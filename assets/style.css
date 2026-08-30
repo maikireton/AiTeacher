@@ -102,6 +102,16 @@ body {
 .today-stat b { color: var(--accent-deep); font-size: 15px; }
 .today-reco { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
 .today-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.today-reco.done { background: rgba(82,196,26,.06); border-color: var(--green); }
+.today-done-badge {
+  display: inline-block; min-height: 36px; line-height: 36px; padding: 0 16px;
+  background: var(--green); color: #fff; font-size: 13px; font-weight: 700;
+  border-radius: 10px;
+}
+.today-all-done {
+  margin-top: 10px; padding: 10px 14px; border-radius: 10px;
+  background: rgba(82,196,26,.10); color: #2f8a3a; font-size: 13px; font-weight: 700;
+}
 .today-reco-label { font-size: 12px; color: var(--text-2); margin-bottom: 4px; }
 .today-reco-name { display: inline-block; font-size: 20px; font-weight: 800; color: var(--accent-deep); text-decoration: none; }
 .today-reco-meta { margin: 6px 0 4px; }

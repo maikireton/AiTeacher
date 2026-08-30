@@ -10,6 +10,7 @@ window.Record = (function () {
   "use strict";
 
   var KEY = "aiTeacher:records";
+  var TASK_KEY = "aiTeacher:dailyTask";
   var mem = null;
 
   /* ---------- 存储 ---------- */
@@ -198,6 +199,29 @@ window.Record = (function () {
     return recommendList(1)[0] || null;
   }
 
+  /* ---------- 当日任务（锁定制） ----------
+   * 当天第一次调用时生成并锁定 2 个知识点，当天内固定不变；
+   * 学完一个标记一个，不因完成而补新的。第二天自动重新生成。 */
+  function dailyTask() {
+    var rec = loadTask();
+    if (rec && rec.date === today() && Array.isArray(rec.ids) && rec.ids.length) {
+      return rec;
+    }
+    var list = recommendList(2);
+    var task = { date: today(), ids: list.map(function (k) { return k.id; }) };
+    saveTask(task);
+    return task;
+  }
+  function loadTask() {
+    try {
+      var raw = window.localStorage.getItem(TASK_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function saveTask(t) {
+    try { window.localStorage.setItem(TASK_KEY, JSON.stringify(t)); } catch (e) { /* 降级 */ }
+  }
+
   /* 按「最近学习日期」排序：没学过的排最前（优先新学），学得越久远的越靠前（优先复习） */
   function byLastStudy(a, b) {
     var la = last(a.id), lb = last(b.id);
@@ -221,6 +245,7 @@ window.Record = (function () {
     stats: stats,
     recommend: recommend,
     recommendList: recommendList,
+    dailyTask: dailyTask,
     today: today
   };
 })();
