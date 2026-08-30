@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>加法交换律和结合律 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .ac-box { margin: 12px 0; }
+  .ac-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .ac-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .ac-swap { display: flex; justify-content: center; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .ac-set { display: flex; gap: 4px; transition: all .5s; }
+  .ac-set .cube { width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; }
+  .ac-set .cube.r { background: linear-gradient(180deg,#ff8a80,#e53935); }
+  .ac-set .cube.b { background: linear-gradient(180deg,#82b1ff,#3d5afe); }
+  .ac-set .cube.a { background: linear-gradient(180deg,#ffd591,#ffa940); }
+  .ac-sym { font-size: 34px; font-weight: 800; color: var(--accent-deep); }
+  .ac-expr { font-size: 28px; font-weight: 800; color: #d97706; text-align: center; margin: 8px 0; }
+  .ac-step { font-size: 22px; font-weight: 800; text-align: center; min-height: 34px; color: #2e7d32; }
+  .ac-term { display: inline-block; padding: 2px 10px; border-radius: 8px; background: #dceaff; font-weight: 800; margin: 0 2px; }
+  .ac-term.hot { background: #ffd591; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">加法交换律和结合律 <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>加法交换律 a+b=b+a；加法结合律 (a+b)+c=a+(b+c)；利用"凑整"能口算更快。</p>
+      <p><b>孩子容易走神的地方：</b>加减混算时错用交换律（减法不能随便交换）；强调交换/结合只对加法适用。</p>
+      <p><b>建议：</b>本课约 8 分钟；找几组能凑 100 的数，用"先凑整"的方法速算。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-034</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想 3+5 和 5+3 一样吗！",
+      voice: "3 加 5 等于 8，5 加 3 也等于 8。交换加数的位置，和不变！这就是加法交换律。",
+      body: function () {
+        return '' +
+          '<h2>换一换也不变</h2>' +
+          '<p class="ac-expr">3 + 5 = 5 + 3</p>' +
+          '<div class="hint">👆 交换加数位置，和不变</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "交换律动画",
+      task: "咱们这一步要做的：看动画两边换位！",
+      voice: "看动画。左边 3 个红方块加 5 个蓝方块。交换位置，变成 5 个蓝方块加 3 个红方块。两边的方块总数一样多，都是 8！",
+      body: function () {
+        return '' +
+          '<h2>看动画：3 + 5 = 5 + 3</h2>' +
+          '<div class="ac-box" id="d1">' +
+          '<div class="ac-swap">' +
+          '<div class="ac-set" id="setA"></div>' +
+          '<span class="ac-sym">+</span>' +
+          '<div class="ac-set" id="setB"></div>' +
+          '<span class="ac-sym">=</span><span class="ac-sym">?</span>' +
+          "</div>" +
+          "</div>" +
+          '<div class="ac-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="ac-rule">a + b = b + a（交换律）</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "结合律与凑整动画",
+      task: "咱们这一步要做的：看动画凑整先算！",
+      voice: "看动画。25 加 137 加 75。先把 25 和 75 加在一起，等于 100，再加 137，等于 237。先凑整，算起来飞快！",
+      body: function () {
+        return '' +
+          '<h2>看动画：25 + 137 + 75</h2>' +
+          '<div class="ac-box" id="d2">' +
+          '<div class="ac-expr" id="ex2">25 + 137 + 75 = ?</div>' +
+          '<div class="ac-step" id="st2">？</div>' +
+          "</div>" +
+          '<div class="ac-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="ac-rule">(a+b)+c = a+(b+c)（结合律）→ 先凑整</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道加法巧算题！",
+      voice: "现在考考你！用交换律结合律巧算。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：巧算 36+58+64，领奖！",
+      voice: "Boss 来啦！36 加 58 加 64。先把 36 和 64 凑成 100，再加 58，等于 158！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：36 + 58 + 64 = ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function cubes(cls, n) {
+    var h = "";
+    for (var i = 0; i < n; i++) { h += '<div class="cube ' + cls + '"></div>'; }
+    return h;
+  }
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    var setA = document.getElementById("setA"), setB = document.getElementById("setB");
+    setA.innerHTML = cubes("r", 3);
+    setB.innerHTML = cubes("b", 5);
+    var syms = document.querySelectorAll("#d1 .ac-sym");
+    setTimeout(function () { if (tip) { tip.textContent = "① 左边 3 红 + 5 蓝 = 8"; } }, 800);
+    setTimeout(function () {
+      // 交换：5蓝在左，3红在右
+      setA.innerHTML = cubes("b", 5);
+      setB.innerHTML = cubes("r", 3);
+      syms[syms.length - 1].textContent = "8";
+      if (tip) { tip.textContent = "② 交换位置：5 蓝 + 3 红 = 8，和不变 ✅"; }
+    }, 2600);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 交换律：3 + 5 = 5 + 3"; } }, 4600);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    var st = document.getElementById("st2");
+    var ex = document.getElementById("ex2");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 找能凑整的：25 和 75 凑成 100（高亮）"; }
+      ex.innerHTML = '<span class="ac-term hot">25</span> + 137 + <span class="ac-term hot">75</span>';
+      st.textContent = "25 + 75 = 100";
+    }, 800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 先算 25+75=100（结合律：先把前两个结合）"; }
+      ex.innerHTML = '<span class="ac-term">(25 + 75)</span> + 137';
+      st.textContent = "100 + 137";
+    }, 2600);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 100 + 137 = 237 ✅ 先凑整更快"; }
+      ex.innerHTML = "<b>237</b>";
+      st.textContent = "100 + 137 = 237";
+    }, 4400);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "运用交换律：38 + 56 = 56 + ?", right: "38", opts: ["38", "56", "94"] },
+    { q: "25 + 68 + 75 = ?（先凑整）", right: "168", opts: ["168", "93", "100"] },
+    { q: "46 + 137 + 54 = ?（先凑整）", right: "237", opts: ["237", "183", "2370"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "交换律、结合律只对加法适用；先找能凑整的数先算";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">36 + 58 + 64 = ?（先凑整）</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">158</div>' +
+      '<div class="opt" data-ok="0">94</div>' +
+      '<div class="opt" data-ok="0">258</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 加法巧算你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "36 + 64 = 100，100 + 58 = 158";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "加法交换律 a+b=b+a；加法结合律 (a+b)+c=a+(b+c)；利用「凑整」能口算更快。",
+      attention: "孩子加减混算时错用交换律（减法不能随便交换）；强调交换/结合只对加法适用。",
+      tip: "本课约 8 分钟；找几组能凑 100 的数，用「先凑整」的方法速算。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

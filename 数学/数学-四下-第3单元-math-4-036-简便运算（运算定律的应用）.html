@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>简便运算（运算定律的应用） · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .sj-box { margin: 12px 0; }
+  .sj-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .sj-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .sj-expr { font-size: 30px; font-weight: 800; color: #d97706; text-align: center; margin: 8px 0; }
+  .sj-term { display: inline-block; padding: 2px 10px; border-radius: 8px; background: #dceaff; font-weight: 800; margin: 0 2px; }
+  .sj-term.hot { background: #ffd591; }
+  .sj-term.b { background: #e8f6ff; }
+  .sj-step { font-size: 22px; font-weight: 800; text-align: center; min-height: 34px; color: #2e7d32; }
+  .sj-split { display: flex; justify-content: center; gap: 24px; align-items: flex-start; flex-wrap: wrap; margin: 8px 0; }
+  .sj-part { border: 2px dashed var(--border); border-radius: 12px; padding: 8px 16px; text-align: center; opacity: 0; transition: all .4s; }
+  .sj-part.show { opacity: 1; }
+  .sj-part.hl { border-style: solid; border-color: var(--accent-deep); background: #eef4ff; }
+  .sj-part .t { font-size: 15px; font-weight: 700; color: var(--text-2); }
+  .sj-part .e { font-size: 24px; font-weight: 800; color: #d97706; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">简便运算（运算定律的应用） <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>简便运算就是"凑整"：连减 a−b−c=a−(b+c)；乘接近整百的数（102、99）用分配律拆开算。</p>
+      <p><b>孩子容易走神的地方：</b>减法凑整时丢符号、分配律拆 99 时把 +99 写成 −1 用错；逐题先找"能凑整的数"。</p>
+      <p><b>建议：</b>本课约 8 分钟；口诀"连减改加合、乘拆整百算"。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-036</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想 238−56−44 怎么算快！",
+      voice: "238 减 56 再减 44。一个一个减多麻烦！先看 56 加 44 正好等于 100。把要减的两个数先加起来，一次减掉！今天学简便运算。",
+      body: function () {
+        return '' +
+          '<h2>减着减着能凑整</h2>' +
+          '<p class="sj-expr">238 − 56 − 44 = ?</p>' +
+          '<div class="hint">👆 56 + 44 = 100，先加起来一次减</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "连减性质动画",
+      task: "咱们这一步要做的：看动画 56+44 一起减！",
+      voice: "看动画。238 要减 56 再减 44。先把 56 和 44 合起来是 100（高亮），然后 238 减 100 等于 138！一次减掉，更快！",
+      body: function () {
+        return '' +
+          '<h2>看动画：238 − 56 − 44</h2>' +
+          '<div class="sj-box" id="d1">' +
+          '<div class="sj-expr" id="ex1">238 − <span class="sj-term">56</span> − <span class="sj-term">44</span> = ?</div>' +
+          '<div class="sj-step" id="st1">？</div>' +
+          "</div>" +
+          '<div class="sj-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="sj-rule">a − b − c = a − (b + c)（连减性质）</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "分配律简便动画",
+      task: "咱们这一步要做的：看动画 102×45 拆开算！",
+      voice: "看动画。102 乘 45。102 接近 100，把它拆成 100 加 2。100 乘 45 等于 4500，2 乘 45 等于 90，加起来是 4590！",
+      body: function () {
+        return '' +
+          '<h2>看动画：102 × 45 = ?</h2>' +
+          '<div class="sj-box" id="d2">' +
+          '<div class="sj-expr" id="ex2">102 × 45 = ?</div>' +
+          '<div class="sj-split">' +
+          '<div class="sj-part" id="p1"><div class="t">100 × 45</div><div class="e">4500</div></div>' +
+          '<div class="sj-part" id="p2"><div class="t">2 × 45</div><div class="e">90</div></div>' +
+          "</div>" +
+          '<div class="sj-step" id="st2">？</div>' +
+          "</div>" +
+          '<div class="sj-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="sj-rule">102 = 100 + 2 → (100+2)×45 = 100×45 + 2×45</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道简便运算题！",
+      voice: "现在考考你！简便运算。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算 99×56，领奖！",
+      voice: "Boss 来啦！99 乘 56。99 接近 100，把它看成 100 减 1。100 乘 56 等于 5600，减 1 乘 56 等于 56，5600 减 56 等于 5544！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：99 × 56 = ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    var st = document.getElementById("st1");
+    var ex = document.getElementById("ex1");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 先看 56 + 44 = 100（可凑整，高亮）"; }
+      ex.innerHTML = "238 − <span class='sj-term hot'>(56 + 44)</span>";
+      st.textContent = "56 + 44 = 100";
+    }, 800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 238 − 100 = 138 ✅ 一次减掉"; }
+      ex.innerHTML = "238 − 100 = <b>138</b>";
+      st.textContent = "238 − 100 = 138";
+    }, 2800);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    var st = document.getElementById("st2");
+    var ex = document.getElementById("ex2");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 102 拆成 100 + 2（接近整百）"; }
+      ex.innerHTML = "(100 + 2) × 45";
+    }, 700);
+    setTimeout(function () {
+      document.getElementById("p1").classList.add("show", "hl");
+      if (tip) { tip.textContent = "② 100 × 45 = 4500"; }
+      st.textContent = "100 × 45 = 4500";
+    }, 2400);
+    setTimeout(function () {
+      document.getElementById("p2").classList.add("show", "hl");
+      if (tip) { tip.textContent = "③ 2 × 45 = 90"; }
+      st.textContent = "2 × 45 = 90";
+    }, 4200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "④ 4500 + 90 = 4590 ✅ 分配律"; }
+      ex.innerHTML = "102 × 45 = <b>4590</b>";
+      st.textContent = "4500 + 90 = 4590";
+    }, 6000);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "328 − 67 − 33 = ?（先凑整）", right: "228", opts: ["228", "294", "100"] },
+    { q: "101 × 32 = ?（拆 100+1）", right: "3232", opts: ["3232", "3200", "3100"] },
+    { q: "25 × 36 = ?（拆 4×9）", right: "900", opts: ["900", "360", "600"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "连减改加合：a−b−c=a−(b+c)；乘接近整百的数拆成整百±几";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">99 × 56 = ?（看成 100−1）</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">5544</div>' +
+      '<div class="opt" data-ok="0">5600</div>' +
+      '<div class="opt" data-ok="0">5656</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 简便运算你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "(100−1)×56 = 5600 − 56 = 5544";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "简便运算就是「凑整」：连减 a−b−c=a−(b+c)；乘接近整百的数（102、99）用分配律拆开算。",
+      attention: "孩子减法凑整时容易丢符号、拆 99 时把 (−1) 用错；先找「能凑整的数」再下笔。",
+      tip: "本课约 8 分钟；口诀「连减改加合、乘拆整百算」。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

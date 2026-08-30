@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>边读边想象画面 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .im-box { margin: 12px 0; width: 100%; max-width: 600px; }
+  .im-card { background: #fffaf0; border: 2px solid #f2d9a8; border-radius: 16px; padding: 18px 20px; font-size: 18px; font-weight: 700; color: #7c5c10; line-height: 1.8; min-height: 70px; display: flex; align-items: center; justify-content: center; }
+  .im-pic { min-height: 160px; display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; }
+  .pic-obj { font-size: 46px; opacity: 0; transform: translateY(16px); transition: all .8s ease; }
+  .pic-obj.on { opacity: 1; transform: translateY(0); }
+  .pic-label { font-size: 15px; font-weight: 700; color: #8a6d1f; margin-top: 4px; }
+  .step3 { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .step3 .s3tag { min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 12px; background: #eef1f6; color: #6b7280; font-weight: 700; font-size: 14px; transition: all .3s; }
+  .step3 .s3tag.on { background: #6b8fd8; color: #fff; }
+  .wave { font-size: 30px; letter-spacing: 6px; }
+  .qtext { font-size: 17px; font-weight: 700; color: #444; background: #f5f3ec; border-radius: 12px; padding: 12px 16px; margin: 8px 0; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 语文</a>
+    <span class="brand">边读边想象画面 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>读书时把文字变成脑海里的画面——方法口诀"读一读、想一想、说一说"，重点落在"想画面"上。</p>
+      <p><b>孩子容易走神的地方：</b>只读文字不闭眼想画面，跳过想象直接做题；可多问"你脑子里看到了什么"。</p>
+      <p><b>建议：</b>本课约 8 分钟；选孩子熟悉的生活句子（如吃西瓜、坐车）练想象，想得越具体越好。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 语文 chinese-4-001</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：念一句魔法句子，看它变成画面！",
+      voice: "闭上眼睛听这句：远远的街灯明了，好像闪着无数的明星。你脑子里是不是出现了夜晚的街道，路灯像星星一样亮？读文字，脑子里能出现画面，这就是想象画面。今天学这个本领。",
+      body: function () {
+        return '' +
+          '<h2>魔法句子变画面</h2>' +
+          '<div class="im-box" id="b1">' +
+          '<div class="im-card">“远远的街灯明了，好像闪着无数的明星。”</div>' +
+          '<div class="im-pic" id="b1-pic">' +
+          '<div class="pic-obj" data-i="0">🌃</div>' +
+          '<div class="pic-obj" data-i="1">✨</div>' +
+          '<div class="pic-obj" data-i="2">🏙️</div>' +
+          '</div>' +
+          '<div class="fc-tip" id="b1-tip">准备开始…</div>' +
+          '</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：学口诀“读一想二说三”，看文字变画面！",
+      voice: "想象画面有三步口诀。第一步读一读，把句子读清楚。第二步想一想，脑子里出现画面。第三步说一说，把画面说出来。看动画，弯弯的月儿像小船，读着读着，夜空里就出现了弯弯的月亮和小船。你猜还能想到什么？",
+      body: function () {
+        return '' +
+          '<h2>三步口诀：读一想二说三</h2>' +
+          '<div class="step3" id="s3tags">' +
+          '<span class="s3tag" data-i="0">① 读一读</span>' +
+          '<span class="s3tag" data-i="1">② 想一想</span>' +
+          '<span class="s3tag" data-i="2">③ 说一说</span>' +
+          '</div>' +
+          '<div class="im-box">' +
+          '<div class="im-card" id="b2-card">“弯弯的月儿像小船”</div>' +
+          '<div class="im-pic" id="b2-pic">' +
+          '<div class="pic-obj" data-i="0">🌙</div>' +
+          '<div class="pic-obj" data-i="1">⛵</div>' +
+          '<div class="pic-obj" data-i="2">🌌</div>' +
+          '</div>' +
+          '<div class="fc-tip" id="b2-tip">准备开始…</div>' +
+          '</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：看《观潮》名句怎么在脑子里“放电影”！",
+      voice: "来看课文里的句子：浪潮越来越近，犹如千万匹白色战马齐头并进。读这句话，你要在脑子里放电影：一条白线，慢慢变成千万匹白色战马，浩浩荡荡冲过来。想一想，你仿佛听到了什么声音？看到了什么颜色？",
+      body: function () {
+        return '' +
+          '<h2>《观潮》名句·想象放电影</h2>' +
+          '<div class="qtext">“浪潮越来越近，犹如千万匹白色战马齐头并进，浩浩荡荡地飞奔而来。”</div>' +
+          '<div class="im-pic" id="b3-pic">' +
+          '<div class="pic-obj" data-i="0">➖</div>' +
+          '<div class="pic-obj" data-i="1">🌊</div>' +
+          '<div class="pic-obj" data-i="2">🐎🐎🐎</div>' +
+          '</div>' +
+          '<div class="fc-tip" id="b3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道想象画面题！",
+      voice: "现在考考你！读句子，想想你脑子里应该出现什么画面。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：背出口诀，拿满星星！",
+      voice: "来总结！边读边想象画面的口诀是：读一读、想一想、说一说。记住了吗？以后每次读书，都让文字在脑子里放电影，你就越来越会读课文啦！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="im-card">口诀：读一读 → 想一想 → 说一说</div>' +
+          '<div class="hint">读文字 → 想画面 → 说感受，让课文在脑子里“放电影” 🎬</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S1 情境动画 ---------- */
+  function runS1() {
+    var tip = document.getElementById("b1-tip");
+    var pics = document.querySelectorAll("#b1-pic .pic-obj");
+    setTimeout(function () { if (tip) { tip.textContent = "① 读句子：远远的街灯明了…"; } }, 900);
+    pics.forEach(function (p, i) {
+      setTimeout(function () { p.classList.add("on"); }, 1400 + i * 700);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 读完句子，脑海里出现了夜晚的街道和灯光！"; } }, 3800);
+  }
+
+  /* ---------- S2 三步口诀动画 ---------- */
+  function runS2() {
+    var tags = document.querySelectorAll("#s3tags .s3tag");
+    var card = document.getElementById("b2-card");
+    var tip = document.getElementById("b2-tip");
+    var pics = document.querySelectorAll("#b2-pic .pic-obj");
+    setTimeout(function () { if (tip) { tip.textContent = "① 读一读：把句子读清楚"; } }, 700);
+    setTimeout(function () { tags[0].classList.add("on"); }, 900);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 想一想：脑子里出现画面（月亮、小船、夜空）"; }
+      tags[1].classList.add("on");
+      pics.forEach(function (p, i) { setTimeout(function () { p.classList.add("on"); }, 300 + i * 600); });
+    }, 2400);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 说一说：把画面说出来——“月亮像小船挂在夜空”"; }
+      tags[2].classList.add("on");
+    }, 5200);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 读一想二说三，画面自然来！"; } }, 6800);
+  }
+
+  /* ---------- S3 观潮想象动画 ---------- */
+  function runS3() {
+    var tip = document.getElementById("b3-tip");
+    var pics = document.querySelectorAll("#b3-pic .pic-obj");
+    setTimeout(function () { if (tip) { tip.textContent = "① 读：浪潮像千万匹白色战马"; } }, 800);
+    setTimeout(function () { pics[0].classList.add("on"); if (tip) { tip.textContent = "② 白线出现了！"; } }, 1600);
+    setTimeout(function () { pics[1].classList.add("on"); if (tip) { tip.textContent = "③ 白线变粗变宽，成了滚滚浪潮"; } }, 2600);
+    setTimeout(function () { pics[2].classList.add("on"); if (tip) { tip.textContent = "④ 变成千万匹白色战马，齐头并进！你能听到声音吗？"; } }, 3800);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 想画面 = 脑子里放电影，越具体越生动！"; } }, 5600);
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "读“红红的柿子像一个个小灯笼”，你的脑海里出现？", right: "挂满红果子的树", opts: ["挂满红果子的树", "一盏真的电灯笼", "一片蓝色的海洋"] },
+    { q: "读“小河哗啦啦地唱着歌”，这里的想象主要在？", right: "把河水当作会唱歌的人", opts: ["把河水当作会唱歌的人", "小河真的会唱歌", "河边有很多人"] },
+    { q: "想画面时，第一步应该先做什么？", right: "读一读，把句子读清楚", opts: ["读一读，把句子读清楚", "马上告诉别人", "直接写下来"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "再读一遍句子，想想它让你看到什么、想到什么";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：读“雪花像无数白色的蝴蝶在空中飞舞”，该想什么画面？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">漫天飘舞的白色雪花</div>' +
+      '<div class="opt" data-ok="0">真的蝴蝶在空中</div>' +
+      '<div class="opt" data-ok="0">一堆白纸</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 想象画面你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "想的是雪花的画面，不是真的蝴蝶哦";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "边读边想象画面=读文字时在脑海里出现画面。口诀：读一读→想一想→说一说。",
+      attention: "孩子容易只读不想、跳过画面直接做题；可多问「你脑子里看到了什么」。",
+      tip: "本课约 8 分钟；用孩子熟悉的生活句子（吃西瓜、坐车）多练想象。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
