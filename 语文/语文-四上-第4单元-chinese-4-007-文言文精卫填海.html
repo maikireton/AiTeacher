@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文言文《精卫填海》· AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .wenyan { background: #f4f0e6; border: 2px solid #d8cdb4; border-radius: 16px; padding: 18px 22px; margin: 10px 0; max-width: 620px; width: 100%; }
+  .wenyan .wt { font-size: 19px; font-weight: 800; color: #6b4e1a; }
+  .wenyan .wl { font-size: 18px; line-height: 2.1; color: #4a3a10; font-weight: 600; letter-spacing: 1px; }
+  .zhu { display: inline-block; border-bottom: 2px solid #c9a75c; cursor: help; position: relative; }
+  .zhu .ztip { display: none; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: #6b8fd8; color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 13px; white-space: nowrap; z-index: 10; }
+  .zhu:hover .ztip { display: block; }
+  .sentence { background: #fff; border: 2px solid #e4e3dd; border-radius: 12px; padding: 10px 14px; margin: 8px 0; font-size: 16px; color: #444; text-align: left; line-height: 1.7; }
+  .sentence.on { border-color: #6b8fd8; background: rgba(155,187,244,.1); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 语文</a>
+    <span class="brand">文言文《精卫填海》 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>《精卫填海》文言文大意：炎帝小女儿女娃溺亡后化为精卫鸟，常衔西山木石填东海，赞坚持与勇敢。重点字词：少女=小女儿、故=所以、为=变成、衔=叼、堙=填塞。</p>
+      <p><b>孩子容易走神的地方：</b>畏难"古文看不懂"；可从逐字注释入手，读通读顺，不求一字全懂。</p>
+      <p><b>建议：</b>本课约 8 分钟；先跟读 3 遍，再逐句看注释，最后用自己的话讲一遍。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 语文 chinese-4-007</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：认识“小古文”，读精卫鸟的故事！",
+      voice: "你听说过精卫填海吗？一只小鸟，每天叼树枝和石头去填大海，多勇敢呀！这个故事是古代人用很短的话写下来的，叫文言文，也叫小古文。今天我们来读一读！",
+      body: function () {
+        return '' +
+          '<h2>精卫填海 🐦</h2>' +
+          '<div style="font-size:52px">🐦🌊</div>' +
+          '<div class="fc-tip" id="s1-tip">准备开始…</div>' +
+          '<div class="hint">文言文 = 古人写的短话，读懂它并不难</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：看动画，一句一句读《精卫填海》！",
+      voice: "看动画，我们一句一句读。第一句：炎帝之少女，名曰女娃。意思是炎帝的小女儿，名叫女娃。第二句：女娃游于东海，溺而不返。女娃去东海游玩，溺水没能回来。第三句：故为精卫。所以变成精卫鸟。第四句：常衔西山之木石，以堙于东海。常常叼来西山的树枝石头，填东海。",
+      body: function () {
+        return '' +
+          '<h2>逐句读《精卫填海》</h2>' +
+          '<div class="wenyan">' +
+          '<div class="wt">精卫填海 <span style="font-size:13px;color:#a07f3f;font-weight:400">《山海经》</span></div>' +
+          '<div class="wl">炎帝之<span class="zhu">少女</span><span class="ztip">小女儿</span>，名曰女娃。<br>' +
+          '女娃游于东海，<span class="zhu">溺</span><span class="ztip">溺水</span>而不返，<br>' +
+          '<span class="zhu">故</span><span class="ztip">所以</span><span class="zhu">为</span><span class="ztip">变成</span>精卫，<br>' +
+          '常<span class="zhu">衔</span><span class="ztip">用嘴叼</span>西山之木石，<br>' +
+          '以<span class="zhu">堙</span><span class="ztip">填塞</span>于东海。</div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>' +
+          '<div class="hint">把鼠标放到带点的字上，看注释哦</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：把古文翻成大白话！",
+      voice: "看例题。把每句古文翻成大白话，就是它的意思。炎帝的小女儿，名叫女娃。女娃在东海游玩，溺水没有回来，所以变成精卫鸟，常常叼来西山的树枝和石头，用来填塞东海。你看，古文并不难懂！",
+      body: function () {
+        return '' +
+          '<h2>古文 → 大白话</h2>' +
+          '<div class="sentence" data-i="0">📜 炎帝之少女，名曰女娃。<br>➡️ 炎帝的小女儿，名叫女娃。</div>' +
+          '<div class="sentence" data-i="1">📜 常衔西山之木石，以堙于东海。<br>➡️ 常常叼来西山的树枝石头，填东海。</div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：闯三关，认古文词语！",
+      voice: "现在考考你！看看这些古文里的词语，你都认识吗？",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：Boss 关辨字义，领星星！",
+      voice: "最后总结！读文言文的方法：先读通，再看注释，最后翻成大白话。《精卫填海》告诉我们：只要坚持，小小的鸟也能撼动大海。Boss 关来了！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="sentence" style="opacity:1"><b>读古文三步：</b>读通 → 看注释 → 翻大白话</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runS1() {
+    var tip = document.getElementById("s1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "🐦 精卫：一只坚持填海的小鸟"; } }, 1000);
+    setTimeout(function () { if (tip) { tip.textContent = "📜 古人用短短几句话讲完这个故事"; } }, 2400);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 这就是文言文，我们试试读懂它！"; } }, 3800);
+  }
+
+  function runS2() {
+    var tip = document.getElementById("s2-tip");
+    var msgs = ["① 炎帝之少女，名曰女娃：炎帝的小女儿，名叫女娃", "② 女娃游于东海，溺而不返：游玩溺水，没能回来", "③ 故为精卫：所以变成精卫鸟", "④ 常衔西山之木石，以堙于东海：叼木石填东海", "✅ 四句话读完，故事就懂啦！"];
+    msgs.forEach(function (m, i) {
+      setTimeout(function () { if (tip) { tip.textContent = m; } }, 1300 + i * 2400);
+    });
+  }
+
+  function runS3() {
+    var sen = document.querySelectorAll("#s3 .sentence");
+    var tip = document.getElementById("s3-tip");
+    sen.forEach(function (s, i) {
+      setTimeout(function () {
+        s.classList.add("on");
+        if (tip) { tip.textContent = (i === 0 ? "① 第一句：介绍女娃" : "② 最后一句：精卫天天填海"); }
+      }, 1100 + i * 2000);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 古文翻成大白话，意思清清楚楚！"; } }, 5600);
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "“炎帝之少女”中的“少女”意思是？", right: "小女儿", opts: ["小女儿", "年少的女子", "姐姐"] },
+    { q: "“故为精卫”的“故”意思是？", right: "所以", opts: ["所以", "故事", "过去"] },
+    { q: "“常衔西山之木石”的“衔”意思是？", right: "用嘴叼", opts: ["用嘴叼", "跑", "扛"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "回看课文里的注释提示再想想";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 关：“以堙于东海”的“堙”意思是？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">填塞</div>' +
+      '<div class="opt" data-ok="0">游泳</div>' +
+      '<div class="opt" data-ok="0">变成</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 小古文你读得懂啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 9 ? "（全部拿下！）" : n >= 6 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "“堙”是填塞的意思——把海填起来";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "《精卫填海》：女娃溺亡化精卫，衔木石填东海，赞坚持勇敢。重点词：少女=小女儿、故=所以、为=变成、衔=叼、堙=填塞。",
+      attention: "孩子易畏难古文；先跟读再看注释，不求一字全懂。",
+      tip: "本课约 8 分钟；先跟读 3 遍，再逐句看注释，最后讲大意。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

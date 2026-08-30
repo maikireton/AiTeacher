@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三角形的认识与特性 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .tr-box { margin: 12px 0; }
+  .tr-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .tr-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .tr-svg { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+  .tr-svg svg { background: #fafcff; border: 1px solid var(--border); border-radius: 12px; }
+  .tr-lab { text-align: center; font-size: 16px; font-weight: 800; color: var(--text-2); }
+  .tr-side { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin: 8px 0; }
+  .tr-side .card { border: 2px dashed var(--border); border-radius: 12px; padding: 8px 16px; text-align: center; opacity: 0; transition: all .4s; }
+  .tr-side .card.show { opacity: 1; }
+  .tr-side .card.ok { border-color: #2e7d32; background: #eef8ee; }
+  .tr-side .card.no { border-color: #c0392b; background: #fdeeee; }
+  .tr-side .card .e { font-size: 22px; font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">三角形的认识与特性 <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>三角形由 3 条线段围成，有 3 个顶点、3 条边、3 个角；具有稳定性；两边之和大于第三边才能围成。</p>
+      <p><b>孩子容易走神的地方：</b>画三角形时线段没首尾相连；用"三条边里最短两条的和比最长的大吗"来判断。</p>
+      <p><b>建议：</b>本课约 8 分钟；用吸管/小棒摆三角形，试试哪三根能围起来。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-042</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想三角形为什么拉不动！",
+      voice: "三角形有三个顶点、三条边、三个角。它还特别稳固，怎么拉都拉不动！今天认识三角形。",
+      body: function () {
+        return '' +
+          '<h2>三角形</h2>' +
+          '<p>🔺 3 条线段围成的图形 → 3 个顶点、3 条边、3 个角</p>' +
+          '<div class="hint">👆 三角形有稳定性</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "三角形构成动画",
+      task: "咱们这一步要做的：看动画三条线段围成三角形！",
+      voice: "看动画。第一条线段，第二条线段，第三条线段，三条首尾相接，围成了三角形！它有三个顶点 A B C，三条边，三个角。",
+      body: function () {
+        return '' +
+          '<h2>看动画：三条线段围成</h2>' +
+          '<div class="tr-box" id="d1">' +
+          '<div class="tr-svg"><svg id="sv1" width="300" height="210" viewBox="0 0 300 210"></svg></div>' +
+          "</div>" +
+          '<div class="tr-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="tr-rule">由 3 条线段围成的封闭图形叫三角形</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "稳定性与三边关系动画",
+      task: "咱们这一步要做的：看动画三角形拉不动、三边要够长！",
+      voice: "看动画。左边三角形，怎么拉都拉不动，这就是稳定性！右边四边形，一拉就变形。再看三根小棒：3 厘米、4 厘米、5 厘米，3 加 4 大于 5，能围成。2 加 3 小于 6，围不成。",
+      body: function () {
+        return '' +
+          '<h2>看动画：稳定性 + 三边关系</h2>' +
+          '<div class="tr-box" id="d2">' +
+          '<div class="tr-svg">' +
+          '<div><svg id="sv2" width="150" height="130" viewBox="0 0 150 130"></svg><div class="tr-lab">三角形：拉不动</div></div>' +
+          '<div><svg id="sv3" width="150" height="130" viewBox="0 0 150 130"></svg><div class="tr-lab">四边形：一拉就变</div></div>' +
+          "</div>" +
+          '<div class="tr-side">' +
+          '<div class="card" id="c1"><div class="e">3 + 4 > 5</div><div>能围成 ✅</div></div>' +
+          '<div class="card" id="c2"><div class="e">2 + 3 < 6</div><div>围不成 ❌</div></div>' +
+          "</div>" +
+          "</div>" +
+          '<div class="tr-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="tr-rule">两边之和必须大于第三边；三角形有稳定性</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道三角形题！",
+      voice: "现在考考你！三角形。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：判断三根小棒，领奖！",
+      voice: "Boss 来啦！2 厘米、4 厘米、7 厘米能围成三角形吗？2 加 4 等于 6，6 小于 7，围不成！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：2cm、4cm、7cm 能围成吗？</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var svg = document.getElementById("sv1");
+    var tip = document.getElementById("d1-tip");
+    // 顶点 A(40,170) B(260,170) C(150,30)
+    var pts = [[40, 170], [260, 170], [150, 30]];
+    var lines = [[0, 1], [1, 2], [2, 0]];
+    var colors = ["#4a7fe0", "#e8890c", "#2e7d32"];
+    lines.forEach(function (l, i) {
+      setTimeout(function () {
+        var ln = svgEl("line", { x1: pts[l[0]][0], y1: pts[l[0]][1], x2: pts[l[1]][0], y2: pts[l[1]][1], stroke: colors[i], "stroke-width": 4, "stroke-linecap": "round" });
+        svg.appendChild(ln);
+        if (tip) { tip.textContent = "第 " + (i + 1) + " 条边（" + (["底边", "斜边", "斜边"][i]) + "）出现…"; }
+      }, 800 * (i + 1));
+    });
+    setTimeout(function () {
+      var names = ["A", "B", "C"];
+      pts.forEach(function (p, i) {
+        var c = svgEl("circle", { cx: p[0], cy: p[1], r: 7, fill: "#e53935" });
+        svg.appendChild(c);
+        var t = svgEl("text", { x: p[0] + (p[0] > 150 ? -18 : 12), y: p[1] - 12, "font-size": 18, "font-weight": "bold", fill: "#e53935" });
+        t.textContent = names[i];
+        svg.appendChild(t);
+      });
+      if (tip) { tip.textContent = "③ 3 条边首尾相连 → 3 个顶点 A B C ✅"; }
+    }, 800 * 4 + 300);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    var sv2 = document.getElementById("sv2"), sv3 = document.getElementById("sv3");
+    setTimeout(function () {
+      var t = svgEl("polygon", { points: "75,15 130,115 20,115", fill: "rgba(122,182,255,.35)", stroke: "#3d5afe", "stroke-width": 4, "stroke-linejoin": "round" });
+      sv2.appendChild(t);
+      if (tip) { tip.textContent = "① 三角形：怎么拉都不变形（稳定性）"; }
+    }, 700);
+    setTimeout(function () {
+      var q = svgEl("polygon", { points: "20,25 120,20 125,110 15,100", fill: "rgba(255,213,145,.4)", stroke: "#e8890c", "stroke-width": 4, "stroke-linejoin": "round" });
+      sv3.appendChild(q);
+      // 变形动画：用 animate 变换
+      var an = svgEl("animateTransform", { attributeName: "transform", type: "rotate", values: "0 75 65; 12 75 65; 0 75 65; -10 75 65; 0 75 65", dur: "4s", repeatCount: "indefinite" });
+      q.appendChild(an);
+      if (tip) { tip.textContent = "② 四边形：一拉就歪 → 不稳"; }
+    }, 2600);
+    setTimeout(function () {
+      document.getElementById("c1").classList.add("show", "ok");
+      document.getElementById("c2").classList.add("show", "no");
+      if (tip) { tip.textContent = "③ 三边关系：两边之和要大于第三边 ✅"; }
+    }, 5200);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "三角形有（ ）个顶点？", right: "3", opts: ["3", "4", "2"] },
+    { q: "下面哪组能围成三角形？", right: "3、4、5", opts: ["3、4、5", "1、2、4", "2、2、5"] },
+    { q: "三角形具有（ ）性？", right: "稳定", opts: ["稳定", "易变", "弹力"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "两边之和大于第三边才能围成；三角形有稳定性";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">2cm、4cm、7cm 能围成三角形吗？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">不能（2+4&lt;7）</div>' +
+      '<div class="opt" data-ok="0">能（有三角形）</div>' +
+      '<div class="opt" data-ok="0">看情况</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 三角形你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "2 + 4 = 6 < 7 → 围不成";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "三角形由 3 条线段围成，有 3 个顶点、3 条边、3 个角；具有稳定性；两边之和大于第三边才能围成。",
+      attention: "孩子画三角形时线段没首尾相连；用「最短两条的和比最长的大吗」来判断。",
+      tip: "本课约 8 分钟；用吸管/小棒摆三角形，试试哪三根能围起来。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

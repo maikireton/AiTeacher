@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>习作：把事情写清楚 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .six { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; max-width: 560px; width: 100%; margin: 12px 0; }
+  .six .cell { background: #fff; border: 2px solid #e4e3dd; border-radius: 14px; padding: 12px; opacity: .3; transform: scale(.94); transition: all .5s ease; }
+  .six .cell.on { opacity: 1; transform: scale(1); }
+  .six .cell .c1 { font-size: 20px; }
+  .six .cell .c2 { font-size: 14px; font-weight: 700; color: #2c5a9e; margin-top: 2px; }
+  .six .cell .c3 { font-size: 12px; color: #8a8a8a; }
+  .exp { background: #fffaf0; border: 2px solid #f0d9a8; border-radius: 14px; padding: 14px 18px; margin: 8px 0; max-width: 600px; width: 100%; text-align: left; font-size: 15px; line-height: 1.8; color: #444; }
+  .exp b { color: #2c5a9e; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 语文</a>
+    <span class="brand">习作：把事情写清楚 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>把事情写清楚=写清六要素（时间、地点、人物、起因、经过、结果）+ 把"经过"写具体（怎么做、说什么、想什么）+ 用顺序词（先、接着、然后、最后）。</p>
+      <p><b>孩子容易走神的地方：</b>只写"然后……然后……"流水账；可用"怎么做+说什么+想什么"三问把经过拉长。</p>
+      <p><b>建议：</b>本课约 8 分钟；先口头讲一遍经历，再按六要素写下。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 语文 chinese-4-008</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：帮“小明”把一件事讲清楚！",
+      voice: "想象你给朋友讲你昨天做的一件事。如果只说“我玩了一会儿”，朋友一定一头雾水。怎么才能把一件事讲得清清楚楚呢？今天学记事六要素，一学就会！",
+      body: function () {
+        return '' +
+          '<h2>把一件事讲清楚 🎤</h2>' +
+          '<div style="font-size:44px">📖 ✍️</div>' +
+          '<div class="fc-tip" id="s1-tip">准备开始…</div>' +
+          '<div class="hint">记事六要素 = 让读者看得明明白白</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：点亮记事六要素！",
+      voice: "看动画。记事六要素，就像六个拼图。时间、地点、人物，这是故事的背景。起因，事情为什么开始。经过，事情怎么发展的，最重要。结果，最后怎么样了。六个都齐了，事情就写清楚了！",
+      body: function () {
+        return '' +
+          '<h2>记事六要素</h2>' +
+          '<div class="six" id="six">' +
+          '<div class="cell"><div class="c1">🕐</div><div class="c2">时间</div><div class="c3">什么时候</div></div>' +
+          '<div class="cell"><div class="c1">📍</div><div class="c2">地点</div><div class="c3">在哪里</div></div>' +
+          '<div class="cell"><div class="c1">👦</div><div class="c2">人物</div><div class="c3">有谁</div></div>' +
+          '<div class="cell"><div class="c1">❓</div><div class="c2">起因</div><div class="c3">为什么</div></div>' +
+          '<div class="cell"><div class="c1">⚡</div><div class="c2">经过</div><div class="c3">怎么做（最重要）</div></div>' +
+          '<div class="cell"><div class="c1">🏁</div><div class="c2">结果</div><div class="c3">最后怎样</div></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：看“一句话”变“一段话”！",
+      voice: "看例题。先把一句话写成六要素齐全的话：星期天上午，我和爸爸在公园里放风筝，风筝飞不起来，我们想办法，最后风筝飞上了天。再把经过写具体：怎么跑的、说了什么、想了什么，句子就生动了！",
+      body: function () {
+        return '' +
+          '<h2>一句话 → 一段话</h2>' +
+          '<div class="exp">❌ 只有一句话：<br>“我和爸爸放风筝。”</div>' +
+          '<div class="exp" id="s3-exp">✅ 六要素写清楚：<br><b>星期天上午</b>，<b>我和爸爸</b>在<b>公园里</b><b>放风筝</b>。<b>起因</b>是风太小飞不起来；<b>经过</b>是我举着风筝，爸爸拉着线跑，边跑边喊“快放！”，风筝终于摇摇晃晃飞上天；<b>结果</b>是我们开心得跳了起来。</div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：闯三关，练写清楚！",
+      voice: "现在考考你！判断哪些要素写清楚了，给句子排顺序，看看你会不会写清楚一件事。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：Boss 关找“经过”，领星星！",
+      voice: "最后总结！把事情写清楚，记住三招：写清六要素、把经过写具体、用上顺序词。下次写作文，你就知道怎么把一件事讲明白啦！Boss 关来了！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="six" id="six-sum" style="grid-template-columns:repeat(3,1fr);opacity:1">' +
+          '<div class="cell on"><div class="c1">1️⃣</div><div class="c2">六要素</div><div class="c3">全写清</div></div>' +
+          '<div class="cell on"><div class="c1">2️⃣</div><div class="c2">经过具体</div><div class="c3">怎么做/说/想</div></div>' +
+          '<div class="cell on"><div class="c1">3️⃣</div><div class="c2">顺序词</div><div class="c3">先/接着/最后</div></div>' +
+          '</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runS1() {
+    var tip = document.getElementById("s1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "只写“我玩了一会儿”→ 朋友听不懂"; } }, 1200);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 六要素齐了，人人听得懂！"; } }, 2800);
+  }
+
+  function runS2() {
+    var cells = document.querySelectorAll("#six .cell");
+    var tip = document.getElementById("s2-tip");
+    var msgs = ["① 时间：什么时候", "② 地点：在哪里", "③ 人物：有谁", "④ 起因：为什么", "⑤ 经过：怎么做（最重要）", "⑥ 结果：最后怎样"];
+    cells.forEach(function (c, i) {
+      setTimeout(function () {
+        c.classList.add("on");
+        if (tip) { tip.textContent = msgs[i]; }
+      }, 800 + i * 1300);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 六块拼图齐了，事情写清楚了！"; } }, 800 + cells.length * 1300 + 300);
+  }
+
+  function runS3() {
+    var tip = document.getElementById("s3-tip");
+    var exp = document.getElementById("s3-exp");
+    var msgs = ["① 六要素齐：时间/地点/人物/起因/经过/结果", "② 经过写具体：怎么跑、说什么、想什么", "✅ 一句话就变成一段生动的话啦！"];
+    msgs.forEach(function (m, i) {
+      setTimeout(function () {
+        if (exp) { exp.style.borderColor = "#f0d9a8"; }
+        if (tip) { tip.textContent = m; }
+      }, 1200 + i * 2200);
+    });
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "“昨天下午，我和妹妹在楼下骑自行车”缺少哪个要素？", right: "经过", opts: ["经过", "时间", "人物"] },
+    { q: "把经过写具体，可以写什么？", right: "怎么做、说什么、想什么", opts: ["怎么做、说什么、想什么", "只写结果", "只写心情"] },
+    { q: "下面哪个词是顺序词？", right: "接着", opts: ["接着", "很漂亮", "真高兴"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "六要素是：时间、地点、人物、起因、经过、结果";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 关：一句话里，“我和哥哥先搭积木，接着比赛谁搭得高，最后我赢了。”这句的重点是？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">把经过按顺序写清楚</div>' +
+      '<div class="opt" data-ok="0">写了三个时间</div>' +
+      '<div class="opt" data-ok="0">没写人物</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 写清楚你学会啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 9 ? "（全部拿下！）" : n >= 6 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "用“先、接着、最后”把经过按顺序写清——这就是本事";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 2000);
+        }
+      });
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "把事情写清楚：写清六要素 + 把经过写具体（怎么做/说什么/想什么）+ 用顺序词（先、接着、最后）。",
+      attention: "孩子易写流水账；用三问把经过拉长。",
+      tip: "本课约 8 分钟；先口头讲一遍经历再写。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三角形的分类与内角和 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .tc-box { margin: 12px 0; }
+  .tc-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .tc-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .tc-svg { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+  .tc-svg svg { background: #fafcff; border: 1px solid var(--border); border-radius: 12px; }
+  .tc-lab { text-align: center; font-size: 16px; font-weight: 800; color: var(--text-2); margin-top: 4px; }
+  .tc-sum { font-size: 22px; font-weight: 800; color: #d97706; text-align: center; margin: 8px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">三角形的分类与内角和 <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>按角分：锐角三角形、直角三角形（1 个直角）、钝角三角形（1 个钝角）；任意三角形内角和都是 180°。</p>
+      <p><b>孩子容易走神的地方：</b>把等腰/等边与"锐角/直角"分类混在一起；先分清"按角分"还是"按边分"。</p>
+      <p><b>建议：</b>本课约 8 分钟；把三角形的三个角剪下来拼一拼，看是不是正好一个平角。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-043</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想三角形怎么分类！",
+      voice: "三角形可以按角来分：全是锐角的是锐角三角形，有一个直角的是直角三角形，有一个钝角的是钝角三角形。今天学分类，还要知道内角和。",
+      body: function () {
+        return '' +
+          '<h2>三角形分类</h2>' +
+          '<p>🔺 按角分：锐角 / 直角 / 钝角三角形</p>' +
+          '<div class="hint">👆 最多只有 1 个直角或 1 个钝角</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "按角分类动画",
+      task: "咱们这一步要做的：看动画三种三角形！",
+      voice: "看动画。第一个三角形三个角都是锐角，是锐角三角形。第二个有一个直角，是直角三角形。第三个有一个钝角，是钝角三角形。",
+      body: function () {
+        return '' +
+          '<h2>看动画：按角分类</h2>' +
+          '<div class="tc-box" id="d1">' +
+          '<div class="tc-svg">' +
+          '<div><svg id="t1" width="120" height="110" viewBox="0 0 120 110"></svg><div class="tc-lab">锐角三角形</div></div>' +
+          '<div><svg id="t2" width="120" height="110" viewBox="0 0 120 110"></svg><div class="tc-lab">直角三角形</div></div>' +
+          '<div><svg id="t3" width="120" height="110" viewBox="0 0 120 110"></svg><div class="tc-lab">钝角三角形</div></div>' +
+          "</div>" +
+          "</div>" +
+          '<div class="tc-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="tc-rule">按角分：3 锐角 / 1 直角 / 1 钝角</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "内角和 180° 动画",
+      task: "咱们这一步要做的：看动画三个角拼成平角！",
+      voice: "看动画。把三角形的三个角撕下来，角 1、角 2、角 3。把它们拼在一条直线上，正好拼成一个平角，是 180 度！所以三角形内角和等于 180 度。",
+      body: function () {
+        return '' +
+          '<h2>看动画：内角和 = 180°</h2>' +
+          '<div class="tc-box" id="d2">' +
+          '<div class="tc-svg"><svg id="sv" width="320" height="150" viewBox="0 0 320 150"></svg></div>' +
+          '<div class="tc-sum" id="sum">∠1 + ∠2 + ∠3 = ?</div>' +
+          "</div>" +
+          '<div class="tc-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="tc-rule">任意三角形内角和都是 180°</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道三角形分类题！",
+      voice: "现在考考你！三角形分类和内角和。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算第三个角，领奖！",
+      voice: "Boss 来啦！三角形两个角分别是 70 度和 50 度，第三个角多少度？180 减 70 再减 50，等于 60 度！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：∠A=70°，∠B=50°，∠C=? </h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function drawTri(svg, pts, angles) {
+    var poly = svgEl("polygon", { points: pts.join(" "), fill: "rgba(122,182,255,.3)", stroke: "#3d5afe", "stroke-width": 3, "stroke-linejoin": "round" });
+    svg.appendChild(poly);
+    angles.forEach(function (a) {
+      var c = svgEl("circle", { cx: a[0], cy: a[1], r: 12, fill: "rgba(232,137,12,.5)" });
+      svg.appendChild(c);
+      var t = svgEl("text", { x: a[0] - 7, y: a[1] + 6, "font-size": 16, "font-weight": "bold", fill: "#fff" });
+      t.textContent = a[2];
+      svg.appendChild(t);
+    });
+  }
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    // 锐角三角形（等边）
+    drawTri(document.getElementById("t1"), [[60, 12], [105, 98], [15, 98]], [[60, 14, "✓"], [101, 96, "✓"], [15, 96, "✓"]]);
+    setTimeout(function () { if (tip) { tip.textContent = "① 3 个角都是锐角（<90°）→ 锐角三角形"; } }, 800);
+    // 直角三角形
+    drawTri(document.getElementById("t2"), [[20, 20], [100, 20], [20, 98]], [[22, 24, "■"], [92, 24, "✓"], [16, 96, "✓"]]);
+    setTimeout(function () { if (tip) { tip.textContent = "② 有 1 个直角 → 直角三角形"; } }, 2600);
+    // 钝角三角形
+    drawTri(document.getElementById("t3"), [[95, 20], [105, 98], [12, 98]], [[88, 26, "○"], [100, 96, "✓"], [14, 96, "✓"]]);
+    setTimeout(function () { if (tip) { tip.textContent = "③ 有 1 个钝角（>90°）→ 钝角三角形 ✅"; } }, 4400);
+  }
+
+  function arcPath(cx, cy, r, a1, a2) {
+    var x1 = cx + r * Math.cos(a1 * Math.PI / 180), y1 = cy + r * Math.sin(a1 * Math.PI / 180);
+    var x2 = cx + r * Math.cos(a2 * Math.PI / 180), y2 = cy + r * Math.sin(a2 * Math.PI / 180);
+    return "M" + x1.toFixed(1) + " " + y1.toFixed(1) + " A" + r + " " + r + " 0 0 1 " + x2.toFixed(1) + " " + y2.toFixed(1);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    var svg = document.getElementById("sv");
+    var sum = document.getElementById("sum");
+    // 三角形 A(40,120) B(280,120) C(160,20)，三个角
+    var tri = svgEl("polygon", { points: "40,120 280,120 160,20", fill: "rgba(122,182,255,.25)", stroke: "#3d5afe", "stroke-width": 3, "stroke-linejoin": "round" });
+    svg.appendChild(tri);
+    var cols = ["#e53935", "#2e7d32", "#e8890c"];
+    setTimeout(function () {
+      // 角A(左下): 从180°到240°弧；角B(右下): 从-60°到0°；角C(上): 从240°到300°
+      var a1 = svgEl("path", { d: arcPath(40, 120, 22, 190, 235), stroke: cols[0], "stroke-width": 4, fill: "none" });
+      var a2 = svgEl("path", { d: arcPath(280, 120, 22, -55, 0), stroke: cols[1], "stroke-width": 4, fill: "none" });
+      var a3 = svgEl("path", { d: arcPath(160, 20, 22, 250, 300), stroke: cols[2], "stroke-width": 4, fill: "none" });
+      svg.appendChild(a1); svg.appendChild(a2); svg.appendChild(a3);
+      if (tip) { tip.textContent = "① 三角形有三个角：红 ∠1、绿 ∠2、橙 ∠3"; }
+    }, 700);
+    setTimeout(function () {
+      // 把三个角"撕下来"拼到底部直线：在 y=110 处拼成半圆（180°）
+      var arc1 = svgEl("path", { d: arcPath(60, 110, 40, 180, 240), stroke: cols[0], "stroke-width": 4, fill: "none" });
+      var arc2 = svgEl("path", { d: arcPath(150, 110, 40, 240, 300), stroke: cols[1], "stroke-width": 4, fill: "none" });
+      var arc3 = svgEl("path", { d: arcPath(240, 110, 40, 300, 360), stroke: cols[2], "stroke-width": 4, fill: "none" });
+      svg.appendChild(arc1); svg.appendChild(arc2); svg.appendChild(arc3);
+      if (tip) { tip.textContent = "② 三个角拼到一条直线上 → 正好是平角"; }
+      sum.textContent = "∠1 + ∠2 + ∠3 = 180°";
+    }, 3000);
+    setTimeout(function () { if (tip) { tip.textContent = "③ 内角和 = 180° ✅ 任何三角形都一样"; } }, 5000);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "三个角都是锐角的三角形叫？", right: "锐角三角形", opts: ["锐角三角形", "直角三角形", "钝角三角形"] },
+    { q: "三角形内角和是多少？", right: "180°", opts: ["180°", "90°", "360°"] },
+    { q: "有一个直角的三角形叫？", right: "直角三角形", opts: ["直角三角形", "锐角三角形", "钝角三角形"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "按角分：3锐角/1直角/1钝角；内角和 180°";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">∠A=70°，∠B=50°，∠C=? </div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">60°</div>' +
+      '<div class="opt" data-ok="0">70°</div>' +
+      '<div class="opt" data-ok="0">120°</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 三角形分类你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "180 − 70 − 50 = 60°";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "按角分：锐角三角形、直角三角形（1 个直角）、钝角三角形（1 个钝角）；任意三角形内角和都是 180°。",
+      attention: "孩子容易把等腰/等边与「锐角/直角」分类混在一起；先分清「按角分」还是「按边分」。",
+      tip: "本课约 8 分钟；把三角形的三个角剪下来拼一拼，看是不是正好一个平角。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
