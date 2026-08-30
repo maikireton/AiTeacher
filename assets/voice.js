@@ -99,8 +99,8 @@
   function speakNow(text, opts) {
     if (!("speechSynthesis" in window)) { return; }
     var tok = ++speechToken;
-    try { window.speechSynthesis.cancel(); } catch (e) {}
-    /* Chrome 下 cancel() 后立即 speak() 偶发静默吞音：先中断，稍等再读 */
+    /* cancel 后 resume() 可复位 Chrome 偶发卡死的语音引擎；再稍等 80ms 读，避免静默吞音 */
+    try { window.speechSynthesis.cancel(); window.speechSynthesis.resume(); } catch (e) {}
     setTimeout(function () {
       if (tok !== speechToken) { return; }
       try {
@@ -219,8 +219,8 @@
       }
       try { window.speechSynthesis.speak(u); } catch (e) { clearWd(); idx++; playSegment(); }
     }
-    /* Chrome 下 cancel() 后立即 speak() 偶发静默吞掉首段：先中断，稍等 80ms 再读首段 */
-    try { window.speechSynthesis.cancel(); } catch (e) {}
+    /* Chrome 下 cancel() 后立即 speak() 偶发静默吞掉首段：先中断并 resume() 复位引擎，稍等 80ms 再读首段 */
+    try { window.speechSynthesis.cancel(); window.speechSynthesis.resume(); } catch (e) {}
     setTimeout(playSegment, 80);
   }
 

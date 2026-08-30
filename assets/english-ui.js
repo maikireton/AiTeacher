@@ -52,7 +52,8 @@ window.EngUI = (function () {
     box.innerHTML = h;
   }
 
-  /* 单词卡逐个弹出 + 朗读；点击卡片可重听 */
+  /* 单词卡逐个弹出 + 朗读：读完一个词卡（等语音结束）再读下一个，
+   * 避免固定间隔 + 反复 cancel 造成的 Chrome 丢音；点击卡片可重听 */
   function playWords(boxId, words, speakFn, interval, tok) {
     var box = el(boxId);
     if (!box) { return; }
@@ -64,18 +65,29 @@ window.EngUI = (function () {
       if (words[i]) { speakFn(words[i]); }
     });
     var k = 0;
-    function next() {
-      if (tok !== animToken) { return; }   // 已切到其他步骤，停止自动朗读
-      if (k >= words.length) { return; }
+    function popCard(k) {
       var card = el("wc-" + boxId + "-" + k);
       if (card) {
         card.classList.remove("cur");
         card.classList.add("pop");
         card.classList.add("cur");
       }
-      if (speakFn) { speakFn(words[k]); }
-      k++;
-      setTimeout(next, interval);
+    }
+    function next() {
+      if (tok !== animToken) { return; }   // 已切到其他步骤，停止自动朗读
+      if (k >= words.length) { return; }
+      var w = words[k++];
+      popCard(k - 1);
+      if (!speakFn) { setTimeout(next, interval); return; }
+      var done = false;
+      var guard = setTimeout(function () { onCardDone(); }, 6000);  // 兜底：朗读异常也继续
+      function onCardDone() {
+        if (done) { return; }
+        done = true;
+        clearTimeout(guard);
+        setTimeout(next, interval);
+      }
+      try { speakFn(w, onCardDone); } catch (e) { onCardDone(); }
     }
     setTimeout(next, 400);
   }
@@ -336,9 +348,9 @@ window.EngUI = (function () {
   function enter(C, stepId, api) {
     var tok = ++animToken;   // 进入新步骤：作废旧步骤的定时动画/自动朗读
     if (stepId === "s2") {
-      playWords("words-box", C.words, function (w) {
-        api.speak(w.e + "，" + w.z);
-      }, 2200, tok);
+      playWords("words-box", C.words, function (w, done) {
+        api.speak(w.e + "，" + w.z, done);
+      }, 600, tok);
     }
     if (stepId === "s3") {
       renderSentence("sent-box", C.pattern.sentence, C.pattern.zh);
