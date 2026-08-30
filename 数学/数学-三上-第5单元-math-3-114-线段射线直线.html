@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>线段、射线、直线 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .ln-box { margin: 12px 0; }
+  .ln-svg { display: flex; justify-content: center; }
+  .ln-svg svg { max-width: 320px; width: 100%; }
+  .ln-name { text-align: center; font-size: 20px; font-weight: 800; margin: 6px 0; min-height: 30px; }
+  .ln-name .tag { display: inline-block; background: var(--accent-deep); color: #fff; border-radius: 8px; padding: 2px 12px; font-size: 15px; opacity: 0; transition: opacity .3s; }
+  .ln-name .tag.show { opacity: 1; }
+  .ln-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .ln-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .ln-compare { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .lnc { border: 2px solid var(--border); border-radius: 10px; padding: 6px 10px; font-size: 13px; text-align: center; background: var(--card); opacity: 0; transition: opacity .4s; }
+  .lnc.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">线段、射线、直线 <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>线段有两个端点、可量长度；射线有一个端点、向一端无限延伸；直线没有端点、向两端无限延伸。</p>
+      <p><b>孩子容易走神的地方：</b>把射线/直线当成长线段；记住"端点个数"是关键（2/1/0）。</p>
+      <p><b>建议：</b>本课约 8 分钟；用手电筒比喻射线（光往一个方向射），帮孩子记住。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-114</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+  function drawLine(containerId, kind) {
+    var c = document.getElementById(containerId);
+    if (!c) { return; }
+    c.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 320 60", width: "320", height: "60" });
+    var line = svgEl("line", { x1: "40", y1: "30", x2: "280", y2: "30", stroke: "#4a7fe0", "stroke-width": 5, "stroke-linecap": "round" });
+    svg.appendChild(line);
+    function arrow(x, dir) {
+      var a = svgEl("polygon", { points: dir === "r" ? (x + ",20 " + x + ",40 " + (x + 18) + ",30") : (x + ",20 " + x + ",40 " + (x - 18) + ",30"), fill: "#4a7fe0" });
+      svg.appendChild(a);
+    }
+    function dot(x) {
+      var d = svgEl("circle", { cx: x, cy: 30, r: 7, fill: "#ffa940", stroke: "#fff", "stroke-width": 2 });
+      svg.appendChild(d);
+    }
+    if (kind === "seg") { dot(40); dot(280); }
+    if (kind === "ray") { dot(40); arrow(280, "r"); }
+    if (kind === "line") { arrow(40, "l"); arrow(280, "r"); }
+    c.appendChild(svg);
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看手电筒的光是什么线！",
+      voice: "一根拉直的绳子是线段。手电筒的光，从一个点射出去，越射越远——这就是射线。今天认识三种线：线段、射线、直线。",
+      body: function () {
+        return '' +
+          '<h2>三种线</h2>' +
+          '<p>🔦 手电筒的光：从一个点出发，一直往前射 → 射线</p>' +
+          '<p>📏 拉直的绳子：两头都有头 → 线段</p>' +
+          '<div class="hint">👆 数数端点：线段 2 个、射线 1 个、直线 0 个</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "线段 → 射线",
+      task: "咱们这一步要做的：看动画发现一个端点消失变射线！",
+      voice: "看动画。先是一条线段，左右各有一个端点。现在右边这个端点不见了，线一直向右延伸，射向远方——这就是射线！它只有一个端点。",
+      body: function () {
+        return '' +
+          '<h2>看动画：线段 → 射线</h2>' +
+          '<div class="ln-box" id="ln1">' +
+          '<div class="ln-svg" id="svg1"></div>' +
+          '<div class="ln-name"><span class="tag" id="tag1">线段</span></div>' +
+          "</div>" +
+          '<div class="ln-tip" id="ln1-tip">准备开始…</div>' +
+          '<div class="ln-rule">射线：1 个端点，向一端无限延伸</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "射线 → 直线",
+      task: "咱们这一步要做的：看动画两个端点都没了变直线！",
+      voice: "看动画。现在把左边这个端点也去掉，线向两边无限延伸，没有头没有尾——这就是直线！它没有端点。记住：线段两个点，射线一个点，直线没有点。",
+      body: function () {
+        return '' +
+          '<h2>看动画：射线 → 直线</h2>' +
+          '<div class="ln-box" id="ln2">' +
+          '<div class="ln-svg" id="svg2"></div>' +
+          '<div class="ln-name"><span class="tag" id="tag2">射线</span></div>' +
+          "</div>" +
+          '<div class="ln-tip" id="ln2-tip">准备开始…</div>' +
+          '<div class="ln-rule">直线：没有端点，向两端无限延伸</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道三种线题！",
+      voice: "现在考考你！三种线的端点。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：判断谁最长，领奖！",
+      voice: "Boss 来啦！线段、射线、直线，谁最长？线段有头有尾，可以量。射线和直线都无限长，没法比长短！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：谁最长？</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runLn1() {
+    drawLine("svg1", "seg");
+    var tip = document.getElementById("ln1-tip");
+    document.getElementById("tag1").textContent = "线段（2 个端点）";
+    document.getElementById("tag1").classList.add("show");
+    setTimeout(function () { if (tip) { tip.textContent = "① 线段：两个端点，可量长度"; } }, 800);
+    setTimeout(function () { drawLine("svg1", "ray"); document.getElementById("tag1").textContent = "射线（1 个端点）"; if (tip) { tip.textContent = "② 右端点消失，向右无限延伸 → 射线"; } }, 2600);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 射线：一个端点，向一端无限延伸"; } }, 4600);
+  }
+  function runLn2() {
+    drawLine("svg2", "ray");
+    var tip = document.getElementById("ln2-tip");
+    document.getElementById("tag2").textContent = "射线（1 个端点）";
+    document.getElementById("tag2").classList.add("show");
+    setTimeout(function () { if (tip) { tip.textContent = "① 这是射线：左端还有点"; } }, 800);
+    setTimeout(function () { drawLine("svg2", "line"); document.getElementById("tag2").textContent = "直线（0 个端点）"; if (tip) { tip.textContent = "② 左端点也没了，两端都延伸 → 直线"; } }, 2600);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 直线：没有端点，向两端无限延伸"; } }, 4600);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "有两个端点的是？", right: "线段", opts: ["线段", "射线", "直线"] },
+    { q: "有一个端点，向一端无限延伸的是？", right: "射线", opts: ["射线", "线段", "直线"] },
+    { q: "没有端点，向两端无限延伸的是？", right: "直线", opts: ["直线", "射线", "线段"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "线段 2 端点、射线 1 端点、直线 0 端点";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">线段、射线、直线谁最长？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">没法比（射线直线无限长）</div>' +
+      '<div class="opt" data-ok="0">直线最长</div>' +
+      '<div class="opt" data-ok="0">线段最长</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 三种线你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "射线、直线无限长，不能和线段比长短";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runLn1(); }
+    if (step.id === "s3") { runLn2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "线段有两个端点、可量长度；射线有一个端点、向一端无限延伸；直线没有端点、向两端无限延伸。",
+      attention: "孩子容易把射线/直线当成长线段；记住「端点个数」是关键（2/1/0）。",
+      tip: "本课约 8 分钟；用手电筒比喻射线（光往一个方向射），帮孩子记住。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
