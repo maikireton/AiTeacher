@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平行与垂直 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .pv-box { margin: 10px 0; }
+  .pv-box svg { max-width: 420px; width: 100%; }
+  .pv-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .pv-line { stroke: #4a7fe0; stroke-width: 5; stroke-linecap: round; }
+  .pv-ext { stroke: #9aa4b2; stroke-width: 4; stroke-dasharray: 8 7; stroke-linecap: round; opacity: 0; transition: opacity .5s; }
+  .pv-ext.on { opacity: 1; }
+  .pv-r { fill: rgba(155,187,244,.4); }
+  .pv-tag { font-size: 18px; font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">平行与垂直 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>同一平面内永不相交的两条直线互相平行；相交成直角的两条直线互相垂直。</p>
+      <p><b>孩子容易走神的地方：</b>以为"画得短没相交就是平行"（要延长看）、或把"垂直"当成"竖着"。</p>
+      <p><b>建议：</b>本课约 8 分钟；在家用两支铅笔摆一摆，体会平行和垂直。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-013</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想两条直线放在一起有几种关系！",
+      voice: "马路上，两根铁轨一直并排向前。教室的墙上，横线竖线交叉成直角。两条直线放在一起，有几种特别重要的关系？今天我们认识两种：平行和垂直。",
+      body: function () {
+        return '' +
+          '<h2>两条直线的秘密</h2>' +
+          '<p>铁轨并排向前，永远不会碰到一起——<b>平行</b>。</p>' +
+          '<p>横竖交叉成直角——<b>垂直</b>。</p>' +
+          '<div class="hint">👆 还能在生活中找到平行和垂直的例子吗？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "平行动画",
+      task: "咱们这一步要做的：看动画理解「永不相交」！",
+      voice: "看动画。这两条直线，不管往左还是往右，一直延长下去，它们永远不相交。像这样，同一平面内永不相交的两条直线，就叫互相平行。",
+      body: function () {
+        return '' +
+          '<h2>看动画：平行 = 永不相交</h2>' +
+          '<div class="pv-box" id="pv1"></div>' +
+          '<div class="pv-tip" id="pv1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "垂直动画",
+      task: "咱们这一步要做的：看动画理解「相交成直角」！",
+      voice: "再看这一组。两条直线相交了，交叉的地方形成了一个直角，正好九十度。像这样相交成直角的两条直线，就叫互相垂直。",
+      body: function () {
+        return '' +
+          '<h2>看动画：垂直 = 相交成直角</h2>' +
+          '<div class="pv-box" id="pv2"></div>' +
+          '<div class="pv-tip" id="pv2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道，分清平行和垂直！",
+      voice: "现在考考你！平行和垂直，你分清了吗？",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：判断教室里的关系，领奖！",
+      voice: "Boss 来啦！看教室里的黑板，它相对的两条边，也就是上面一条和下面一条，是什么关系？",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：黑板相对的两边？</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 平行动画 ========== */
+  function runPv1() {
+    var box = document.getElementById("pv1");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 420 190", width: "420", height: "190" });
+    var cx = 210;
+    var l1 = svgEl("line", { x1: cx - 90, y1: 70, x2: cx + 90, y2: 70, class: "pv-line" });
+    var l2 = svgEl("line", { x1: cx - 90, y1: 120, x2: cx + 90, y2: 120, class: "pv-line" });
+    var e1l = svgEl("line", { x1: cx - 90, y1: 70, x2: cx - 90, y2: 70, class: "pv-ext" });
+    var e1r = svgEl("line", { x1: cx + 90, y1: 70, x2: cx + 90, y2: 70, class: "pv-ext" });
+    var e2l = svgEl("line", { x1: cx - 90, y1: 120, x2: cx - 90, y2: 120, class: "pv-ext" });
+    var e2r = svgEl("line", { x1: cx + 90, y1: 120, x2: cx + 90, y2: 120, class: "pv-ext" });
+    var t1 = svgEl("text", { x: 10, y: 64, class: "pv-tag", fill: "#4a7fe0" });
+    t1.textContent = "直线 A";
+    var t2 = svgEl("text", { x: 10, y: 114, class: "pv-tag", fill: "#4a7fe0" });
+    t2.textContent = "直线 B";
+    svg.appendChild(t1); svg.appendChild(l1); svg.appendChild(e1l); svg.appendChild(e1r);
+    svg.appendChild(t2); svg.appendChild(l2); svg.appendChild(e2l); svg.appendChild(e2r);
+    box.appendChild(svg);
+    var tip = document.getElementById("pv1-tip");
+
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 两条直线并排，现在没有相交"; }
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 向左右一直延长……（虚线是延长部分）"; }
+      e1l.classList.add("on"); e1r.classList.add("on"); e2l.classList.add("on"); e2r.classList.add("on");
+      e1l.setAttribute("x1", 20); e1r.setAttribute("x2", 400);
+      e2l.setAttribute("x1", 20); e2r.setAttribute("x2", 400);
+    }, 2200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 不管怎么延长，两条线都碰不到 → 永不相交！"; }
+    }, 4200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 同一平面内永不相交的两条直线 → 互相平行"; }
+    }, 5800);
+  }
+
+  /* ========== S3 垂直动画 ========== */
+  function runPv2() {
+    var box = document.getElementById("pv2");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 420 190", width: "420", height: "190" });
+    var cx = 210, cy = 100;
+    var h = svgEl("line", { x1: 40, y1: cy, x2: 380, y2: cy, class: "pv-line" });
+    var v = svgEl("line", { x1: cx, y1: 20, x2: cx, y2: 175, class: "pv-line" });
+    svg.appendChild(h); svg.appendChild(v);
+    // 直角标记（左上角）
+    var sq = svgEl("path", { d: "M " + cx + " " + (cy - 30) + " L " + (cx + 30) + " " + (cy - 30) + " L " + (cx + 30) + " " + cy, fill: "none", stroke: "#e65100", "stroke-width": "4", opacity: "0" });
+    svg.appendChild(sq);
+    var rt = svgEl("text", { x: cx + 6, y: cy - 38, "font-size": "20", fill: "#e65100", "font-weight": "800", opacity: "0" });
+    rt.textContent = "90°";
+    svg.appendChild(rt);
+    var t1 = svgEl("text", { x: 10, y: cy - 6, class: "pv-tag", fill: "#4a7fe0" });
+    t1.textContent = "直线 C";
+    var t2 = svgEl("text", { x: cx + 8, y: 40, class: "pv-tag", fill: "#4a7fe0" });
+    t2.textContent = "直线 D";
+    svg.appendChild(t1); svg.appendChild(t2);
+    box.appendChild(svg);
+    var tip = document.getElementById("pv2-tip");
+
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 这两条直线相交在一点（这里）"; }
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 相交形成了 4 个角，其中一个正好是直角（90°）"; }
+      sq.setAttribute("opacity", "1");
+      rt.setAttribute("opacity", "1");
+    }, 2500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 相交成直角的两条直线 → 互相垂直"; }
+    }, 4500);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "什么样的两条直线互相平行？", right: "永不相交", opts: ["永不相交", "相交一次", "弯弯曲曲"] },
+    { q: "垂直是两条直线相交成？", right: "直角", opts: ["直角", "锐角", "平角"] },
+    { q: "长方形相对的两条边是什么关系？", right: "互相平行", opts: ["互相平行", "互相垂直", "没有关系"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "平行=永不相交；垂直=相交成直角";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">黑板相对的两条边（上边和下边）是？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">互相平行</div>' +
+      '<div class="opt" data-ok="0">互相垂直</div>' +
+      '<div class="opt" data-ok="0">会相交</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 平行垂直你都懂啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "黑板的上边和下边一直并排、永不相交 → 平行（相邻两边才垂直）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runPv1(); }
+    if (step.id === "s3") { runPv2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "同一平面内永不相交的两条直线互相平行；相交成直角的两条直线互相垂直。",
+      attention: "孩子容易以为「画得短没相交就是平行」，要强调延长后看；或把「垂直」当成「竖着」（任何方向都可以垂直）。",
+      tip: "本课约 8 分钟；在家用两支铅笔摆一摆，体会平行和垂直。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

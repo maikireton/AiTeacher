@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>梯形的认识与特征 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .tr-box { margin: 10px 0; }
+  .tr-box svg { max-width: 430px; width: 100%; }
+  .tr-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .tr-poly { fill: rgba(155,187,244,.2); stroke: #4a7fe0; stroke-width: 4; }
+  .tr-par { stroke: #2e7d32; stroke-width: 6; opacity: 0; transition: opacity .4s; }
+  .tr-par.on { opacity: 1; }
+  .tr-leg { stroke: #e65100; stroke-width: 6; opacity: 0; transition: opacity .4s; }
+  .tr-leg.on { opacity: 1; }
+  .tr-hi { stroke: #9c27b0; stroke-width: 4; stroke-dasharray: 7 5; opacity: 0; transition: opacity .4s; }
+  .tr-hi.on { opacity: 1; }
+  .tr-tag { font-size: 15px; font-weight: 800; }
+  .tr-label { font-size: 16px; font-weight: 800; fill: #0b5e91; opacity: 0; transition: opacity .4s; }
+  .tr-label.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">梯形的认识与特征 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>只有一组对边平行的四边形叫梯形；平行的一组叫上底（短）、下底（长），另两边叫腰，两底间垂直距离叫高；两腰相等的是等腰梯形。</p>
+      <p><b>孩子容易走神的地方：</b>把梯形和平行四边形搞混（平行四边形两组平行，梯形只有一组）；上底、下底名称记反。</p>
+      <p><b>建议：</b>本课约 8 分钟；对比平行四边形看，找「只有一组平行」的差别。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-016</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：找一找生活里的梯形！",
+      voice: "河岸的大坝、梯子的横档，很多都是梯形的。它和平行四边形长得有点像，但又不一样。今天认识梯形，看看它和平行四边形差在哪。",
+      body: function () {
+        return '' +
+          '<h2>生活里的梯形</h2>' +
+          '<p>大坝、梯子、台灯的灯罩……</p>' +
+          '<p>它们都有一个共同的样子：上窄下宽，像一架小梯子。</p>' +
+          '<div class="hint">👆 想一想：梯形和平行四边形哪里不一样？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "定义动画",
+      task: "咱们这一步要做的：看动画理解「只有一组对边平行」！",
+      voice: "看动画。梯形有几条边？四条。它的上面和下面这两条边是平行的，但是左右两条边不平行。注意，只有一组对边平行的四边形，才叫梯形。",
+      body: function () {
+        return '' +
+          '<h2>看动画：什么是梯形</h2>' +
+          '<div class="tr-box" id="tr1"></div>' +
+          '<div class="tr-tip" id="tr1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "各部分动画",
+      task: "咱们这一步要做的：看动画认识「上底、下底、腰、高」！",
+      voice: "梯形有自己的名字。上下这两条平行的边，长的叫下底，短的叫上底。左右两条斜斜的边，叫腰。从一条底到另一条底的垂直距离，叫高。",
+      body: function () {
+        return '' +
+          '<h2>看动画：梯形的各部分</h2>' +
+          '<div class="tr-box" id="tr2"></div>' +
+          '<div class="tr-tip" id="tr2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道梯形小知识！",
+      voice: "现在考考你！梯形的各部分你记住了吗？",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：认出特殊的梯形，领奖！",
+      voice: "Boss 来啦！有一种特殊的梯形，左右两条腰一样长，看起来左右对称，它叫什么名字？",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：特殊梯形</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 定义动画 ========== */
+  function runTr1() {
+    var box = document.getElementById("tr1");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 430 200", width: "430", height: "200" });
+    var poly = svgEl("polygon", { points: "90,60 250,60 320,140 40,140", class: "tr-poly" });
+    svg.appendChild(poly);
+    var top = svgEl("line", { x1: 90, y1: 60, x2: 250, y2: 60, class: "tr-par" });
+    var bottom = svgEl("line", { x1: 40, y1: 140, x2: 320, y2: 140, class: "tr-par" });
+    var ll = svgEl("line", { x1: 90, y1: 60, x2: 40, y2: 140, class: "tr-leg" });
+    var rl = svgEl("line", { x1: 250, y1: 60, x2: 320, y2: 140, class: "tr-leg" });
+    svg.appendChild(top); svg.appendChild(bottom);
+    svg.appendChild(ll); svg.appendChild(rl);
+    var t1 = svgEl("text", { x: 160, y: 46, class: "tr-tag", fill: "#2e7d32", opacity: "0" });
+    t1.textContent = "∥ 平行";
+    var t2 = svgEl("text", { x: 330, y: 100, class: "tr-tag", fill: "#e65100", opacity: "0" });
+    t2.textContent = "不平行";
+    svg.appendChild(t1); svg.appendChild(t2);
+    box.appendChild(svg);
+    var tip = document.getElementById("tr1-tip");
+
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 上下两条边平行（绿色）——只有这一组平行"; }
+      top.classList.add("on"); bottom.classList.add("on");
+      t1.setAttribute("opacity", "1");
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 左右两条腰不平行（橙色）→ 只有一组对边平行"; }
+      ll.classList.add("on"); rl.classList.add("on");
+      t2.setAttribute("opacity", "1");
+    }, 3000);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 只有一组对边平行的四边形 = 梯形（平行四边形是两组）"; }
+    }, 4800);
+  }
+
+  /* ========== S3 各部分动画 ========== */
+  function runTr2() {
+    var box = document.getElementById("tr2");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 430 220", width: "430", height: "220" });
+    var poly = svgEl("polygon", { points: "90,70 250,70 320,160 40,160", class: "tr-poly" });
+    svg.appendChild(poly);
+    // 高（从上底某点垂直下）
+    var hline = svgEl("line", { x1: 90, y1: 70, x2: 90, y2: 160, class: "tr-hi" });
+    svg.appendChild(hline);
+    var lb1 = svgEl("text", { x: 130, y: 60, class: "tr-label" }); lb1.textContent = "上底（短）";
+    var lb2 = svgEl("text", { x: 120, y: 185, class: "tr-label" }); lb2.textContent = "下底（长）";
+    var lb3 = svgEl("text", { x: 16, y: 120, class: "tr-label" }); lb3.textContent = "腰";
+    var lb4 = svgEl("text", { x: 262, y: 120, class: "tr-label" }); lb4.textContent = "腰";
+    var lb5 = svgEl("text", { x: 96, y: 122, class: "tr-label" }); lb5.textContent = "高";
+    svg.appendChild(lb1); svg.appendChild(lb2); svg.appendChild(lb3); svg.appendChild(lb4); svg.appendChild(lb5);
+    box.appendChild(svg);
+    var tip = document.getElementById("tr2-tip");
+
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 上面这条短的是「上底」"; }
+      lb1.classList.add("on");
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 下面这条长的是「下底」"; }
+      lb2.classList.add("on");
+    }, 1800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 左右两条斜边是「腰」"; }
+      lb3.classList.add("on"); lb4.classList.add("on");
+    }, 3100);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "④ 从上底到下底的垂直距离是「高」（紫色虚线）"; }
+      lb5.classList.add("on");
+      hline.classList.add("on");
+    }, 4400);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 上底、下底、腰、高——梯形大家族认识完毕"; }
+    }, 6000);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "梯形有______组对边平行？", right: "1 组", opts: ["1 组", "2 组", "0 组"] },
+    { q: "梯形中较短的那条平行边叫？", right: "上底", opts: ["上底", "下底", "腰"] },
+    { q: "两组对边都平行的四边形是？", right: "平行四边形", opts: ["平行四边形", "梯形", "三角形"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "梯形只有 1 组对边平行；上短下长；腰不平行";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">两腰一样长的梯形叫什么？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">等腰梯形</div>' +
+      '<div class="opt" data-ok="0">等边梯形</div>' +
+      '<div class="opt" data-ok="0">直角梯形</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 梯形你过关啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "两腰相等的梯形叫「等腰梯形」（腰相等=等腰）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runTr1(); }
+    if (step.id === "s3") { runTr2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "只有一组对边平行的四边形叫梯形；平行的一组叫上底（短）、下底（长），另两边叫腰，两底间垂直距离叫高；两腰相等的是等腰梯形。",
+      attention: "孩子容易把梯形和平行四边形搞混（平行四边形两组平行、梯形只有一组）；上底、下底名称易记反。",
+      tip: "本课约 8 分钟；对比平行四边形看，找「只有一组平行」的差别。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

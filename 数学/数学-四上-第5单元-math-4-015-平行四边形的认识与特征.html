@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平行四边形的认识与特征 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .pg-box { margin: 10px 0; }
+  .pg-box svg { max-width: 430px; width: 100%; }
+  .pg-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .pg-poly { fill: rgba(155,187,244,.22); stroke: #4a7fe0; stroke-width: 4; transition: all .5s; }
+  .pg-edge1 { stroke: #2e7d32; stroke-width: 6; opacity: 0; transition: opacity .4s; }
+  .pg-edge1.on { opacity: 1; }
+  .pg-edge2 { stroke: #e65100; stroke-width: 6; opacity: 0; transition: opacity .4s; }
+  .pg-edge2.on { opacity: 1; }
+  .pg-mark { font-size: 22px; font-weight: 800; fill: #2e7d32; opacity: 0; transition: opacity .4s; }
+  .pg-mark.on { opacity: 1; }
+  .pg-tag { font-size: 15px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">平行四边形的认识与特征 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>两组对边分别平行的四边形叫平行四边形；对边平行且相等、对角相等；容易变形（不稳定性）。</p>
+      <p><b>孩子容易走神的地方：</b>只记得"斜斜的四边形"；要抓住本质"两组对边分别平行"（长方形也是平行四边形）。</p>
+      <p><b>建议：</b>本课约 8 分钟；用伸缩门/拉闸实物感受"易变形"。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-015</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：观察伸缩门，认识平行四边形！",
+      voice: "小区门口的伸缩门，一拉就开，一推就合。它的每个小格子，都是平行四边形。今天认识它：什么是平行四边形，它有什么特点。",
+      body: function () {
+        return '' +
+          '<h2>伸缩门的秘密</h2>' +
+          '<p>小区伸缩门一拉就开、一推就合，靠的就是平行四边形。</p>' +
+          '<p>那到底什么是平行四边形？它有什么特点？</p>' +
+          '<div class="hint">👆 注意看：伸缩门的小格子形状会变，但边长不变。</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "定义动画",
+      task: "咱们这一步要做的：看动画理解「两组对边分别平行」！",
+      voice: "看动画。这个四边形，上面一条边和下面一条边，永远平行。左右两条边，也永远平行。两组对边分别平行的四边形，就是平行四边形。",
+      body: function () {
+        return '' +
+          '<h2>看动画：什么是平行四边形</h2>' +
+          '<div class="pg-box" id="pg1"></div>' +
+          '<div class="pg-tip" id="pg1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "特征动画",
+      task: "咱们这一步要做的：看动画发现「对边相等 + 易变形」！",
+      voice: "平行四边形还有两个特点。第一，对边不仅平行，长度还相等：上面的边和下面的边一样长，左右两边也一样长。第二，它特别容易变形：一拉就变个样子，这就是伸缩门的原理。",
+      body: function () {
+        return '' +
+          '<h2>看动画：对边相等 & 易变形</h2>' +
+          '<div class="pg-box" id="pg2"></div>' +
+          '<div class="pg-tip" id="pg2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道平行四边形小知识！",
+      voice: "现在考考你！平行四边形的特点和用途。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：答出伸缩门的原理，领奖！",
+      voice: "Boss 来啦！伸缩门一拉就开、一推就合，靠的是平行四边形的什么特点？",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：伸缩门的原理</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 定义动画 ========== */
+  function runPg1() {
+    var box = document.getElementById("pg1");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 430 200", width: "430", height: "200" });
+    var poly = svgEl("polygon", { points: "70,140 270,140 310,60 110,60", class: "pg-poly" });
+    svg.appendChild(poly);
+    // 上下对边（绿色）
+    var top = svgEl("line", { x1: 110, y1: 60, x2: 310, y2: 60, class: "pg-edge1" });
+    var bottom = svgEl("line", { x1: 70, y1: 140, x2: 270, y2: 140, class: "pg-edge1" });
+    // 左右对边（橙色）
+    var left = svgEl("line", { x1: 110, y1: 60, x2: 70, y2: 140, class: "pg-edge2" });
+    var right = svgEl("line", { x1: 310, y1: 60, x2: 270, y2: 140, class: "pg-edge2" });
+    svg.appendChild(top); svg.appendChild(bottom);
+    svg.appendChild(left); svg.appendChild(right);
+    // 平行箭头标记
+    var t1 = svgEl("text", { x: 205, y: 45, class: "pg-tag", fill: "#2e7d32", opacity: "0" });
+    t1.textContent = "∥ 平行";
+    var t2 = svgEl("text", { x: 355, y: 105, class: "pg-tag", fill: "#e65100", opacity: "0" });
+    t2.textContent = "∥ 平行";
+    svg.appendChild(t1); svg.appendChild(t2);
+    box.appendChild(svg);
+    var tip = document.getElementById("pg1-tip");
+
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 这个四边形，上下两条边是平行的（绿色）"; }
+      top.classList.add("on"); bottom.classList.add("on");
+      t1.setAttribute("opacity", "1");
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 左右两条边也是平行的（橙色）→ 两组对边分别平行！"; }
+      left.classList.add("on"); right.classList.add("on");
+      t2.setAttribute("opacity", "1");
+    }, 2800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 两组对边分别平行的四边形 = 平行四边形"; }
+    }, 4600);
+  }
+
+  /* ========== S3 特征动画 ========== */
+  function runPg2() {
+    var box = document.getElementById("pg2");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 430 200", width: "430", height: "200" });
+    var poly = svgEl("polygon", { points: "70,140 270,140 310,60 110,60", class: "pg-poly" });
+    svg.appendChild(poly);
+    // 对边相等标记
+    var m1 = svgEl("text", { x: 185, y: 155, class: "pg-mark" });
+    m1.textContent = "═ ═ 相等";
+    var m2 = svgEl("text", { x: 340, y: 105, class: "pg-mark" });
+    m2.textContent = "═ ═ 相等";
+    svg.appendChild(m1); svg.appendChild(m2);
+    box.appendChild(svg);
+    var tip = document.getElementById("pg2-tip");
+
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 对边不仅平行，长度还相等（上下相等、左右相等）"; }
+      m1.classList.add("on"); m2.classList.add("on");
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 现在用力拉它 → 形状变了（更斜了）！"; }
+      poly.setAttribute("points", "110,140 270,140 310,60 150,60");
+    }, 3000);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 再压一下 → 形状又变（但还是平行四边形，对边仍平行相等）"; }
+      poly.setAttribute("points", "40,140 230,140 310,60 120,60");
+    }, 4600);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 平行四边形容易变形（易变性）→ 伸缩门原理"; }
+      poly.setAttribute("points", "70,140 270,140 310,60 110,60");
+    }, 6400);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "平行四边形的两组对边？", right: "分别平行且相等", opts: ["分别平行且相等", "只平行不相等", "既不平行也不相等"] },
+    { q: "平行四边形容易？", right: "变形", opts: ["变形", "碎掉", "消失"] },
+    { q: "长方形是不是平行四边形？", right: "是", opts: ["是", "不是", "有时候是"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "平行四边形：两组对边分别平行且相等，容易变形（长方形也是）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">伸缩门一拉就开，靠平行四边形的？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">容易变形</div>' +
+      '<div class="opt" data-ok="0">对边相等</div>' +
+      '<div class="opt" data-ok="0">对角相等</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 平行四边形你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "平行四边形有「易变形」的特性 → 伸缩门用它一拉就开";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runPg1(); }
+    if (step.id === "s3") { runPg2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "两组对边分别平行的四边形叫平行四边形；对边平行且相等、对角相等；容易变形（不稳定性）。",
+      attention: "孩子容易只记「斜斜的四边形」，忽略本质「两组对边分别平行」；要强调长方形也是平行四边形。",
+      tip: "本课约 8 分钟；用伸缩门/拉闸实物感受「易变形」。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

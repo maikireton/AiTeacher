@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>画垂线（点到直线的距离）· AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .dr-box { margin: 10px 0; }
+  .dr-box svg { max-width: 420px; width: 100%; }
+  .dr-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .dr-line { stroke: #4a5568; stroke-width: 4; stroke-linecap: round; }
+  .dr-point { fill: #e65100; }
+  .dr-ob { stroke: #c23a3d; stroke-width: 3; stroke-dasharray: 6 5; opacity: 0; transition: opacity .4s; }
+  .dr-ob.on { opacity: 1; }
+  .dr-perp { stroke: #2e7d32; stroke-width: 4; opacity: 0; transition: opacity .4s; }
+  .dr-perp.on { opacity: 1; }
+  .dr-r { stroke: #e65100; stroke-width: 3; fill: none; opacity: 0; transition: opacity .4s; }
+  .dr-r.on { opacity: 1; }
+  .dr-tag { font-size: 15px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">画垂线（点到直线的距离）<small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>过一点画垂线：用三角尺直角边对齐直线，沿另一直角边画；点到直线的垂直线段最短，它的长度就是点到直线的距离。</p>
+      <p><b>孩子容易走神的地方：</b>画完不标直角符号、或以为"斜线也能当距离"；要强调距离一定是垂直的。</p>
+      <p><b>建议：</b>本课约 8 分钟；让孩子实际用三角尺画一次垂线。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-014</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想到底怎么画垂线！",
+      voice: "要给一块菜地做篱笆，篱笆要垂直于河岸。过一点画垂线，怎么画得又准又快？还有个小秘密：从点到直线的距离，什么线段最短？今天都搞清楚。",
+      body: function () {
+        return '' +
+          '<h2>画垂线 & 最短距离</h2>' +
+          '<p>过直线外一个点，作这条直线的垂线。</p>' +
+          '<p>再想想：从这点到直线上，哪条线段最短？</p>' +
+          '<div class="hint">👆 直觉告诉你：直直地"掉"下去是不是最短？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "画垂线动画",
+      task: "咱们这一步要做的：看动画学会「过一点画垂线」！",
+      voice: "看动画。用三角尺的一条直角边对齐这条直线，另一条直角边对准这个点，沿着它画下去，就得到一条垂线。画完在交点标上直角符号，检查一下是不是直角。",
+      body: function () {
+        return '' +
+          '<h2>看动画：过点 P 画垂线</h2>' +
+          '<div class="dr-box" id="dr1"></div>' +
+          '<div class="dr-tip" id="dr1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "点到直线距离动画",
+      task: "咱们这一步要做的：看动画发现「垂线段最短」！",
+      voice: "看动画。从点到直线上，可以画很多条线段。这条斜斜的，这条更斜的……你看，画到垂直的那条，是不是最短？它叫垂直线段，它的长度，就是点到直线的距离。",
+      body: function () {
+        return '' +
+          '<h2>看动画：哪条最短？</h2>' +
+          '<div class="dr-box" id="dr2"></div>' +
+          '<div class="dr-tip" id="dr2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道垂线小知识！",
+      voice: "现在考考你！垂线怎么画、距离是什么？",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：帮小明找最短的路，领奖！",
+      voice: "Boss 来啦！小明在草地上，想到河边去打水。河是直的，走哪条路最短？记住刚才的发现：垂直线段最短！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：走哪条路最短？</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 画垂线动画 ========== */
+  function runDr1() {
+    var box = document.getElementById("dr1");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 420 200", width: "420", height: "200" });
+    var L = svgEl("line", { x1: 40, y1: 150, x2: 380, y2: 150, class: "dr-line" });
+    var P = svgEl("circle", { cx: 220, cy: 45, r: 6, class: "dr-point" });
+    var pT = svgEl("text", { x: 228, y: 40, class: "dr-tag", fill: "#e65100" });
+    pT.textContent = "P";
+    var perp = svgEl("line", { x1: 220, y1: 45, x2: 220, y2: 150, class: "dr-perp" });
+    var r = svgEl("path", { d: "M 220 150 L 220 130 L 240 130", class: "dr-r" });
+    svg.appendChild(L);
+    svg.appendChild(P);
+    svg.appendChild(pT);
+    svg.appendChild(perp);
+    svg.appendChild(r);
+    box.appendChild(svg);
+    var tip = document.getElementById("dr1-tip");
+
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 这是直线 L 和直线外一点 P"; }
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 过 P 画一条与 L 垂直的线（蓝色三角尺的直角边）"; }
+      perp.classList.add("on");
+    }, 2400);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 标上直角符号，检查 → 真的垂直！"; }
+      r.classList.add("on");
+    }, 4200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 过直线外一点，可以画这条直线的垂线（只有 1 条）"; }
+    }, 5700);
+  }
+
+  /* ========== S3 距离动画 ========== */
+  function runDr2() {
+    var box = document.getElementById("dr2");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 420 200", width: "420", height: "200" });
+    var yLine = 150, P = { x: 220, y: 40 };
+    var L = svgEl("line", { x1: 40, y1: yLine, x2: 380, y2: yLine, class: "dr-line" });
+    var Pt = svgEl("circle", { cx: P.x, cy: P.y, r: 6, class: "dr-point" });
+    var pT = svgEl("text", { x: 228, y: 34, class: "dr-tag", fill: "#e65100" });
+    pT.textContent = "P";
+    svg.appendChild(L);
+    svg.appendChild(Pt);
+    svg.appendChild(pT);
+    // 斜线
+    var obliques = [90, 350];
+    var obEls = obliques.map(function (x) {
+      var o = svgEl("line", { x1: P.x, y1: P.y, x2: x, y2: yLine, class: "dr-ob" });
+      svg.appendChild(o);
+      return o;
+    });
+    // 垂线
+    var perp = svgEl("line", { x1: P.x, y1: P.y, x2: P.x, y2: yLine, class: "dr-perp" });
+    svg.appendChild(perp);
+    var tag = svgEl("text", { x: P.x + 8, y: yLine - 18, class: "dr-tag", fill: "#2e7d32", opacity: "0" });
+    tag.textContent = "最短！= 点到直线的距离";
+    svg.appendChild(tag);
+    box.appendChild(svg);
+    var tip = document.getElementById("dr2-tip");
+
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 从 P 到直线上可以画很多条线段（先看两条斜线）"; }
+      obEls.forEach(function (o, i) { setTimeout(function () { o.classList.add("on"); }, 600 + i * 900); });
+    }, 800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 垂直线段出现了——它是最短的一条！"; }
+      perp.classList.add("on");
+      tag.setAttribute("opacity", "1");
+    }, 4200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 垂直线段最短，它的长度就是点到直线的距离"; }
+    }, 5800);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "点到直线的距离是指什么？", right: "垂直线段的长度", opts: ["垂直线段的长度", "任意线段的长度", "直线的长度"] },
+    { q: "从直线外一点到这条直线，什么线段最短？", right: "垂直线段", opts: ["垂直线段", "斜线段", "都一样"] },
+    { q: "过直线上一点，能画几条这条直线的垂线？", right: "1 条", opts: ["1 条", "无数条", "2 条"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "距离一定走垂直线段：垂直→最短→才是距离";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">小明到河边打水，走哪条路最短？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">与河垂直的路</div>' +
+      '<div class="opt" data-ok="0">斜着走的路</div>' +
+      '<div class="opt" data-ok="0">沿着河再走</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 最短路径你找到啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "河是直线，垂直的路 = 垂直线段 = 最短（点到直线的距离）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runDr1(); }
+    if (step.id === "s3") { runDr2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "过一点画垂线：三角尺直角边对齐直线，沿另一直角边画；点到直线的垂直线段最短，其长度就是点到直线的距离。",
+      attention: "孩子容易画完不标直角符号、或把斜线当距离；Boss 题用生活情境强化「垂直最短」。",
+      tip: "本课约 8 分钟；让孩子实际用三角尺画一次垂线再对答案。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
