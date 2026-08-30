@@ -99,22 +99,26 @@
   function speakNow(text, opts) {
     if (!("speechSynthesis" in window)) { return; }
     var tok = ++speechToken;
-    try {
-      window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(String(text || ""));
-      var v = pickSavedVoice("zh");
-      if (v) { u.voice = v; u.lang = v.lang || "zh-CN"; }
-      else { u.lang = "zh-CN"; }
-      u.rate = (opts && opts.rate) || 0.92;
-      u.pitch = (opts && opts.pitch) || 1.05;
-      /* onEnd：仅当本次朗读仍是最新语音时触发（供自动播放等读完再前进） */
-      if (opts && typeof opts.onEnd === "function") {
-        var onDone = function () { if (tok === speechToken) { try { opts.onEnd(); } catch (e) {} } };
-        u.onend = onDone;
-        u.onerror = onDone;
-      }
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* 语音失败不阻塞学习 */ }
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+    /* Chrome 下 cancel() 后立即 speak() 偶发静默吞音：先中断，稍等再读 */
+    setTimeout(function () {
+      if (tok !== speechToken) { return; }
+      try {
+        var u = new SpeechSynthesisUtterance(String(text || ""));
+        var v = pickSavedVoice("zh");
+        if (v) { u.voice = v; u.lang = v.lang || "zh-CN"; }
+        else { u.lang = "zh-CN"; }
+        u.rate = (opts && opts.rate) || 0.92;
+        u.pitch = (opts && opts.pitch) || 1.05;
+        /* onEnd：仅当本次朗读仍是最新语音时触发（供自动播放等读完再前进） */
+        if (opts && typeof opts.onEnd === "function") {
+          var onDone = function () { if (tok === speechToken) { try { opts.onEnd(); } catch (e) {} } };
+          u.onend = onDone;
+          u.onerror = onDone;
+        }
+        window.speechSynthesis.speak(u);
+      } catch (e) { /* 语音失败不阻塞学习 */ }
+    }, 80);
   }
 
   /* 统一朗读入口：语音列表未就绪时等待，就绪后用正确音色 */
@@ -172,21 +176,20 @@
       return;
     }
     var parts = splitMixed(text);
-    var i = 0;
+    var idx = 0;
     var tok = ++speechToken;
-    /* 开始前中断上一段语音；段与段之间用 onend 衔接、不再反复 cancel，
-     * 避免 Chrome 下 cancel()→speak() 紧连导致丢字/无声 */
-    try { window.speechSynthesis.cancel(); } catch (e) {}
+    var firstRetry = false;   // 首段被静默吞掉时是否已重试过一次
     function done() {
       if (opts && typeof opts.onEnd === "function") { try { opts.onEnd(); } catch (e) {} }
     }
-    function next() {
+    function playSegment() {
       /* 已有更新的朗读开始（如切步后新语音启动），旧朗读链立即停止，不再抢读 */
       if (tok !== speechToken) { return; }
-      if (i >= parts.length) { done(); return; }
-      var p = parts[i++];
+      if (idx >= parts.length) { done(); return; }
+      var p = parts[idx];
+      var u;
       try {
-        var u = new SpeechSynthesisUtterance(p.text);
+        u = new SpeechSynthesisUtterance(p.text);
         if (p.en) {
           /* 英文段：优先用设置页保存的英文音色，未保存则按 en 前缀匹配系统音色 */
           var ev = pickSavedVoice("en") || pickVoiceFor("en-US");
@@ -199,12 +202,26 @@
         }
         u.rate = (opts && opts.rate) || 0.92;
         u.pitch = (opts && opts.pitch) || 1.05;
-        u.onend = next;
-        u.onerror = next;
-        window.speechSynthesis.speak(u);
-      } catch (e) { next(); }
+      } catch (e) { idx++; playSegment(); return; }
+      var started = false, wd = null;
+      function clearWd() { if (wd) { clearTimeout(wd); wd = null; } }
+      u.onstart = function () { started = true; clearWd(); };
+      u.onend = function () { clearWd(); idx++; playSegment(); };
+      u.onerror = function () { clearWd(); idx++; playSegment(); };
+      if (idx === 0) {
+        /* 首段兜底：cancel 后 Chrome 偶发静默吞段（无任何事件）。无声则重试一次，仍无声才跳过 */
+        wd = setTimeout(function () {
+          if (tok !== speechToken) { return; }
+          if (started) { return; }
+          if (!firstRetry) { firstRetry = true; playSegment(); }
+          else { idx++; playSegment(); }
+        }, 2000);
+      }
+      try { window.speechSynthesis.speak(u); } catch (e) { clearWd(); idx++; playSegment(); }
     }
-    next();
+    /* Chrome 下 cancel() 后立即 speak() 偶发静默吞掉首段：先中断，稍等 80ms 再读首段 */
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+    setTimeout(playSegment, 80);
   }
 
   /* 中英混读入口：语音列表未就绪时等待 */
