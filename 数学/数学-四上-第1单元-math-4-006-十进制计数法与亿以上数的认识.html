@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>十进制计数法与亿以上数的认识 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  /* 满十进一 */
+  .dc-table { display: flex; gap: 5px; justify-content: center; align-items: flex-end; margin: 14px 0; flex-wrap: wrap; }
+  .dc-cell {
+    width: 52px; height: 58px; border: 2px solid var(--border); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800;
+    background: var(--card); transition: all .3s; position: relative;
+  }
+  .dc-cell .dname { position: absolute; bottom: -20px; left: 0; right: 0; font-size: 12px; color: var(--text-2); font-weight: 400; }
+  .dc-cell.hot { border-color: var(--red); background: rgba(234,102,104,.16); color: #c23a3d; transform: scale(1.1); box-shadow: 0 0 0 4px rgba(234,102,104,.2); }
+  .dc-cell.zero { color: var(--text-2); }
+  .dc-cell.carry { border-color: #8bc34a; background: rgba(139,195,74,.16); color: #2e7d32; animation: dcarry .5s ease; }
+  @keyframes dcarry { 0% { transform: scale(1.4); } 100% { transform: scale(1); } }
+  .dc-tip { font-size: 15px; font-weight: 700; min-height: 24px; margin: 10px 0 8px; color: var(--accent-deep); }
+  .full { display: inline-block; background: #fff1f0; border: 1px solid var(--red); color: #c23a3d; border-radius: 10px; padding: 3px 10px; font-size: 13px; margin-top: 4px; }
+
+  /* 数位顺序表 */
+  .grade-box { margin: 8px 0; }
+  .grade-row { display: flex; gap: 4px; justify-content: center; align-items: center; margin: 6px 0; }
+  .grade-name { width: 40px; font-size: 13px; color: #fff; background: var(--accent-deep); border-radius: 8px; padding: 3px 6px; text-align: center; font-weight: 700; }
+  .gcell { width: 54px; height: 46px; border: 2px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; background: var(--card); opacity: 0; transform: translateX(10px); transition: all .4s; }
+  .gcell.reveal { opacity: 1; transform: translateX(0); }
+  .gcell.reveal.hot { border-color: var(--accent-deep); background: rgba(155,187,244,.18); color: var(--accent-deep); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">十进制计数法与亿以上数的认识 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>十进制计数法：每相邻两个计数单位之间进率都是 10；数位分三级：个级、万级、亿级，每级 4 位。</p>
+      <p><b>孩子容易走神的地方：</b>搞混"数位"和"计数单位"、或进位链（9+1 连续进位）跟不上；多让他自己拨一遍 999+1。</p>
+      <p><b>建议：</b>本课约 8 分钟；在家可用计数器/口头从 9 数到 11，感受满十进一。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-006</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 满十进一工具 ========== */
+  function renderDc(boxId, digits) {
+    var box = document.getElementById(boxId);
+    if (!box) { return; }
+    var names = ["千", "百", "十", "个"];
+    box.innerHTML = digits.map(function (d, i) {
+      return '<span class="dc-cell" id="' + boxId + "-" + i + '">' + d + '<span class="dname">' + names[i] + "</span></span>";
+    }).join("");
+  }
+  function setDc(boxId, i, val, cls) {
+    var c = document.getElementById(boxId + "-" + i);
+    if (c) { c.textContent = val; c.className = "dc-cell " + (cls || ""); }
+  }
+
+  /* ========== 数位顺序表工具 ========== */
+  var GRADES = [
+    { name: "亿级", digits: ["千亿", "百亿", "十亿", "亿"] },
+    { name: "万级", digits: ["千万", "百万", "十万", "万"] },
+    { name: "个级", digits: ["千", "百", "十", "个"] }
+  ];
+  function renderGrades(boxId) {
+    var box = document.getElementById(boxId);
+    if (!box) { return; }
+    var h = "";
+    GRADES.forEach(function (g, gi) {
+      h += '<div class="grade-row" id="gr-' + boxId + "-" + gi + '">' +
+        '<span class="grade-name">' + g.name + "</span>";
+      g.digits.forEach(function (d, di) {
+        h += '<span class="gcell" id="' + boxId + "-" + gi + "-" + di + '">' + d + "</span>";
+      });
+      h += "</div>";
+    });
+    box.innerHTML = h;
+  }
+  function revealGrade(boxId, gi, hot) {
+    GRADES[gi].digits.forEach(function (_, di) {
+      var c = document.getElementById(boxId + "-" + gi + "-" + di);
+      if (c) { setTimeout(function () { c.className = "gcell reveal" + (hot ? " hot" : ""); }, di * 120); }
+    });
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看 999 + 1 会发生什么神奇的事！",
+      voice: "九百九十九，再加一，会发生什么神奇的事？九个变十个，十个变百个……今天我们看看数是怎么一级一级长上去的。这就是十进制。",
+      body: function () {
+        return '' +
+          '<h2>999 + 1 = ？</h2>' +
+          '<p>个位已经满了 9，再加 1 会怎么样？</p>' +
+          '<p>个位 <b>满十</b> 要进位，十位又满了，又要进位……</p>' +
+          '<div class="hint">👆 先在草稿纸上算一算 999 + 1。</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "满十进一动画",
+      task: "咱们这一步要做的：看动画理解「每相邻两位进率都是十」！",
+      voice: "看动画。个位有九，加一个一，就满十了！满十就要向十位进一，个位回到零。十位原来也有九，加上进位的，又满十，再向百位进一。一路进下去，最后得到一千。这就是满十进一。",
+      body: function () {
+        return '' +
+          '<h2>看动画：满十进一（0999 + 1）</h2>' +
+          '<div class="dc-table" id="dc1"></div>' +
+          '<div class="dc-tip" id="dc1-tip">准备开始…</div>' +
+          '<div class="full">进率都是十：满 10 个低单位 = 1 个高单位</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "数位顺序表动画",
+      task: "咱们这一步要做的：看动画认识「个级、万级、亿级」三级！",
+      voice: "数位是一级一级排好的。最右边是个级，有个、十、百、千四位。再往左是万级，有万、十万、百万、千万四位。再往左是亿级，有亿、十亿、百亿、千亿四位。相邻两个计数单位之间，进率都是十。",
+      body: function () {
+        return '' +
+          '<h2>看动画：数位顺序表逐级展开</h2>' +
+          '<div class="grade-box" id="grade"></div>' +
+          '<div class="dc-tip" id="grade-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道关于数位的小问题！",
+      voice: "现在考考你！关于数位和计数单位的小问题，来挑战吧。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：读一个亿以上的大数，领奖！",
+      voice: "最后的大 Boss！这个数又长又大：四的后面有十个零。用上亿级的知识，它是多少亿呢？",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：这个大数是多少亿？</h2>' +
+          '<p class="big">40000000000</p>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 动画：满十进一 ========== */
+  function runCarry() {
+    var box = document.getElementById("dc1");
+    if (!box) { return; }
+    renderDc("dc1", ["0", "9", "9", "9"]);
+    var tip = document.getElementById("dc1-tip");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 个位是 9，再 +1 → 9 + 1 = 10，满十了！"; }
+      setDc("dc1", 3, "10", "hot");
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 满十进位：个位归 0，十位进 1（9 + 1 = 10 又满十）"; }
+      setDc("dc1", 3, "0", "zero");
+      setDc("dc1", 2, "10", "hot");
+    }, 1800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 十位满十 → 归 0，百位进 1（9 + 1 = 10 又满十）"; }
+      setDc("dc1", 2, "0", "zero");
+      setDc("dc1", 1, "10", "hot");
+    }, 3000);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "④ 百位满十 → 归 0，千位进 1 → 得到 1000！"; }
+      setDc("dc1", 1, "0", "zero");
+      setDc("dc1", 0, "1", "carry");
+    }, 4200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 0999 + 1 = 1000（每相邻两位进率都是十）"; }
+    }, 5400);
+  }
+
+  /* ========== S3 动画：数位顺序表 ========== */
+  function runGrade() {
+    var box = document.getElementById("grade");
+    if (!box) { return; }
+    renderGrades("grade");
+    var tip = document.getElementById("grade-tip");
+    // 先展示个级
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 最右边是个级：个、十、百、千（4 位）"; }
+      revealGrade("grade", 2, true);
+    }, 400);
+    // 万级
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 往左是万级：万、十万、百万、千万（4 位）"; }
+      revealGrade("grade", 1, true);
+    }, 2000);
+    // 亿级
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 再往左是亿级：亿、十亿、百亿、千亿（4 位）"; }
+      revealGrade("grade", 0, true);
+    }, 3600);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 三级共 12 位：个级｜万级｜亿级，相邻进率都是十"; }
+    }, 5200);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "「万」和「十万」之间的进率是？", right: "十", opts: ["十", "百", "千"] },
+    { q: "10 个一千万是多少？", right: "一亿", opts: ["一亿", "十亿", "一千万"] },
+    { q: "从个位起，第 9 位是什么位？", right: "亿位", opts: ["亿位", "千万位", "十亿位"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "想一想数位顺序表：个级｜万级｜亿级，相邻进率都是十";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1300);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">40000000000 = ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">400 亿</div>' +
+      '<div class="opt" data-ok="0">40 亿</div>' +
+      '<div class="opt" data-ok="0">4000 亿</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 亿级你都认识了！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "数一下：4 后面有 10 个 0 → 是 400 亿（亿级）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runCarry(); }
+    if (step.id === "s3") { runGrade(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "十进制计数法：每相邻两个计数单位之间进率都是 10；数位分三级：个级、万级、亿级，每级 4 位。",
+      attention: "孩子容易搞混「数位」和「计数单位」、或 9+1 连续进位跟不上；可让他自己拨一遍 999+1。",
+      tip: "本课约 8 分钟；在家可用计数器或口头从 9 数到 11，感受满十进一。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

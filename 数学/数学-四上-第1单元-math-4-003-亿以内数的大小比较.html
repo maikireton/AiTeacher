@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>亿以内数的大小比较 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .cmp-table { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
+  .cmp-row { display: flex; gap: 4px; justify-content: center; align-items: center; }
+  .cmp-row .cd {
+    width: 44px; height: 52px; border: 2px solid var(--border); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800;
+    background: var(--card); transition: all .3s;
+  }
+  .cmp-row .cd.big { border-color: #8bc34a; background: rgba(139,195,74,.16); color: #2e7d32; }
+  .cmp-row .cd.small { border-color: var(--red); background: rgba(234,102,104,.12); color: #c23a3d; }
+  .cmp-row .cd.same { border-color: var(--border); color: var(--text-2); }
+  .cmp-row .cd.cursor { border-color: var(--accent-deep); box-shadow: 0 0 0 3px rgba(155,187,244,.35); }
+  .cmp-name { font-size: 12px; color: var(--text-2); min-width: 56px; text-align: right; }
+  .cmp-tip { font-size: 15px; font-weight: 700; min-height: 24px; margin: 8px 0; color: var(--accent-deep); }
+  .cmp-res { font-size: 22px; font-weight: 800; margin-top: 6px; }
+  .vs { font-size: 26px; font-weight: 800; color: var(--accent-deep); padding: 0 6px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">亿以内数的大小比较 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>比较两个大数：先看位数，位数多的数大；位数相同就从最高位一位一位往下比。</p>
+      <p><b>孩子容易走神的地方：</b>位数多不等于数大（如 99 万位数少但比 1000 大吗？不，1000000 是 7 位更大）；要数清楚位数再比。</p>
+      <p><b>建议：</b>本课约 8 分钟；在家可以报两个大数让他口头说"谁大、为什么"。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-003</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 比较动画工具 ========== */
+  function renderRows(boxId, rows) {
+    var box = document.getElementById(boxId);
+    if (!box) { return; }
+    var h = "";
+    rows.forEach(function (r, ri) {
+      h += '<div class="cmp-row" id="cr-' + boxId + "-" + ri + '">' +
+        '<span class="cmp-name">' + r.name + "</span>";
+      r.digits.forEach(function (d, di) {
+        h += '<div class="cd" id="' + boxId + "-" + ri + "-" + di + '">' + d + "</div>";
+      });
+      h += "</div>";
+    });
+    box.innerHTML = h;
+  }
+  function mark(boxId, ri, di, cls) {
+    var c = document.getElementById(boxId + "-" + ri + "-" + di);
+    if (c) { c.className = "cd " + cls; }
+  }
+  function clearMarks(boxId, cls) {
+    var cells = document.querySelectorAll("#" + boxId + " .cd." + cls);
+    cells.forEach(function (c) { c.className = "cd"; });
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：猜猜这两个大数谁更大？",
+      voice: "两个大数放在一起，怎么一下子分出大小呢？1000000 和 800000，你觉得谁大？我们一起来学比大小的两个秘诀。",
+      body: function () {
+        return '' +
+          '<h2>谁更大？</h2>' +
+          '<p class="big">1000000　与　800000</p>' +
+          '<p>先凭感觉猜一猜，再学学比大小的真正方法。</p>' +
+          '<div class="hint">👆 在草稿纸上数一数，它们各有几位？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "秘诀一：位数不同",
+      task: "咱们这一步要做的：看动画学会「位数不同时比大小」！",
+      voice: "第一个秘诀：位数不同，位数多的数就大。你看，1000000 有七个数字，是七位数；800000 只有六个数字，是六位数。七位数比六位数大，所以 1000000 大于 800000。",
+      body: function () {
+        return '' +
+          '<h2>看动画：位数不同</h2>' +
+          '<div class="cmp-table" id="cmp1"></div>' +
+          '<div class="cmp-tip" id="cmp1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "秘诀二：位数相同",
+      task: "咱们这一步要做的：看动画学会「位数相同时从最高位比起」！",
+      voice: "第二个秘诀：位数相同，就从最高位一位一位往下比。520000 和 518000 都是六位数。最高位都是五，一样大，就比下一位：万位，二比一大，所以 520000 大于 518000。",
+      body: function () {
+        return '' +
+          '<h2>看动画：位数相同逐位比</h2>' +
+          '<div class="cmp-table" id="cmp2"></div>' +
+          '<div class="cmp-tip" id="cmp2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道比大小，选出正确的符号！",
+      voice: "现在轮到你啦！一共三道比大小题，在三个符号里选一个。记住两个秘诀：先比位数，再比高位。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：从三个大数里找出最大的那个，领奖！",
+      voice: "Boss 来啦！三个数里找出最大的一个。先用秘诀一数位数，位数一样再用秘诀二从高位比。加油！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：谁最大？</h2>' +
+          '<p class="big">1080000　1090000　980000</p>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 动画：位数不同 ========== */
+  function runCmp1() {
+    var box = document.getElementById("cmp1");
+    if (!box) { return; }
+    renderRows("cmp1", [
+      { name: "A", digits: ["1", "0", "0", "0", "0", "0", "0"] },
+      { name: "B", digits: ["8", "0", "0", "0", "0", "0"] }
+    ]);
+    var tip = document.getElementById("cmp1-tip");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 数一数：A 是 7 位，B 是 6 位（位数不同！）"; }
+      for (var i = 0; i < 7; i++) { (function (i) { setTimeout(function () { mark("cmp1", 0, i, "big"); }, 200 + i * 120); })(i); }
+      for (var i = 0; i < 6; i++) { (function (i) { setTimeout(function () { mark("cmp1", 1, i, "small"); }, 200 + i * 120); })(i); }
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 结论：位数多的数大！"; }
+    }, 2000);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 1000000 ＞ 800000（7 位 ＞ 6 位）"; }
+    }, 3000);
+  }
+
+  /* ========== S3 动画：位数相同逐位比 ========== */
+  function runCmp2() {
+    var box = document.getElementById("cmp2");
+    if (!box) { return; }
+    renderRows("cmp2", [
+      { name: "A", digits: ["5", "2", "0", "0", "0", "0"] },
+      { name: "B", digits: ["5", "1", "8", "0", "0", "0"] }
+    ]);
+    var tip = document.getElementById("cmp2-tip");
+    var seq = [
+      { pos: 0, a: "same", b: "same", msg: "① 最高位都是 5，一样大 → 继续比下一位" },
+      { pos: 1, a: "big", b: "small", msg: "② 万位：2 ＞ 1 → 分出胜负！" }
+    ];
+    setTimeout(function () {
+      seq.forEach(function (s, idx) {
+        setTimeout(function () {
+          clearMarks("cmp2", "cursor");
+          mark("cmp2", 0, s.pos, s.a + " cursor");
+          mark("cmp2", 1, s.pos, s.b + " cursor");
+          if (tip) { tip.textContent = s.msg; }
+        }, 600 + idx * 2200);
+      });
+    }, 500);
+    setTimeout(function () {
+      clearMarks("cmp2", "cursor");
+      if (tip) { tip.textContent = "✅ 520000 ＞ 518000（万位 2 ＞ 1）"; }
+    }, 5600);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { a: "1000000", b: "800000", right: ">" },
+    { a: "230000", b: "2500000", right: "<" },
+    { a: "468000", b: "486000", right: "<" }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：<b>" + q.a + " ○ " + q.b + "</b> 填 &gt;、&lt; 还是 =？</div>" +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="' + (">" === q.right ? "1" : "0") + '">&gt;</div>' +
+      '<div class="opt" data-ok="' + ("<" === q.right ? "1" : "0") + '">&lt;</div>' +
+      '<div class="opt" data-ok="' + ("=" === q.right ? "1" : "0") + '">=</div>' +
+      "</div><div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    bindQuiz(box, q, idx);
+  }
+  function bindQuiz(box, q, idx) {
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "再想想：先数位数，位数一样再比最高位！";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1200);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">哪个数最大？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="0">1080000</div>' +
+      '<div class="opt" data-ok="1">1090000</div>' +
+      '<div class="opt" data-ok="0">980000</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 比大小你赢啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "先数位数（980000 是 6 位最小），再比前两位 108 vs 109";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runCmp1(); }
+    if (step.id === "s3") { runCmp2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "比较两个大数：先看位数，位数多的数大；位数相同就从最高位一位一位往下比。",
+      attention: "孩子可能数错位数，或位数相同时直接看第一位而漏掉后面的高位比较；练习第 3 题专门考逐位比。",
+      tip: "本课约 8 分钟；在家报两个大数让他口头说「谁大、为什么」，比做题更能检验理解。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

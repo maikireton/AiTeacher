@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数的改写（整万、整亿）· AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .rw-table { display: flex; gap: 4px; justify-content: center; align-items: center; margin: 14px 0; flex-wrap: wrap; }
+  .rw-cell {
+    width: 46px; height: 54px; border: 2px solid var(--border); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800;
+    background: var(--card); transition: all .4s;
+  }
+  .rw-cell.hit { border-color: var(--red); background: rgba(234,102,104,.14); color: #c23a3d; transform: scale(1.08); }
+  .rw-cell.out { opacity: 0; transform: translateY(-16px) scale(.6); }
+  .rw-unit {
+    font-size: 28px; font-weight: 800; color: #2e7d32; margin-left: 6px;
+    animation: unitPop .5s ease; background: rgba(139,195,74,.2); border-radius: 10px; padding: 4px 10px;
+  }
+  @keyframes unitPop { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.3); } 100% { transform: scale(1); } }
+  .rw-tip { font-size: 15px; font-weight: 700; min-height: 24px; margin: 8px 0; color: var(--accent-deep); }
+  .rw-eq { font-size: 24px; font-weight: 800; margin-top: 6px; color: var(--text); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">数的改写（整万、整亿）<small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>整万数改写去掉末尾 4 个 0、加"万"字；整亿数改写去掉末尾 8 个 0、加"亿"字（大小不变，只是写法更简洁）。</p>
+      <p><b>孩子容易走神的地方：</b>搞混去 4 个 0 还是 8 个 0；非整万/亿的数不能直接去 0 改写（本课只练整万整亿）。</p>
+      <p><b>建议：</b>本课约 8 分钟；重点讲清"4 个 0 = 1 万、8 个 0 = 1 亿"。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-004</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 改写动画工具 ========== */
+  function renderNum(boxId, digits) {
+    var box = document.getElementById(boxId);
+    if (!box) { return; }
+    box.innerHTML = digits.map(function (d, i) {
+      return '<span class="rw-cell" id="' + boxId + "-" + i + '">' + d + "</span>";
+    }).join("");
+  }
+  function flipOut(boxId, from, count) {
+    for (var i = from; i < from + count; i++) {
+      (function (i) {
+        setTimeout(function () {
+          var c = document.getElementById(boxId + "-" + i);
+          if (c) { c.className = "rw-cell hit"; }
+        }, 400 + (i - from) * 300);
+        setTimeout(function () {
+          var c = document.getElementById(boxId + "-" + i);
+          if (c) { c.className = "rw-cell out"; }
+        }, 900 + (i - from) * 300);
+      })(i);
+    }
+  }
+  function addUnit(boxId, unit) {
+    var box = document.getElementById(boxId);
+    if (!box) { return; }
+    var u = document.createElement("span");
+    u.className = "rw-unit";
+    u.textContent = unit;
+    box.appendChild(u);
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看一长串 0 怎么写得又短又清楚！",
+      voice: "五百……后面跟着六个零，写出来一大串。数学家想了个聪明的办法：用万和亿当单位，一下子就能写短。今天我们学这个魔法。",
+      body: function () {
+        return '' +
+          '<h2>一长串 0 真麻烦</h2>' +
+          '<p class="big">5000000　300000000</p>' +
+          '<p>写这么多 0，又慢又容易出错。有没有更聪明的写法？</p>' +
+          '<div class="hint">👆 注意：这两个数一个末尾 4 个 0，一个末尾 8 个 0。</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "整万数改写动画",
+      task: "咱们这一步要做的：看动画学会「去掉 4 个 0、加万字」！",
+      voice: "看好了。5000000 末尾有四个零。四个零正好是一个万，我们把它划掉。前面剩下五百，最后加个万字，就写成了五百万。你看，写起来是不是短多了？",
+      body: function () {
+        return '' +
+          '<h2>看动画：改写成「万」</h2>' +
+          '<div class="rw-table" id="rw1"></div>' +
+          '<div class="rw-tip" id="rw1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "整亿数改写动画",
+      task: "咱们这一步要做的：看动画学会「去掉 8 个 0、加亿字」！",
+      voice: "再看这个：300000000 末尾有八个零。八个零就是一亿，划掉这八个零，前面剩一个三，加个亿字，就是三亿。记住口诀：四个零换个万字，八个零换个亿字。",
+      body: function () {
+        return '' +
+          '<h2>看动画：改写成「亿」</h2>' +
+          '<div class="rw-table" id="rw2"></div>' +
+          '<div class="rw-tip" id="rw2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道改写题，数对 0 的个数！",
+      voice: "现在轮到你啦！一共三道改写题。先数清楚末尾有几个零：四个零换万字，八个零换亿字。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：改写一个大家伙，领奖！",
+      voice: "Boss 来啦！把 46000000 改写成用万作单位的数。先数数这串零有几个，别数错哦！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：改写成「万」</h2>' +
+          '<p class="big">46000000 = ? 万</p>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 动画：5000000 → 500 万 ========== */
+  function runRw1() {
+    var box = document.getElementById("rw1");
+    if (!box) { return; }
+    renderNum("rw1", ["5", "0", "0", "0", "0", "0", "0"]);
+    var tip = document.getElementById("rw1-tip");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 5000000 末尾有 4 个 0（红圈标记）"; }
+      flipOut("rw1", 3, 4);
+    }, 600);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 4 个 0 划掉 → 换成「万」字"; }
+      addUnit("rw1", "万");
+    }, 2600);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 5000000 = 500 万（大小没变，只是短了）"; }
+    }, 3600);
+  }
+
+  /* ========== S3 动画：300000000 → 3 亿 ========== */
+  function runRw2() {
+    var box = document.getElementById("rw2");
+    if (!box) { return; }
+    renderNum("rw2", ["3", "0", "0", "0", "0", "0", "0", "0", "0"]);
+    var tip = document.getElementById("rw2-tip");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 300000000 末尾有 8 个 0（红圈标记）"; }
+      flipOut("rw2", 1, 8);
+    }, 600);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 8 个 0 划掉 → 换成「亿」字"; }
+      addUnit("rw2", "亿");
+    }, 4600);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 300000000 = 3 亿（口诀：4 个 0 换万，8 个 0 换亿）"; }
+    }, 5600);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "600000 = ? 万", right: "60", opts: ["60", "600", "6"] },
+    { q: "800000000 = ? 亿", right: "8", opts: ["80", "8", "800"] },
+    { q: "12000000 = ? 万", right: "1200", opts: ["1200", "120", "12000"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "数数 0 的个数：4 个 0 换万、8 个 0 换亿！";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1200);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">46000000 = ? 万</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">4600</div>' +
+      '<div class="opt" data-ok="0">460</div>' +
+      '<div class="opt" data-ok="0">46</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 改写小能手！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "46000000 末尾有 4 个 0 → 4600 万（去掉 4 个 0）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runRw1(); }
+    if (step.id === "s3") { runRw2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "整万数改写去掉末尾 4 个 0、加「万」字；整亿数改写去掉末尾 8 个 0、加「亿」字（大小不变，只是写法更简洁）。",
+      attention: "孩子可能搞混去 4 个 0 还是 8 个 0；本课只练整万、整亿数，非整万/亿的数不能直接去 0 改写。",
+      tip: "本课约 8 分钟；重点讲清「4 个 0 = 1 万、8 个 0 = 1 亿」，可让孩子自编两个数改写。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
