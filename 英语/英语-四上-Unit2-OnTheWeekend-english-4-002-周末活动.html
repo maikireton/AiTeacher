@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>周末活动 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 2 On the Weekend <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>认识周末活动，会用 What do you do on the weekend? 询问、I often ... 表达频率。</p>
+      <p><b>孩子容易走神的地方：</b>often 在主语后（I often go）；on the weekend 的介词 on 别漏。</p>
+      <p><b>建议：</b>本课约 8 分钟；可让孩子用 I often ... 说 3 个周末常做的事。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-4-002</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 2 On the Weekend","title":"周末活动","grade":4,"term":"上册","scene":{"h2":"周末去哪儿","text":"周末到了，Binbin 有时去绘画俱乐部，有时去爬山、摘水果。他很好奇：小伙伴周末都做什么呢？","question":"想一想：你会用英语说「我周末经常去公园」吗？","hint":"周末活动真丰富，学起来！"},"s1_task":"咱们这一步要做的：学会用英语说周末活动！","s1_voice":"周末到了，Binbin 的活动可真多：去绘画俱乐部、爬山、摘水果。他很好奇小伙伴周末做什么。今天我们学会这些活动。","words_title":"单词大本营：周末活动","words_intro":"点一点卡片，认识这些周末活动，跟读一遍吧！","s2_task":"这一步我们要做的：认识周末活动的单词，点卡片听发音！","s2_voice":"周末可以看望爷爷奶奶、去绘画俱乐部、爬山、摘水果，还能玩电脑游戏、钓鱼、去公园。点一点卡片，跟着读一读。","words":[{"e":"visit one's grandparents","z":"看望祖父母","em":"👵👴"},{"e":"go to a drawing club","z":"去绘画俱乐部","em":"🎨"},{"e":"climb a hill","z":"爬山","em":"⛰️"},{"e":"pick fruit","z":"摘水果","em":"🍎"},{"e":"play computer games","z":"玩电脑游戏","em":"🎮"},{"e":"go fishing","z":"钓鱼","em":"🎣"},{"e":"go to the park","z":"去公园","em":"🌳"},{"e":"draw pictures","z":"画画","em":"✏️"}],"pattern":{"title":"句型魔法：你周末做什么？","sentence":["I","often","go","to","the","park","."],"zh":"我经常去公园。","desc":"What do you do on the weekend? 你周末做什么？ ｜ I often ... 我经常… ｜ Do you often ...? 你经常…吗？"},"order":{"zh":"帮 Binbin 说「我经常去绘画俱乐部」","words":["I","often","go","to","a","drawing","club","."],"right":[0,1,2,3,4,5,6,7],"hint":"经常做某事用 I often ...，去俱乐部用 go to a ... club"},"s3_task":"这一步我们要做的：看 often 怎么用，再拼一个长句子！","s3_voice":"周末经常做的事，用 I often 加上活动。看句子拼出来，然后你来把「我经常去绘画俱乐部」拼出来。","quiz":[{"q":"「你周末做什么？」用英语怎么说？","opts":["What do you do on the weekend?","What do you do after school?","What's your favourite sport?"],"ok":0,"hint":"问周末用 on the weekend"},{"q":"climb a hill 是？","opts":["爬山","游泳","跳绳"],"ok":0,"hint":"climb a hill 是爬山"},{"q":"I often go fishing. 的意思是？","opts":["我经常去钓鱼。","我周末去钓鱼。","我喜欢钓鱼。"],"ok":0,"hint":"often 是经常"}],"s4_task":"这一步我们要做的：连闯三道小题，把周末活动用起来！","s4_voice":"现在轮到你啦！三道小题，考考周末的单词和 often。答对就能得到星星哦。","summary_points":[["周末活动","visit grandparents 看望祖父母 · climb a hill 爬山 · pick fruit 摘水果"],["询问周末","What do you do on the weekend? 你周末做什么？"],["频率表达","I often ... 我经常…"]],"phonics":{"tip":"字母组合 cl 发 /kl/","words":"climb 爬 · club 俱乐部 · class 班级"},"s5_task":"这一步我们要做的：把周末活动的单词收进小背包！","s5_voice":"今天我们学会了很多周末活动，还会说 I often 我经常做什么。下次就能和小伙伴聊周末安排了！","boss":{"title":"Boss 关：周末大挑战","type":"mc","q":"大 Boss：你想问朋友「你周末经常摘水果吗？」，怎么说？","opts":["Do you often pick fruit on the weekend?","What do you do on the weekend?","I often pick fruit."],"ok":0,"hint":"问经常做某事用 Do you often ...?"},"s6_task":"这一步我们要做的：打败周末大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！问别人周末经常做的事，用 Do you often 加上活动。选对奖励两颗星！","parent":{"summary":"认识周末活动，会用 What do you do on the weekend? 询问、I often ... 表达频率。","attention":"often 在主语后（I often go）；on the weekend 的介词 on 别漏。","tip":"本课约 8 分钟；可让孩子用 I often ... 说 3 个周末常做的事。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>

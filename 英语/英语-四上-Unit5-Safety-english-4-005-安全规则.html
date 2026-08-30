@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>安全规则 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 5 Safety <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>掌握 Don't ... 祈使句否定、Stop! Look! Listen! 与 Be careful 等安全表达。</p>
+      <p><b>孩子容易走神的地方：</b>Don't + 动词原形是核心句型；be 动词要变 Be careful 而非 Are careful。</p>
+      <p><b>建议：</b>本课约 8 分钟；可带孩子回忆并说出一条安全规则，强化记忆。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-4-005</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 5 Safety","title":"安全规则","grade":4,"term":"上册","scene":{"h2":"马路安全小卫士","text":"过马路要停、看、听，不可以在街上乱跑，更不能玩火。Binbin 要当安全小卫士，把安全规则教给小伙伴！","question":"想一想：你会用英语说「不要跑！」吗？","hint":"安全第一，学会这些英语能保护自己！"},"s1_task":"咱们这一步要做的：学会用英语说安全规则！","s1_voice":"过马路要停、看、听，不可以在街上乱跑，更不能玩火。Binbin 要当安全小卫士，把这些规则用英语告诉小伙伴。今天来学安全表达。","words_title":"单词大本营：安全规则","words_intro":"点一点卡片，记住这些保命的安全用语，跟读一遍吧！","s2_task":"这一步我们要做的：认识安全的用语，点卡片听发音！","s2_voice":"过马路前要 Stop 停、Look 看、Listen 听。不可以在街上跑，不能玩火。还有 Be careful 小心。点一点卡片，跟着读一读。","words":[{"e":"safety","z":"安全","em":"🛡️"},{"e":"careful","z":"小心的","em":"⚠️"},{"e":"Don't run","z":"不要跑","em":"🛑"},{"e":"Don't play with fire","z":"不要玩火","em":"🔥"},{"e":"stop","z":"停","em":"✋"},{"e":"look","z":"看","em":"👀"},{"e":"listen","z":"听","em":"👂"},{"e":"cross the street","z":"过马路","em":"🚸"},{"e":"wait","z":"等待","em":"⏳"}],"pattern":{"title":"句型魔法：不要…","sentence":["Don't","run","in","the","street","."],"zh":"不要在街上跑。","desc":"Don't ... 不要…（祈使句否定） ｜ Stop! Look! Listen! 停！看！听！ ｜ Be careful! 小心！"},"order":{"zh":"帮小卫士说「不要玩火」","words":["Don't","play","with","fire","."],"right":[0,1,2,3,4],"hint":"禁止做某事用 Don't + 动词原形"},"s3_task":"这一步我们要做的：看 Don't 怎么用，再拼一条安全规则！","s3_voice":"告诉别人不要做某事，用 Don't 加上动词。比如不要玩火，就是 Don't play with fire。看句子拼出来，然后你来拼一条规则。","quiz":[{"q":"「不要在街上跑」用英语怎么说？","opts":["Don't run in the street.","Run in the street.","Don't stop in the street."],"ok":0,"hint":"禁止用 Don't + 动词"},{"q":"Be careful. 的意思是？","opts":["小心！","快跑！","别走！"],"ok":0,"hint":"Be careful 是小心"},{"q":"过马路前应该怎么做？","opts":["Stop! Look! Listen!","Run quickly!","Play in the street!"],"ok":0,"hint":"过马路前要停、看、听"}],"s4_task":"这一步我们要做的：连闯三道小题，把安全用语用起来！","s4_voice":"现在轮到你啦！三道小题，考考安全规则。答对就能得到星星哦。","summary_points":[["安全规则","Don't run 不要跑 · Don't play with fire 不要玩火"],["三字口诀","Stop! Look! Listen! 停！看！听！"],["提醒小心","Be careful! 小心！"]],"phonics":{"tip":"单词 Don't 中 o 读 /əʊ/，careful 中 ca 读 /eə/","words":"careful 小心 · share 分享 · square 广场"},"s5_task":"这一步我们要做的：把安全规则收进小背包！","s5_voice":"今天我们学会了几条重要的安全规则：不要跑、不要玩火，过马路要停看听。这些英语关键时刻能保护你！","boss":{"title":"Boss 关：安全大挑战","type":"mc","q":"大 Boss：看到小朋友在玩火，你会怎么说？","opts":["Don't play with fire!","Don't run!","Play with fire carefully!"],"ok":0,"hint":"禁止玩火用 Don't play with fire"},"s6_task":"这一步我们要做的：打败安全大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！看到小朋友玩火，要大声说 Don't play with fire！选对奖励两颗星！","parent":{"summary":"掌握 Don't ... 祈使句否定、Stop! Look! Listen! 与 Be careful 等安全表达。","attention":"Don't + 动词原形是核心句型；be 动词要变 Be careful 而非 Are careful。","tip":"本课约 8 分钟；可带孩子回忆并说出一条安全规则，强化记忆。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>

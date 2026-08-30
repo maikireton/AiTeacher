@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学校课程 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 1 School Subjects <small>3年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>认识科目单词，会用 What's your favourite subject? 与 I like ... best 表达喜好。</p>
+      <p><b>孩子容易走神的地方：</b>favourite 意思是「最喜欢的」；喜欢与否用 Yes, I do / No, I don't 回答。</p>
+      <p><b>建议：</b>本课约 8 分钟；可让孩子用英语介绍今天上了什么课。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-3-011</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 1 School Subjects","title":"学校课程","grade":3,"term":"下册","scene":{"h2":"课表上的秘密","text":"新学期的课表发下来啦！语文、数学、英语、体育……Binbin 最喜欢英语课，他要用英语说说自己最喜欢的科目。","question":"想一想：语文、英语、体育用英语怎么说？","hint":"和课表交朋友，一起学起来！"},"s1_task":"咱们这一步要做的：学会用英语说喜欢的科目！","s1_voice":"新学期的课表发下来了，上面有好多科目。Binbin 最喜欢英语课，他想知道小伙伴最喜欢什么。今天我们学会科目的单词和问句。","words_title":"单词大本营：学校课程","words_intro":"点一点卡片，认识这些科目，跟读一遍吧！","s2_task":"这一步我们要做的：认识科目的单词，点卡片听发音！","s2_voice":"课表上有语文、英语、数学、科学、体育、音乐、美术，还有计算机课。点一点卡片，听听它们用英语怎么说，跟着读一读。","words":[{"e":"Chinese","z":"语文","em":"📕"},{"e":"English","z":"英语","em":"📘"},{"e":"maths","z":"数学","em":"📐"},{"e":"science","z":"科学","em":"🔬"},{"e":"PE","z":"体育","em":"⚽"},{"e":"music","z":"音乐","em":"🎵"},{"e":"art","z":"美术","em":"🎨"},{"e":"computer class","z":"计算机课","em":"💻"}],"pattern":{"title":"句型魔法：我最喜欢…","sentence":["I","like","English","best","."],"zh":"我最喜欢英语。","desc":"What's your favourite subject? 你最喜欢什么科目？ ｜ I like ... best. 我最喜欢… ｜ Do you like ...? 你喜欢…吗？"},"order":{"zh":"帮 Binbin 说「我最喜欢英语」","words":["I","like","English","best","."],"right":[0,1,2,3,4],"hint":"最喜欢用 like ... best，best 放最后"},"s3_task":"这一步我们要做的：看句型怎么用，再拼一句「我最喜欢英语」！","s3_voice":"说自己最喜欢什么科目，用 I like 加上科目，最后加 best 表示最。看句子拼出来，然后你来动手拼一拼。","quiz":[{"q":"「你最喜欢的科目是什么？」用英语怎么说？","opts":["What's your favourite subject?","What's your name?","What do you like?"],"ok":0,"hint":"问最喜欢的科目用 favourite subject"},{"q":"PE 是？","opts":["体育","美术","音乐"],"ok":0,"hint":"PE 是体育"},{"q":"I like maths best. 的意思是？","opts":["我最喜欢数学。","我讨厌数学。","我在学数学。"],"ok":0,"hint":"best 是最的意思"}],"s4_task":"这一步我们要做的：连闯三道小题，把科目单词用起来！","s4_voice":"现在轮到你啦！三道小题，考考科目的单词和 favourite 句型。答对就能得到星星哦。","summary_points":[["科目单词","Chinese 语文 · English 英语 · maths 数学 · PE 体育 · music 音乐"],["询问喜好","What's your favourite subject? 你最喜欢什么科目？"],["回答","I like ... best. 我最喜欢…"]],"phonics":{"tip":"字母 a：在 name、cake 里读长音 /eɪ/，在 cat、bag 里读短音 /æ/","words":"name · cake ｜ cat · bag"},"s5_task":"这一步我们要做的：把科目的单词收进小背包！","s5_voice":"今天我们认识了课表上的科目，还学会了说我最喜欢什么。下次别人问你最喜欢什么课，你就能用英语回答啦！","boss":{"title":"Boss 关：课程大挑战","type":"mc","q":"大 Boss：弟弟问你「Do you like music?」，你喜欢，怎么回答？","opts":["Yes, I do.","No, I don't.","Yes, I like best."],"ok":0,"hint":"喜欢就回答 Yes, I do."},"s6_task":"这一步我们要做的：打败课程大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！别人问你喜不喜欢音乐，喜欢就回答 Yes, I do。选对奖励两颗星！","parent":{"summary":"认识科目单词，会用 What's your favourite subject? 与 I like ... best 表达喜好。","attention":"favourite 意思是「最喜欢的」；喜欢与否用 Yes, I do / No, I don't 回答。","tip":"本课约 8 分钟；可让孩子用英语介绍今天上了什么课。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>

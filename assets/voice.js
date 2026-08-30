@@ -113,8 +113,93 @@
     speakNow(text, opts);
   }
 
+  /* ============ 中英混读（英语课件专用）============
+   * 文本中英文单词/句子用英文音色（en-US）朗读，中文部分用
+   * 设置页保存的中文音色朗读，满足文档 4.4「英文用 en-US」的要求。
+   * 数学/语文课件文本无英文字母时行为与原来完全一致。 */
+
+  /* 文本是否含英文字母（需要混读） */
+  function hasLatin(text) {
+    return /[A-Za-z]/.test(String(text || ""));
+  }
+
+  /* 中英分段：字母开头的连续字母/数字/撇号段视为英文段，其余为中文段 */
+  function splitMixed(text) {
+    text = String(text || "");
+    var parts = [];
+    var re = /[A-Za-z][A-Za-z0-9'’.-]*/g;
+    var last = 0, m;
+    while ((m = re.exec(text)) !== null) {
+      if (m.index > last) { parts.push({ text: text.slice(last, m.index), en: false }); }
+      parts.push({ text: m[0], en: true });
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) { parts.push({ text: text.slice(last), en: false }); }
+    return parts.filter(function (p) { return p.text.trim().length > 0; });
+  }
+
+  /* 选择语言匹配的音色：先精确匹配，再按语言前缀匹配 */
+  function pickVoiceFor(lang) {
+    var voices = getVoices();
+    var target = String(lang || "").toLowerCase();
+    var prefix = target.slice(0, 2);
+    var pre = null;
+    for (var i = 0; i < voices.length; i++) {
+      var l = (voices[i].lang || "").toLowerCase();
+      if (l === target) { return voices[i]; }
+      if (!pre && l.indexOf(prefix) === 0) { pre = voices[i]; }
+    }
+    return pre;
+  }
+
+  function speakMixedNow(text, opts) {
+    if (!("speechSynthesis" in window)) {
+      if (opts && typeof opts.onEnd === "function") {
+        setTimeout(function () { try { opts.onEnd(); } catch (e) {} }, 1200);
+      }
+      return;
+    }
+    var parts = splitMixed(text);
+    var i = 0;
+    function next() {
+      if (i >= parts.length) {
+        if (opts && typeof opts.onEnd === "function") { try { opts.onEnd(); } catch (e) {} }
+        return;
+      }
+      var p = parts[i++];
+      try {
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(p.text);
+        if (p.en) {
+          var ev = pickVoiceFor("en-US");
+          if (ev) { u.voice = ev; u.lang = ev.lang || "en-US"; }
+          else { u.lang = "en-US"; }
+        } else {
+          var sv = pickSavedVoice() || pickVoiceFor("zh-CN");
+          if (sv) { u.voice = sv; u.lang = sv.lang || "zh-CN"; }
+          else { u.lang = "zh-CN"; }
+        }
+        u.rate = (opts && opts.rate) || 0.92;
+        u.pitch = (opts && opts.pitch) || 1.05;
+        u.onend = next;
+        u.onerror = next;
+        window.speechSynthesis.speak(u);
+      } catch (e) { next(); }
+    }
+    next();
+  }
+
+  /* 中英混读入口：语音列表未就绪时等待 */
+  function speakMixed(text, opts) {
+    if (!("speechSynthesis" in window)) { return; }
+    if (!voiceReady) { waitForVoices(function () { speakMixedNow(text, opts); }); return; }
+    speakMixedNow(text, opts);
+  }
+
   window.AiVoice = {
     speak: speak,
+    speakMixed: speakMixed,
+    hasLatin: hasLatin,
     pickSavedVoice: pickSavedVoice,
     readSettings: readSettings
   };

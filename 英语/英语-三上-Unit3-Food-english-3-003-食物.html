@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>食物 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 3 Food <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>认识食物单词，会用 I like / I don't like 表达喜好，会用 Would you like 与 May I have 礼貌问答。</p>
+      <p><b>孩子容易走神的地方：</b>I don't 的否定容易漏；礼貌请求 May I have ... please? 是重点，见 Boss 关。</p>
+      <p><b>建议：</b>本课约 8 分钟；可在家吃饭时用英语问孩子 Do you like ...? 强化表达。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-3-003</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 3 Food","title":"食物","grade":3,"term":"上册","scene":{"h2":"饿了的小熊","text":"小熊肚子咕咕叫，来到餐厅想点餐。它要用英语说出自己喜欢吃什么，还要有礼貌地表达想要什么。","question":"想一想：面包、牛奶、果汁用英语怎么说？","hint":"跟着小熊一起学点餐吧！"},"s1_task":"咱们这一步要做的：帮小熊用英语点餐！","s1_voice":"小熊肚子饿得咕咕叫，它来到餐厅，却不会用英语说想吃什么。今天我们来学食物的单词，还要学会说我喜欢和我不喜欢。","words_title":"单词大本营：食物","words_intro":"点一点卡片，认识这些好吃的食物，跟读一遍吧！","s2_task":"这一步我们要做的：认识食物的单词，点卡片听发音！","s2_voice":"这一单元我们认识几种好吃的：面包、蛋糕、鸡蛋、米饭、牛奶、果汁、水、茶、水果、汉堡。点一点卡片，听一听，跟着读一读。","words":[{"e":"bread","z":"面包","em":"🍞"},{"e":"cake","z":"蛋糕","em":"🎂"},{"e":"egg","z":"鸡蛋","em":"🥚"},{"e":"rice","z":"米饭","em":"🍚"},{"e":"milk","z":"牛奶","em":"🥛"},{"e":"juice","z":"果汁","em":"🧃"},{"e":"water","z":"水","em":"💧"},{"e":"tea","z":"茶","em":"🍵"},{"e":"fruit","z":"水果","em":"🍎"},{"e":"hamburger","z":"汉堡","em":"🍔"}],"pattern":{"title":"句型魔法：我喜欢…","sentence":["I","like","milk","."],"zh":"我喜欢牛奶。","desc":"I like ... 我喜欢… ｜ I don't like ... 我不喜欢… ｜ Would you like some ...? 你想要…吗？ 回答 Yes, please."},"order":{"zh":"帮小熊说「我不喜欢茶」","words":["I","don't","like","tea","."],"right":[0,1,2,3,4],"hint":"不喜欢要说 I don't like，don't 就是「不」"},"s3_task":"这一步我们要做的：看 I like 句型怎么用，再拼一句「我不喜欢茶」！","s3_voice":"说自己喜欢什么，用 I like 加上食物。说不喜欢，就用 I don't like。看句子拼出来，然后轮到你把「我不喜欢茶」排出来。","quiz":[{"q":"「我喜欢牛奶」用英语怎么说？","opts":["I like milk.","I don't like milk.","Would you like milk?"],"ok":0,"hint":"喜欢用 I like"},{"q":"bread 的意思是？","opts":["面包","蛋糕","米饭"],"ok":0,"hint":"bread 是面包"},{"q":"别人问 Would you like some juice?，你想要，怎么回答？","opts":["Yes, please.","No, I like.","Yes, I like juice please."],"ok":0,"hint":"想要就回答 Yes, please."}],"s4_task":"这一步我们要做的：连闯三道小题，把食物单词用起来！","s4_voice":"现在轮到你啦！三道小题，考考食物单词和 I like 句型。答对就能得到星星哦。","summary_points":[["食物单词","bread 面包 · cake 蛋糕 · milk 牛奶 · juice 果汁 · rice 米饭"],["喜欢与不喜欢","I like ... 我喜欢… ｜ I don't like ... 我不喜欢…"],["礼貌问答","Would you like ...? 回答 Yes, please. / No, thank you."]],"phonics":{"tip":"字母 f 的发音是 /f/","words":"food 食物 · fish 鱼 · four 四"},"s5_task":"这一步我们要做的：把食物的单词收进小背包！","s5_voice":"今天我们学了食物的单词，还学会了说我喜欢什么、不喜欢什么。以后去餐厅点餐，你也能用英语啦！","boss":{"title":"Boss 关：点餐大挑战","type":"mc","q":"大 Boss：你想喝果汁，怎么用英语有礼貌地说？","opts":["Would you like some juice?","I don't like juice.","May I have some juice, please?"],"ok":2,"hint":"请求别人给东西，用 May I have ... please? 最有礼貌"},"s6_task":"这一步我们要做的：打败点餐大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！它想知道你会不会礼貌地请求。注意 May I have ... please? 是最礼貌的说法哦。选对奖励两颗星！","parent":{"summary":"认识食物单词，会用 I like / I don't like 表达喜好，会用 Would you like 与 May I have 礼貌问答。","attention":"I don't 的否定容易漏；礼貌请求 May I have ... please? 是重点，见 Boss 关。","tip":"本课约 8 分钟；可在家吃饭时用英语问孩子 Do you like ...? 强化表达。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>

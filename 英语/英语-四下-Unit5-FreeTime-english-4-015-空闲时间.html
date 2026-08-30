@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>空闲时间 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 5 Free Time <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>认识空闲活动，会用 What do you do in your free time? 询问、often/sometimes 表达频率。</p>
+      <p><b>孩子容易走神的地方：</b>often 与 sometimes 的频率区别；listen to 的 to 不能丢。</p>
+      <p><b>建议：</b>本课约 8 分钟；可让孩子用 often/sometimes 说自己的自由时光。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-4-015</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 5 Free Time","title":"空闲时间","grade":4,"term":"下册","scene":{"h2":"我的自由时光","text":"写完作业，自由时间到啦！有人看电视、有人听音乐、有人和朋友打球。Binbin 想听听你的自由时光怎么过。","question":"想一想：你会用英语说「我经常听音乐」吗？","hint":"聊一聊你的自由时光！"},"s1_task":"咱们这一步要做的：学会用英语说空闲时间做什么！","s1_voice":"写完作业，自由时间到啦！有人看电视、有人听音乐、有人和朋友打球。Binbin 想知道你的自由时光怎么过。今天来学这些表达。","words_title":"单词大本营：空闲时间","words_intro":"点一点卡片，认识这些空闲活动，跟读一遍吧！","s2_task":"这一步我们要做的：认识空闲活动的单词，点卡片听发音！","s2_voice":"空闲时间可以看电视、和朋友玩、听音乐、读书，还能去公园、打篮球或者睡觉。点一点卡片，跟着读一读。","words":[{"e":"free time","z":"空闲时间","em":"⏰"},{"e":"watch TV","z":"看电视","em":"📺"},{"e":"play with friends","z":"和朋友玩","em":"🧒"},{"e":"listen to music","z":"听音乐","em":"🎧"},{"e":"read books","z":"读书","em":"📖"},{"e":"go to the park","z":"去公园","em":"🌳"},{"e":"play basketball","z":"打篮球","em":"🏀"},{"e":"sleep","z":"睡觉","em":"😴"},{"e":"sometimes","z":"有时","em":"🔁"}],"pattern":{"title":"句型魔法：空闲时间我…","sentence":["I","often","listen","to","music","in","my","free","time","."],"zh":"空闲时间我经常听音乐。","desc":"What do you do in your free time? 空闲时间你做什么？ ｜ I often ... 我经常… ｜ Sometimes ... 有时…"},"order":{"zh":"帮 Binbin 说「我经常听音乐」","words":["I","often","listen","to","music","."],"right":[0,1,2,3,4,5],"hint":"经常做某事用 I often ...，听音乐是 listen to music"},"s3_task":"这一步我们要做的：看 often 怎么用，再拼一句！","s3_voice":"说空闲时间经常做什么，用 I often 加上动作。听音乐是 listen to music，注意有个 to。看句子拼出来，然后你来拼一句。","quiz":[{"q":"「空闲时间你做什么？」用英语怎么说？","opts":["What do you do in your free time?","What do you do after school?","What's your hobby?"],"ok":0,"hint":"问空闲时间用 in your free time"},{"q":"listen to music 是？","opts":["听音乐","唱歌","跳舞"],"ok":0,"hint":"listen to music 是听音乐"},{"q":"Sometimes I play with my friends. 的意思是？","opts":["有时我和朋友一起玩。","我经常和朋友玩。","我不和朋友玩。"],"ok":0,"hint":"sometimes 是有时"}],"s4_task":"这一步我们要做的：连闯三道小题，把空闲活动用起来！","s4_voice":"现在轮到你啦！三道小题，考考空闲活动的单词和频率词。答对就能得到星星哦。","summary_points":[["空闲活动","watch TV 看电视 · listen to music 听音乐 · play basketball 打篮球"],["询问空闲","What do you do in your free time? 空闲时间你做什么？"],["频率词","often 经常 · sometimes 有时"]],"phonics":{"tip":"字母组合 ea 常发 /iː/","words":"read 读 · tea 茶 · sea 海"},"s5_task":"这一步我们要做的：把空闲活动的单词收进小背包！","s5_voice":"今天我们学会说空闲时间做什么，还会用 often 和 sometimes 表达频率。下次聊天就能派上用场啦！","boss":{"title":"Boss 关：自由时光大挑战","type":"mc","q":"大 Boss：空闲时间你有时打篮球，怎么用英语说？","opts":["Sometimes I play basketball in my free time.","I often play basketball.","I play basketball and sleep."],"ok":0,"hint":"有时用 sometimes，空闲时间用 in my free time"},"s6_task":"这一步我们要做的：打败自由时光大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！有时打篮球，要用 sometimes，还要说 in my free time。选对奖励两颗星！","parent":{"summary":"认识空闲活动，会用 What do you do in your free time? 询问、often/sometimes 表达频率。","attention":"often 与 sometimes 的频率区别；listen to 的 to 不能丢。","tip":"本课约 8 分钟；可让孩子用 often/sometimes 说自己的自由时光。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>

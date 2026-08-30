@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生日 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 6 Birthdays <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>会说 Happy birthday!，会用 When is your birthday? 问生日并用 in + 月份回答。</p>
+      <p><b>孩子容易走神的地方：</b>月份前要加 in（in May）；Here's = Here is，送礼物用语见 Boss 关。</p>
+      <p><b>建议：</b>本课约 8 分钟；可把全家人的生日用英语各问一遍。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-3-006</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 6 Birthdays","title":"生日","grade":3,"term":"上册","scene":{"h2":"生日的惊喜","text":"今天是 Lucky 的生日！朋友们准备了蛋糕和礼物。大家要唱生日歌，还要问他的生日是哪个月。","question":"想一想：你会用英语说「生日快乐」吗？","hint":"学完这课，你也能给别人送生日祝福！"},"s1_task":"咱们这一步要做的：学会用英语送生日祝福！","s1_voice":"今天是小狗 Lucky 的生日，朋友们准备了蛋糕和礼物。我们一起来学会说生日快乐，还会问别人的生日是什么时候。","words_title":"单词大本营：生日","words_intro":"点一点卡片，认识这些生日相关的单词，跟读一遍吧！","s2_task":"这一步我们要做的：认识生日的单词，点卡片听发音！","s2_voice":"生日这一天有蛋糕、礼物、聚会和卡片。点一点卡片，听听它们用英语怎么说，跟着读一读。","words":[{"e":"birthday","z":"生日","em":"🎂"},{"e":"cake","z":"蛋糕","em":"🎂"},{"e":"present","z":"礼物","em":"🎁"},{"e":"party","z":"聚会","em":"🎉"},{"e":"card","z":"卡片","em":"💌"},{"e":"month","z":"月份","em":"📅"},{"e":"happy","z":"快乐的","em":"😊"},{"e":"candle","z":"蜡烛","em":"🕯️"}],"pattern":{"title":"句型魔法：生日快乐！","sentence":["Happy","birthday","to","you","!"],"zh":"祝你生日快乐！","desc":"Happy birthday! 生日快乐！ ｜ When is your birthday? 你的生日是什么时候？ ｜ My birthday is in May. 我的生日在五月。"},"order":{"zh":"帮大家问「你的生日是什么时候？」","words":["When","is","your","birthday","?"],"right":[0,1,2,3,4],"hint":"问生日用 When is your birthday?"},"s3_task":"这一步我们要做的：看生日祝福怎么用，再拼一个问句！","s3_voice":"送祝福要说 Happy birthday，问生日是什么时候用 When is your birthday。看句子拼出来，然后你来拼问句。","quiz":[{"q":"「生日快乐」用英语怎么说？","opts":["Happy birthday!","When is your birthday?","My birthday is in May."],"ok":0,"hint":"祝福用 Happy birthday!"},{"q":"present 的意思是？","opts":["礼物","蛋糕","卡片"],"ok":0,"hint":"present 是礼物"},{"q":"「我的生日在五月」怎么说？","opts":["My birthday is in May.","My birthday is May.","I'm in May."],"ok":0,"hint":"生日在几月用 in + 月份"}],"s4_task":"这一步我们要做的：连闯三道小题，把生日单词用起来！","s4_voice":"现在轮到你啦！三道小题，考考生日的单词和祝福语。答对就能得到星星哦。","summary_points":[["生日祝福","Happy birthday! 生日快乐！"],["问生日","When is your birthday? 你的生日什么时候？"],["回答","My birthday is in ... 我的生日在…（月份）"]],"phonics":{"tip":"字母 b 的发音是 /b/","words":"birthday 生日 · book 书 · ball 球"},"s5_task":"这一步我们要做的：把生日的祝福收进小背包！","s5_voice":"今天我们学会了说生日快乐，还会问别人的生日。下次朋友过生日，你就能用英语祝福他啦！","boss":{"title":"Boss 关：生日大挑战","type":"mc","q":"大 Boss：朋友生日，你想送他礼物并说「这是给你的礼物」，怎么说？","opts":["Here's a present for you.","Here's a cake for you.","Happy birthday for you."],"ok":0,"hint":"送礼物说 Here's a present for you."},"s6_task":"这一步我们要做的：打败生日大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！送礼物的时候要说 Here's a present for you，这是给你的礼物。选对奖励两颗星！","parent":{"summary":"会说 Happy birthday!，会用 When is your birthday? 问生日并用 in + 月份回答。","attention":"月份前要加 in（in May）；Here's = Here is，送礼物用语见 Boss 关。","tip":"本课约 8 分钟；可把全家人的生日用英语各问一遍。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>

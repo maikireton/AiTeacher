@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>交通方式 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 3 Transportation <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>认识交通方式，会用 How do you go to ...? 询问、I go by ... / I walk 回答。</p>
+      <p><b>孩子容易走神的地方：</b>步行用 walk（不加 by），乘车用 by + 工具；这是最容易错的一处。</p>
+      <p><b>建议：</b>本课约 8 分钟；可让孩子用英语说说家人上班上学的出行方式。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-4-003</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 3 Transportation","title":"交通方式","grade":4,"term":"上册","scene":{"h2":"怎么去学校","text":"早上，大家用不同的方式去学校：有的坐公交，有的骑车，有的走路。Binbin 想知道你每天怎么上学。","question":"想一想：你会用英语说「我坐公交去学校」吗？","hint":"交通方式学起来，出门问路不用愁！"},"s1_task":"咱们这一步要做的：学会用英语说怎么去学校！","s1_voice":"早上大家去学校的方式各不相同：有的坐公交，有的骑车，有的走路。Binbin 想问问你每天怎么上学。今天来学交通方式。","words_title":"单词大本营：交通方式","words_intro":"点一点卡片，认识这些交通工具，跟读一遍吧！","s2_task":"这一步我们要做的：认识交通工具的单词，点卡片听发音！","s2_voice":"出行可以坐公共汽车、小汽车、自行车、火车、地铁、飞机、轮船，还可以打车，或者步行。点一点卡片，跟着读一读。","words":[{"e":"bus","z":"公共汽车","em":"🚌"},{"e":"car","z":"小汽车","em":"🚗"},{"e":"bike","z":"自行车","em":"🚲"},{"e":"train","z":"火车","em":"🚆"},{"e":"subway","z":"地铁","em":"🚇"},{"e":"plane","z":"飞机","em":"✈️"},{"e":"ship","z":"轮船","em":"🚢"},{"e":"taxi","z":"出租车","em":"🚕"},{"e":"walk","z":"步行","em":"🚶"}],"pattern":{"title":"句型魔法：你怎么去…？","sentence":["I","go","to","school","by","bus","."],"zh":"我坐公共汽车去学校。","desc":"How do you go to ...? 你怎么去…？ ｜ I go by ... 我坐…去。 ｜ I walk to school. 我步行去学校。"},"order":{"zh":"帮 Binbin 问「你怎么去学校？」","words":["How","do","you","go","to","school","?"],"right":[0,1,2,3,4,5,6],"hint":"问交通方式用 How do you go to ...?"},"s3_task":"这一步我们要做的：看 How do you go 怎么用，再拼一个问句！","s3_voice":"想知道别人怎么去某地，用 How do you go to 加上地方。坐什么去用 by 加上交通工具。看句子拼出来，然后你来拼问句。","quiz":[{"q":"「你怎么去学校？」用英语怎么说？","opts":["How do you go to school?","What do you do at school?","Where is your school?"],"ok":0,"hint":"问怎么去用 How do you go to ...?"},{"q":"subway 是？","opts":["地铁","公交","火车"],"ok":0,"hint":"subway 是地铁"},{"q":"I go by plane. 的意思是？","opts":["我坐飞机去。","我坐火车去。","我骑自行车去。"],"ok":0,"hint":"by plane 是坐飞机"}],"s4_task":"这一步我们要做的：连闯三道小题，把交通方式用起来！","s4_voice":"现在轮到你啦！三道小题，考考交通工具的单词和问句。答对就能得到星星哦。","summary_points":[["交通单词","bus 公交 · bike 自行车 · subway 地铁 · plane 飞机 · walk 步行"],["询问方式","How do you go to ...? 你怎么去…？"],["回答","I go by ... 我坐…去；I walk. 我步行。"]],"phonics":{"tip":"字母组合 tr 发 /tr/","words":"train 火车 · tree 树 · truck 卡车"},"s5_task":"这一步我们要做的：把交通的单词收进小背包！","s5_voice":"今天我们学会了很多交通工具，还会问别人怎么去某个地方。下次出门，你也能用英语交流啦！","boss":{"title":"Boss 关：出行大挑战","type":"mc","q":"大 Boss：你想说「我走路去上学」，怎么说？","opts":["I walk to school.","I go to school by walk.","I walk school."],"ok":0,"hint":"步行用动词 walk，不加 by；to school 别忘了"},"s6_task":"这一步我们要做的：打败出行大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！走路用 walk，是动词，不用 by。选对奖励两颗星！","parent":{"summary":"认识交通方式，会用 How do you go to ...? 询问、I go by ... / I walk 回答。","attention":"步行用 walk（不加 by），乘车用 by + 工具；这是最容易错的一处。","tip":"本课约 8 分钟；可让孩子用英语说说家人上班上学的出行方式。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>

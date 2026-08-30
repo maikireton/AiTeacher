@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>城市 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 2 Cities <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>认识城市地点，会用 Where is ...? 与 There is ... in ... 描述城市。</p>
+      <p><b>孩子容易走神的地方：</b>There is 与 It is 的区分（There is 表示存在，It is 表示它…）；next to 表旁边。</p>
+      <p><b>建议：</b>本课约 8 分钟；可让孩子用 There is 介绍所在城市的 3 个地方。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-4-012</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 2 Cities","title":"城市","grade":4,"term":"下册","scene":{"h2":"城市大发现","text":"周末，Binbin 一家去城市里玩：看博物馆、逛动物园、走过大桥、登上高塔……城市里好玩的地方真多！","question":"想一想：博物馆、动物园、大桥用英语怎么说？","hint":"一起探索城市里的好地方！"},"s1_task":"咱们这一步要做的：学会用英语说城市里的地方！","s1_voice":"周末，Binbin 一家去城市里玩，看了博物馆、动物园，还走过大桥。今天来学城市里的地点和 There is 句型。","words_title":"单词大本营：城市","words_intro":"点一点卡片，认识城市里的地方，跟读一遍吧！","s2_task":"这一步我们要做的：认识城市地点的单词，点卡片听发音！","s2_voice":"城市里有博物馆、体育场、动物园、大桥、广场，还有宾馆和高塔。点一点卡片，听听它们的英文名字，跟着读一读。","words":[{"e":"city","z":"城市","em":"🏙️"},{"e":"place","z":"地方","em":"📍"},{"e":"street","z":"街道","em":"🛣️"},{"e":"museum","z":"博物馆","em":"🏛️"},{"e":"stadium","z":"体育场","em":"🏟️"},{"e":"zoo","z":"动物园","em":"🦁"},{"e":"bridge","z":"桥","em":"🌉"},{"e":"square","z":"广场","em":"⛲"},{"e":"hotel","z":"宾馆","em":"🏨"},{"e":"tower","z":"塔","em":"🗼"}],"pattern":{"title":"句型魔法：某处有…","sentence":["There","is","a","big","bridge","in","our","city","."],"zh":"我们城市里有一座大桥。","desc":"Where is ...? …在哪？ ｜ It's near ... 在…附近。 ｜ There is ... in ... 在某处有…"},"order":{"zh":"帮 Binbin 说「我们城市里有一个动物园」","words":["There","is","a","zoo","in","our","city","."],"right":[0,1,2,3,4,5,6,7],"hint":"某处有某物用 There is ... in ..."},"s3_task":"这一步我们要做的：看 There is 怎么用，再拼一个句子！","s3_voice":"说某个地方有什么，用 There is 加上东西，再加 in 和地点。看句子拼出来，然后你来拼一个长句。","quiz":[{"q":"「博物馆在哪里？」用英语怎么说？","opts":["Where is the museum?","What is the museum?","Is there a museum?"],"ok":0,"hint":"问地点用 Where is ...?"},{"q":"stadium 是？","opts":["体育场","动物园","博物馆"],"ok":0,"hint":"stadium 是体育场"},{"q":"There is a bridge in our city. 的意思是？","opts":["我们城市里有一座桥。","桥在城市外面。","我们有一座桥。"],"ok":0,"hint":"There is ... in our city 是我们城市里有…"}],"s4_task":"这一步我们要做的：连闯三道小题，把城市地点用起来！","s4_voice":"现在轮到你啦！三道小题，考考城市的地点单词和 There is 句型。答对就能得到星星哦。","summary_points":[["城市地点","museum 博物馆 · zoo 动物园 · stadium 体育场 · bridge 桥 · square 广场"],["问地点","Where is ...? 在哪？"],["某处有…","There is ... in ... 在某处有…"]],"phonics":{"tip":"字母组合 ee 常发 /iː/","words":"street 街道 · tree 树 · green 绿色"},"s5_task":"这一步我们要做的：把城市的单词收进小背包！","s5_voice":"今天我们认识了城市里的好地方，还会用 There is 说某处有什么。以后介绍你住的城市，也能用英语啦！","boss":{"title":"Boss 关：城市大挑战","type":"mc","q":"大 Boss：你想说「动物园在公园旁边」，怎么说？","opts":["The zoo is next to the park.","The zoo is across from the park.","There is a zoo in the park."],"ok":0,"hint":"旁边用 next to"},"s6_task":"这一步我们要做的：打败城市大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！动物园在公园旁边，用 next to。选对奖励两颗星！","parent":{"summary":"认识城市地点，会用 Where is ...? 与 There is ... in ... 描述城市。","attention":"There is 与 It is 的区分（There is 表示存在，It is 表示它…）；next to 表旁边。","tip":"本课约 8 分钟；可让孩子用 There is 介绍所在城市的 3 个地方。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>

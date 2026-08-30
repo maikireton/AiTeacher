@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的家庭 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 4 My Family <small>3年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>认识家庭成员，会用 This is my ... 介绍、Who is ...? 询问。</p>
+      <p><b>孩子容易走神的地方：</b>he（他）与 she（她）易混，问叔叔用 Who is he?；重点看 Boss 关。</p>
+      <p><b>建议：</b>本课约 8 分钟；可翻出全家福让孩子逐个用英语介绍。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-3-014</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 4 My Family","title":"我的家庭","grade":3,"term":"下册","scene":{"h2":"全家福","text":"Binbin 带来一张全家福，上面有爸爸、妈妈、爷爷奶奶，还有可爱的妹妹。他要向大家介绍自己的家人。","question":"想一想：爸爸、妈妈、爷爷用英语怎么说？","hint":"学会介绍家人，你也能晒出全家福！"},"s1_task":"咱们这一步要做的：学会用英语介绍家人！","s1_voice":"Binbin 带来一张全家福，想介绍自己的家人。有爸爸、妈妈、爷爷奶奶，还有妹妹。今天我们学会家人的单词，还会介绍他们。","words_title":"单词大本营：我的家庭","words_intro":"点一点卡片，认识这些家人，跟读一遍吧！","s2_task":"这一步我们要做的：认识家人的单词，点卡片听发音！","s2_voice":"家人有爸爸、妈妈、兄弟、姐妹，还有爷爷、奶奶、叔叔、阿姨和表兄妹。点一点卡片，听听它们的英文名字，跟着读一读。","words":[{"e":"family","z":"家庭","em":"👨‍👩‍👧"},{"e":"father","z":"爸爸","em":"👨"},{"e":"mother","z":"妈妈","em":"👩"},{"e":"brother","z":"兄弟","em":"👦"},{"e":"sister","z":"姐妹","em":"👧"},{"e":"grandpa","z":"爷爷","em":"👴"},{"e":"grandma","z":"奶奶","em":"👵"},{"e":"uncle","z":"叔叔","em":"👨"},{"e":"aunt","z":"阿姨","em":"👩"},{"e":"cousin","z":"表兄妹","em":"🧒"}],"pattern":{"title":"句型魔法：这是我的…","sentence":["This","is","my","father","."],"zh":"这是我的爸爸。","desc":"This is my ... 这是我的… ｜ Who is ...? …是谁？ ｜ He's / She's ... 他 / 她是…"},"order":{"zh":"帮 Binbin 介绍「这是我的家庭」","words":["This","is","my","family","."],"right":[0,1,2,3,4],"hint":"介绍家人用 This is my ..."},"s3_task":"这一步我们要做的：看 This is 怎么用，再拼一句介绍的话！","s3_voice":"介绍家人用 This is my 加上家人。想知道照片里的人是谁，用 Who is。看句子拼出来，然后你来拼一句。","quiz":[{"q":"「这是我的妈妈」用英语怎么说？","opts":["This is my mother.","This is my father.","She is my mother."],"ok":0,"hint":"妈妈是 mother，介绍用 This is my"},{"q":"grandpa 是？","opts":["爷爷","奶奶","叔叔"],"ok":0,"hint":"grandpa 是爷爷，grandma 是奶奶"},{"q":"Who is she? 的回答是？","opts":["She's my grandma.","He's my grandpa.","She is grandpa."],"ok":0,"hint":"女生用 She's，男生用 He's"}],"s4_task":"这一步我们要做的：连闯三道小题，把家人单词用起来！","s4_voice":"现在轮到你啦！三道小题，考考家人的单词和介绍句型。答对就能得到星星哦。","summary_points":[["家人单词","father 爸爸 · mother 妈妈 · brother 兄弟 · sister 姐妹 · grandpa 爷爷 · grandma 奶奶"],["介绍家人","This is my ... 这是我的…"],["询问是谁","Who is ...? 他是谁？ 回答 He's / She's ..."]],"phonics":{"tip":"字母组合 th 发 /θ/，舌尖轻轻放在牙齿间","words":"three 三 · thank 谢谢 · mouth 嘴"},"s5_task":"这一步我们要做的：把家人的单词收进小背包！","s5_voice":"今天我们认识了家人，还学会了用 This is my 介绍他们。下次拿出全家福，你也能用英语介绍啦！","boss":{"title":"Boss 关：家人大挑战","type":"mc","q":"大 Boss：照片里有个不认识的叔叔，你想问「他是谁？」，怎么说？","opts":["Who is he?","Who is she?","What is he?"],"ok":0,"hint":"问男生用 Who is he?"},"s6_task":"这一步我们要做的：打败家人大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！照片里是位叔叔，是男生，要问 Who is he。选对奖励两颗星！","parent":{"summary":"认识家庭成员，会用 This is my ... 介绍、Who is ...? 询问。","attention":"he（他）与 she（她）易混，问叔叔用 Who is he?；重点看 Boss 关。","tip":"本课约 8 分钟；可翻出全家福让孩子逐个用英语介绍。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>

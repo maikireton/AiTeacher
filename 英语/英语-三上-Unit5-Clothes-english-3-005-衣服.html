@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>衣服 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 5 Clothes <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>认识衣服单词，会用 What colour is ...? 问颜色、Do you like ...? 问喜好。</p>
+      <p><b>孩子容易走神的地方：</b>颜色形容词放名词前（the red dress）；问喜好用 Do you like 而非 What colour。</p>
+      <p><b>建议：</b>本课约 8 分钟；可让孩子指着衣服用 What colour 问家长。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-3-005</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 5 Clothes","title":"衣服","grade":3,"term":"上册","scene":{"h2":"挑衣服的小淘气","text":"明天要拍照啦！小淘气在衣柜前挑衣服，红的、蓝的、黄的……它要用英语说出每件衣服和颜色。","question":"想一想：T恤、短裙、帽子用英语怎么说？","hint":"跟着小淘气一起挑衣服学单词！"},"s1_task":"咱们这一步要做的：帮小淘气说出衣服和颜色！","s1_voice":"小淘气明天要拍照，正在衣柜前挑衣服。它想知道每件衣服叫什么、是什么颜色。今天我们来学衣服的单词和问颜色的句型。","words_title":"单词大本营：衣服","words_intro":"点一点卡片，认识这些衣服，跟读一遍吧！","s2_task":"这一步我们要做的：认识衣服的单词，点卡片听发音！","s2_voice":"衣柜里有 T 恤、衬衫、短裙、连衣裙、外套、毛衣、牛仔裤、袜子、鞋子，还有帽子。点一点卡片，听一听，跟着读一读。","words":[{"e":"T-shirt","z":"T恤","em":"👕"},{"e":"shirt","z":"衬衫","em":"👔"},{"e":"skirt","z":"短裙","em":"👗"},{"e":"dress","z":"连衣裙","em":"👗"},{"e":"coat","z":"外套","em":"🧥"},{"e":"sweater","z":"毛衣","em":"🧶"},{"e":"jeans","z":"牛仔裤","em":"👖"},{"e":"socks","z":"袜子","em":"🧦"},{"e":"shoes","z":"鞋","em":"👟"},{"e":"cap","z":"帽子","em":"🧢"}],"pattern":{"title":"句型魔法：什么颜色？","sentence":["I","like","the","red","dress","."],"zh":"我喜欢这条红色的连衣裙。","desc":"What colour is ...? 它是什么颜色？ 回答 It's blue. 它是蓝色的。 ｜ I like the ... 我喜欢…"},"order":{"zh":"帮小淘气问「你的衬衫是什么颜色？」","words":["What","colour","is","your","shirt","?"],"right":[0,1,2,3,4,5],"hint":"问颜色用 What colour is ...?"},"s3_task":"这一步我们要做的：看 What colour 怎么用，再拼一个问颜色的句子！","s3_voice":"想知道一件衣服是什么颜色，用 What colour is 加上衣服。看句子拼出来，然后你来把「你的衬衫是什么颜色」排出来。","quiz":[{"q":"「你的衬衫是什么颜色？」用英语怎么说？","opts":["What colour is your shirt?","What is your shirt?","Is your shirt blue?"],"ok":0,"hint":"问颜色用 What colour is ...?"},{"q":"socks 是？","opts":["袜子","鞋子","裤子"],"ok":0,"hint":"socks 是袜子，shoes 是鞋"},{"q":"It's blue. 的意思是？","opts":["它是蓝色的。","它是黑色的。","它是红色的。"],"ok":0,"hint":"blue 是蓝色"}],"s4_task":"这一步我们要做的：连闯三道小题，把衣服单词用起来！","s4_voice":"现在轮到你啦！三道小题，考考衣服的单词和问颜色。答对就能得到星星哦。","summary_points":[["衣服单词","T-shirt T恤 · skirt 短裙 · coat 外套 · socks 袜子 · shoes 鞋 · cap 帽子"],["问颜色","What colour is ...? 它是什么颜色？ 回答 It's ..."],["我喜欢…","I like the ... dress. 我喜欢…的连衣裙"]],"phonics":{"tip":"字母 s 的发音是 /s/","words":"socks 袜子 · shirt 衬衫 · skirt 短裙"},"s5_task":"这一步我们要做的：把衣服的单词收进小背包！","s5_voice":"今天我们认识了各种衣服，还学会了问颜色 What colour。以后挑衣服的时候，你也能用英语啦！","boss":{"title":"Boss 关：挑衣服大挑战","type":"mc","q":"大 Boss：你想问「你喜欢这件黄色的 T 恤吗？」，怎么问？","opts":["Do you like the yellow T-shirt?","What colour is the T-shirt?","I like the yellow T-shirt."],"ok":0,"hint":"问别人喜不喜欢，用 Do you like ...?"},"s6_task":"这一步我们要做的：打败挑衣服大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！它想问你喜不喜欢黄色的 T 恤。记住问喜不喜欢用 Do you like。选对奖励两颗星！","parent":{"summary":"认识衣服单词，会用 What colour is ...? 问颜色、Do you like ...? 问喜好。","attention":"颜色形容词放名词前（the red dress）；问喜好用 Do you like 而非 What colour。","tip":"本课约 8 分钟；可让孩子指着衣服用 What colour 问家长。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>

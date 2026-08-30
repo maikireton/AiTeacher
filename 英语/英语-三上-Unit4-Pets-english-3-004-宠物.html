@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>宠物 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 4 Pets <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>认识宠物单词，会用 Do you have ...? 询问并用 Yes, I do. / No, I don't. 回答。</p>
+      <p><b>孩子容易走神的地方：</b>肯定回答易说成 Yes, I have；应记 Yes, I do. / No, I don't. 配对。</p>
+      <p><b>建议：</b>本课约 8 分钟；可问问孩子 Do you have a pet? 用英语聊一聊家里的宠物。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-3-004</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 4 Pets","title":"宠物","grade":3,"term":"上册","scene":{"h2":"宠物店之旅","text":"周末，Binbin 去宠物店玩，店里的小动物们可爱极了！他想知道小伙伴有没有养小动物。","question":"想一想：你会用英语问「你养狗吗？」吗？","hint":"学完这课，你就能和小伙伴聊宠物啦！"},"s1_task":"咱们这一步要做的：学会用英语聊宠物！","s1_voice":"周末，Binbin 去宠物店，看到好多可爱的小动物。他想问问小伙伴有没有养宠物，我们帮他学会这些单词和问句吧。","words_title":"单词大本营：宠物","words_intro":"点一点卡片，认识这些小动物，跟读一遍吧！","s2_task":"这一步我们要做的：认识小动物的单词，点卡片听发音！","s2_voice":"宠物店里住着猫、狗、小鸟、小鱼、小兔，还有猴子、老虎和大熊猫。点一点卡片，听听它们的英文名字，跟着读一读。","words":[{"e":"cat","z":"猫","em":"🐱"},{"e":"dog","z":"狗","em":"🐶"},{"e":"bird","z":"鸟","em":"🐦"},{"e":"fish","z":"鱼","em":"🐟"},{"e":"rabbit","z":"兔子","em":"🐰"},{"e":"monkey","z":"猴子","em":"🐵"},{"e":"tiger","z":"老虎","em":"🐯"},{"e":"panda","z":"熊猫","em":"🐼"}],"pattern":{"title":"句型魔法：你有…吗？","sentence":["I","have","a","dog","."],"zh":"我有一只狗。","desc":"Do you have ...? 你有…吗？ 回答 Yes, I do. / No, I don't. ｜ I have ... 我有…"},"order":{"zh":"帮 Binbin 问「你有一只猫吗？」","words":["Do","you","have","a","cat","?"],"right":[0,1,2,3,4,5],"hint":"问句开头是 Do you，别忘了后面的问号"},"s3_task":"这一步我们要做的：看 Do you have 怎么用，再拼一个问句！","s3_voice":"想知道别人有没有养宠物，用 Do you have 加上小动物。看句子拼出来，然后你来把问句「你有一只猫吗」排出来。","quiz":[{"q":"「你有一只猫吗？」用英语怎么说？","opts":["Do you have a cat?","I have a cat.","You have a cat?"],"ok":0,"hint":"问别人有没有用 Do you have ...?"},{"q":"rabbit 是？","opts":["兔子","老虎","猴子"],"ok":0,"hint":"rabbit 是兔子"},{"q":"Do you have a dog? 的否定回答是？","opts":["No, I don't.","Yes, I do.","No, I do."],"ok":0,"hint":"没有就回答 No, I don't."}],"s4_task":"这一步我们要做的：连闯三道小题，把宠物单词用起来！","s4_voice":"现在轮到你啦！三道小题，考考小动物的单词和 Do you have 问句。答对就能得到星星哦。","summary_points":[["宠物单词","cat 猫 · dog 狗 · bird 鸟 · fish 鱼 · rabbit 兔子 · panda 熊猫"],["询问拥有","Do you have ...? 你有…吗？ 回答 Yes, I do. / No, I don't."],["我有…","I have a ... 我有…"]],"phonics":{"tip":"字母 p 的发音是 /p/","words":"pet 宠物 · pig 猪 · pen 钢笔"},"s5_task":"这一步我们要做的：把宠物的单词收进小背包！","s5_voice":"今天我们认识了可爱的小动物，还学会了问别人有没有养宠物。Do you have a cat？你有猫吗？","boss":{"title":"Boss 关：宠物大挑战","type":"mc","q":"大 Boss：妈妈问你「Do you have a rabbit?」，你没有，怎么回答？","opts":["No, I don't.","Yes, I have.","No, I have a rabbit."],"ok":0,"hint":"没有就回答 No, I don't."},"s6_task":"这一步我们要做的：打败宠物大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！妈妈问你有没有兔子，你没有。记住：没有就回答 No, I don't。选对奖励两颗星！","parent":{"summary":"认识宠物单词，会用 Do you have ...? 询问并用 Yes, I do. / No, I don't. 回答。","attention":"肯定回答易说成 Yes, I have；应记 Yes, I do. / No, I don't. 配对。","tip":"本课约 8 分钟；可问问孩子 Do you have a pet? 用英语聊一聊家里的宠物。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>

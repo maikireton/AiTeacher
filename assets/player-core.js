@@ -57,7 +57,11 @@ window.PlayerCore = (function () {
         return;
       }
       if (window.AiVoice) {
-        window.AiVoice.speak(text, { rate: RATE, pitch: PITCH, onEnd: finish });
+        if (window.AiVoice.speakMixed && /[A-Za-z]/.test(text)) {
+          window.AiVoice.speakMixed(text, { rate: RATE, pitch: PITCH, onEnd: finish });
+        } else {
+          window.AiVoice.speak(text, { rate: RATE, pitch: PITCH, onEnd: finish });
+        }
         return;
       }
       try {

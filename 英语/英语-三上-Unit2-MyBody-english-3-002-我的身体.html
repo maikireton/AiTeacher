@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的身体 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 英语</a>
+    <span class="brand">Unit 2 My Body <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>认识 head/eye/nose/mouth/hand/leg/foot 等身体部位，会用 This is my 与 These are my 表达。</p>
+      <p><b>孩子容易走神的地方：</b>This is（一个）和 These are（多个）容易混，foot 复数 feet 也要提醒；重点看 Boss 关。</p>
+      <p><b>建议：</b>本课约 8 分钟；可让孩子边说边指自己的身体部位，加深记忆。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 英语课件 english-3-002</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script src="../assets/english-ui.js"></script>
+<script>
+window.COURSE = {"unit":"Unit 2 My Body","title":"我的身体","grade":3,"term":"上册","scene":{"h2":"受伤的小恐龙","text":"小恐龙玩滑板摔了一跤，指着自己的腿喊疼。它要用英语告诉医生哪里受伤了，得先知道身体的各个部位怎么说！","question":"想一想：头、手、脚用英语怎么说？","hint":"想不出来也没关系，我们马上学！"},"s1_task":"咱们这一步要做的：帮小恐龙说出身体部位！","s1_voice":"小恐龙玩滑板摔了一跤，腿疼得直叫。它想用英语告诉医生哪里受伤了，可是还不会说身体部位的单词。今天我们就来帮它认识自己的身体，你准备好了吗？","words_title":"单词大本营：我的身体","words_intro":"点一点卡片，认识我们身体的各个部位，跟读一遍吧！","s2_task":"这一步我们要做的：认识身体的每个部位，点卡片听发音！","s2_voice":"我们身上有好多部位：头、头发、眼睛、鼻子、嘴巴、手、腿、脚。点一点卡片，听听它们用英语怎么说，再跟着读一读。","words":[{"e":"head","z":"头","em":"👦"},{"e":"hair","z":"头发","em":"💇"},{"e":"eye","z":"眼睛","em":"👀"},{"e":"ear","z":"耳朵","em":"👂"},{"e":"nose","z":"鼻子","em":"👃"},{"e":"mouth","z":"嘴","em":"👄"},{"e":"hand","z":"手","em":"✋"},{"e":"arm","z":"胳膊","em":"💪"},{"e":"leg","z":"腿","em":"🦵"},{"e":"foot","z":"脚","em":"🦶"},{"e":"body","z":"身体","em":"🧍"}],"pattern":{"title":"句型魔法：这是我的…","sentence":["This","is","my","nose","."],"zh":"这是我的鼻子。","desc":"This is my ... 这是我的…（一个） ｜ These are my ... 这些是我的…（多个） ｜ I hurt my ... 我弄伤了…"},"order":{"zh":"帮小恐龙说出「这是我的鼻子」","words":["This","is","my","nose","."],"right":[0,1,2,3,4],"hint":"先说 This is，再说 my，最后说部位～"},"s3_task":"这一步我们要做的：看 This is 句型怎么用，再自己拼一句！","s3_voice":"介绍身体部位的时候，我们用 This is my 加上部位的名字。看动画里句子一块块拼出来，然后你来动手，把「这是我的鼻子」拼成英文吧！","quiz":[{"q":"「这是我的头」用英语怎么说？","opts":["This is my head.","This is my hand.","I hurt my head."],"ok":0,"hint":"头是 head，This is my 表示这是我的"},{"q":"眼睛用英语怎么说？","opts":["eye","ear","nose"],"ok":0,"hint":"eye 是眼睛，ear 是耳朵"},{"q":"I hurt my leg. 的意思是？","opts":["我伤了腿。","我喜欢腿。","这是我的腿。"],"ok":0,"hint":"hurt 是受伤、弄伤"}],"s4_task":"这一步我们要做的：连闯三道小题，把身体单词用起来！","s4_voice":"现在轮到你啦！三道小题，考考你对身体部位和 This is 句型记住了没有。答对就能得到星星哦。","summary_points":[["身体部位","head 头 · eye 眼睛 · nose 鼻子 · mouth 嘴 · hand 手 · leg 腿 · foot 脚"],["这是我的","This is my ... 这是我的…（单个）"],["这些是我的","These are my ... 这些是我的…（多个）"]],"phonics":{"tip":"字母 h 的发音是 /h/","words":"head 头 · hand 手 · help 帮助"},"s5_task":"这一步我们要做的：把身体部位的单词收进小背包！","s5_voice":"今天我们认识了身体的好多部位，还学会了说 This is my 这是我的。以后不小心受伤，就能用英语告诉别人了！","boss":{"title":"Boss 关：身体大挑战","type":"mc","q":"大 Boss：选出正确的句子「这是我的双手。」","opts":["These are my hands.","This is my hand.","I hurt my hands."],"ok":0,"hint":"双手是两个，要用 These are，手也要用复数 hands"},"s6_task":"这一步我们要做的：打败身体大 Boss，赢双倍星星！","s6_voice":"最后的大 Boss 来啦！它问的是「这是我的双手」。记住：两个以上的部位要用 These are 哦。选对就奖励两颗星！","parent":{"summary":"认识 head/eye/nose/mouth/hand/leg/foot 等身体部位，会用 This is my 与 These are my 表达。","attention":"This is（一个）和 These are（多个）容易混，foot 复数 feet 也要提醒；重点看 Boss 关。","tip":"本课约 8 分钟；可让孩子边说边指自己的身体部位，加深记忆。"}};
+EngUI.launch(window.COURSE);
+</script>
+</body>
+</html>
