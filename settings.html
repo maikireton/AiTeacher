@@ -16,6 +16,8 @@
     font-size: 15px; color: var(--text); outline: none;
   }
   .field select:focus { border-color: var(--accent-deep); }
+  .btn { min-height: 44px; padding: 0 18px; border-radius: 12px; border: none; background: var(--accent-deep); color: #fff; font-size: 14px; cursor: pointer; }
+  .btn:active { opacity: .85; }
   .status { font-size: 13px; color: var(--text-2); margin-top: 10px; min-height: 20px; }
   .status.ok { color: var(--green); }
   .status.warn { color: #b07900; }
@@ -31,11 +33,12 @@
 
   <div class="card">
     <h2>语音 · 音色</h2>
-    <div class="desc">课件讲解使用中文（普通话）语音。这里只提供<strong>简体中文（zh-cn）音色</strong>，选择后所有课件都会用这个声音讲解。</div>
+    <div class="desc">课件讲解使用中文（普通话）语音。这里只提供<strong>简体中文（zh-cn）音色</strong>，点「播放」可以听一下效果，选择后所有课件都会用这个声音讲解。</div>
     <div class="field">
       <select id="voice-select" aria-label="选择简体中文音色">
         <option value="">加载中…</option>
       </select>
+      <button class="btn" id="btn-preview">播放</button>
     </div>
     <div class="status" id="voice-status"></div>
     <div class="note" id="voice-note"></div>
@@ -125,6 +128,23 @@
     }
     return null;
   }
+
+  /* 播放按钮：试听当前所选音色 */
+  function preview() {
+    var v = pickVoice();
+    if (!v || !("speechSynthesis" in window)) { return; }
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance("你好，我是你的小老师。这个声音好不好听？");
+      u.lang = v.lang || "zh-CN";
+      u.voice = v;
+      u.rate = 0.92;
+      u.pitch = 1.05;
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* 忽略 */ }
+  }
+  var btnPreview = document.getElementById("btn-preview");
+  if (btnPreview) { btnPreview.addEventListener("click", preview); }
 
   /* 选择变化：保存 */
   select.addEventListener("change", function () {
