@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>条形统计图的读与画 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .chart-box { margin: 14px 0; }
+  .bar-chart { display: flex; gap: 18px; align-items: flex-end; justify-content: center; height: 200px; border-bottom: 3px solid var(--border); border-left: 3px solid var(--border); padding: 6px 12px 0; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; }
+  .bar { width: 46px; background: linear-gradient(180deg, #7eb6ff, #4a7fe0); border-radius: 8px 8px 0 0; height: 0; transition: height .9s ease; }
+  .bar.hl { background: linear-gradient(180deg, #ffd591, #ffa940); }
+  .bar-val { font-weight: 800; margin-bottom: 4px; opacity: 0; transition: opacity .3s; }
+  .bar-val.on { opacity: 1; }
+  .bar-name { margin-top: 6px; font-size: 13px; color: var(--text-2); }
+  .ch-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .bar-mini { height: 110px; gap: 10px; }
+  .bar-mini .bar { width: 34px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">条形统计图的读与画 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>条形统计图用直条的长短表示数量多少；读图看横轴（类别）和纵轴（数量），直条越高数量越多；画图要先定每格代表的数。</p>
+      <p><b>孩子容易走神的地方：</b>把直条高度当数值直接看，忘了看纵轴刻度；画图时每格代表的数不一致。</p>
+      <p><b>建议：</b>本课约 8 分钟；让孩子用自己的玩具数画一张条形图。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-020</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  function renderBars(boxId, items, unit) {
+    var box = document.getElementById(boxId);
+    if (!box) { return; }
+    box.innerHTML = "";
+    var chart = document.createElement("div");
+    chart.className = "bar-chart";
+    items.forEach(function (it) {
+      var col = document.createElement("div");
+      col.className = "bar-col";
+      var val = document.createElement("div");
+      val.className = "bar-val";
+      val.textContent = it.v;
+      var bar = document.createElement("div");
+      bar.className = "bar";
+      bar.style.height = "0px";
+      var name = document.createElement("div");
+      name.className = "bar-name";
+      name.textContent = it.name;
+      col.appendChild(val);
+      col.appendChild(bar);
+      col.appendChild(name);
+      chart.appendChild(col);
+      it._bar = bar;
+      it._val = val;
+    });
+    box.appendChild(chart);
+    return items;
+  }
+  function growBars(items, delay) {
+    items.forEach(function (it, i) {
+      setTimeout(function () {
+        it._bar.style.height = (it.v * 26) + "px";
+        it._val.classList.add("on");
+      }, delay * (i + 1));
+    });
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看统计图怎么帮我们一眼比较！",
+      voice: "要比较四个班的人数，光看数字不直观。画成条形统计图，谁多谁少一眼就看出来。今天我们学会读它、画它。",
+      body: function () {
+        return '' +
+          '<h2>一眼看出谁最多</h2>' +
+          '<p>一班 26 人、二班 32 人、三班 29 人、四班 35 人……</p>' +
+          '<p>哪个班人最多？画成图，一眼就明白。</p>' +
+          '<div class="hint">👆 猜猜：四班最高还是二班最高？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "读图动画",
+      task: "咱们这一步要做的：看动画学会「直条越高数量越多」！",
+      voice: "看动画。这是一张条形统计图。横轴是四个班，纵轴是人数。直条越高，人数越多。最矮的一班二十六人，最高的四班三十五人。直条的高度，一眼就能比较出多少。",
+      body: function () {
+        return '' +
+          '<h2>看动画：读条形统计图</h2>' +
+          '<div class="chart-box" id="ch1"></div>' +
+          '<div class="ch-tip" id="ch1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "画图动画",
+      task: "咱们这一步要做的：看动画学会「直条一根根长起来」！",
+      voice: "现在画一张。横轴是星期几，纵轴是读书页数。直条一根一根长起来：周一四页，周二三页，周三五页，周四两页，周五六页。最高的就是周五。画图时要注意每一格代表的数要一样。",
+      body: function () {
+        return '' +
+          '<h2>看动画：画条形统计图</h2>' +
+          '<div class="chart-box" id="ch2"></div>' +
+          '<div class="ch-tip" id="ch2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道统计图题！",
+      voice: "现在考考你！读图和画图的要点。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：从图里找出最多的，领奖！",
+      voice: "Boss 来啦！看这张统计图，哪一根直条最高，表示数量最多？",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：谁最多？</h2>' +
+          '<div class="chart-box" id="ch3"></div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 读图 ========== */
+  function runCh1() {
+    var items = renderBars("ch1", [
+      { name: "一班", v: 26 }, { name: "二班", v: 32 }, { name: "三班", v: 29 }, { name: "四班", v: 35 }
+    ]);
+    var tip = document.getElementById("ch1-tip");
+    growBars(items, 0);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 横轴是班级，纵轴是人数（一格代表几人）"; }
+    }, 800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 直条越高，人数越多（二班 32 人、四班 35 人）"; }
+      items[1]._bar.classList.add("hl");
+      items[3]._bar.classList.add("hl");
+    }, 3000);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 直条长短一眼就能比出多少 → 四班最多（35 人）"; }
+    }, 4800);
+  }
+
+  /* ========== S3 画图 ========== */
+  function runCh2() {
+    var items = renderBars("ch2", [
+      { name: "周一", v: 4 }, { name: "周二", v: 3 }, { name: "周三", v: 5 }, { name: "周四", v: 2 }, { name: "周五", v: 6 }
+    ]);
+    var tip = document.getElementById("ch2-tip");
+    growBars(items, 550);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 横轴标星期，纵轴标页数，直条一根根长起来…"; }
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 直条最高的是周五（6 页）→ 周五读得最多"; }
+      items[4]._bar.classList.add("hl");
+    }, 3800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 画图要点：每格代表的数要一样，直条对准横轴类别"; }
+    }, 5200);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "条形统计图中，直条越高表示数量越？", right: "多", opts: ["多", "少", "看不清"] },
+    { q: "纵轴上的数字表示？", right: "数量的多少", opts: ["数量的多少", "类别的名字", "时间"] },
+    { q: "横轴一般表示？", right: "类别（是谁）", opts: ["类别（是谁）", "数量多少", "颜色"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "横轴是类别、纵轴是数量，直条越高数量越多";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    renderBars("ch3", [
+      { name: "苹果", v: 5 }, { name: "香蕉", v: 3 }, { name: "葡萄", v: 7 }, { name: "西瓜", v: 6 }
+    ]).forEach(function (it, i) {
+      setTimeout(function () { it._bar.style.height = (it.v * 14) + "px"; it._val.classList.add("on"); }, i * 200);
+    });
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">哪种水果最多？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="0">苹果</div>' +
+      '<div class="opt" data-ok="0">香蕉</div>' +
+      '<div class="opt" data-ok="1">葡萄</div>' +
+      '<div class="opt" data-ok="0">西瓜</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 统计图你会看啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "直条最高 = 数量最多：葡萄（7）最高";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runCh1(); }
+    if (step.id === "s3") { runCh2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "条形统计图用直条长短表示数量多少；读图看横轴（类别）和纵轴（数量），直条越高数量越多；画图要先定每格代表的数。",
+      attention: "孩子容易把直条高度当数值直接看，忘了看纵轴刻度；画图时每格代表的数不一致。",
+      tip: "本课约 8 分钟；让孩子用自己的玩具数画一张条形图。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

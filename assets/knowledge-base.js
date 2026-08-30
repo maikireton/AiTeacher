@@ -75,14 +75,14 @@
       { id: "math-4-019", name: "商的变化规律", subject: "math", grade: 4, term: "上册", unit: "第5单元·除数是两位数的除法", module: "number", difficulty: "挑战", source: "syllabus", prerequisiteIds: ["math-4-018"], status: "已完成", file: "数学/数学-四上-第6单元-math-4-019-商的变化规律.html", summary: "被除数除数变化时商的规律", keywords: ["商","变化规律","除法"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
 
       // 第6单元 条形统计图
-      { id: "math-4-020", name: "条形统计图的读与画", subject: "math", grade: 4, term: "上册", unit: "第6单元·条形统计图", module: "stat", difficulty: "提高", source: "syllabus", prerequisiteIds: [], status: "待制作", file: "", summary: "以一当一/以一当多，读图与制图", keywords: ["统计图","条形","数据"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "math-4-020", name: "条形统计图的读与画", subject: "math", grade: 4, term: "上册", unit: "第6单元·条形统计图", module: "stat", difficulty: "提高", source: "syllabus", prerequisiteIds: [], status: "已完成", file: "数学/数学-四上-第7单元-math-4-020-条形统计图的读与画.html", summary: "以一当一/以一当多，读图与制图", keywords: ["统计图","条形","数据"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
 
       // 第7单元 加法模型和乘法模型（数量关系）
-      { id: "math-4-021", name: "加法模型：数量关系的建立", subject: "math", grade: 4, term: "上册", unit: "第7单元·加法模型和乘法模型", module: "appl", difficulty: "提高", source: "syllabus", prerequisiteIds: [], status: "待制作", file: "", summary: "总量与部分量的加法数量关系", keywords: ["数量关系","加法模型","应用题"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
-      { id: "math-4-022", name: "乘法模型：总价/路程/工作总量", subject: "math", grade: 4, term: "上册", unit: "第7单元·加法模型和乘法模型", module: "appl", difficulty: "提高", source: "syllabus", prerequisiteIds: ["math-4-021"], status: "待制作", file: "", summary: "单价×数量=总价，速度×时间=路程", keywords: ["数量关系","乘法模型","总价","路程"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "math-4-021", name: "加法模型：数量关系的建立", subject: "math", grade: 4, term: "上册", unit: "第7单元·加法模型和乘法模型", module: "appl", difficulty: "提高", source: "syllabus", prerequisiteIds: [], status: "已完成", file: "数学/数学-四上-第7单元-math-4-021-加法模型-数量关系的建立.html", summary: "总量与部分量的加法数量关系", keywords: ["数量关系","加法模型","应用题"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "math-4-022", name: "乘法模型：总价/路程/工作总量", subject: "math", grade: 4, term: "上册", unit: "第7单元·加法模型和乘法模型", module: "appl", difficulty: "提高", source: "syllabus", prerequisiteIds: ["math-4-021"], status: "已完成", file: "数学/数学-四上-第7单元-math-4-022-乘法模型-总价路程工作总量.html", summary: "单价×数量=总价，速度×时间=路程", keywords: ["数量关系","乘法模型","总价","路程"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
 
       // 综合实践
-      { id: "math-4-023", name: "综合实践：寻找宝藏", subject: "math", grade: 4, term: "上册", unit: "综合实践·寻找宝藏", module: "appl", difficulty: "挑战", source: "syllabus", prerequisiteIds: ["math-4-013", "math-4-022"], status: "待制作", file: "", summary: "方向、位置与推理的综合运用", keywords: ["综合实践","方向","位置","推理"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "math-4-023", name: "综合实践：寻找宝藏", subject: "math", grade: 4, term: "上册", unit: "综合实践·寻找宝藏", module: "appl", difficulty: "挑战", source: "syllabus", prerequisiteIds: ["math-4-013", "math-4-022"], status: "已完成", file: "数学/数学-四上-第7单元-math-4-023-综合实践-寻找宝藏.html", summary: "方向、位置与推理的综合运用", keywords: ["综合实践","方向","位置","推理"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
 
       /* ================= 数学 · 四年级下册（2027 春启用，现按 2012 审定旧版目录待校对） ================= */
 

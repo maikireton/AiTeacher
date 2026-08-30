@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>加法模型：数量关系的建立 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .add-box { margin: 12px 0; }
+  .add-zone { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; }
+  .dots-group { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; border: 2px dashed var(--border); border-radius: 14px; padding: 12px; min-width: 90px; transition: all .4s; }
+  .dots-group.hl { border-color: var(--accent-deep); border-style: solid; }
+  .dot-item { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 15px; }
+  .dot-a { background: #4a7fe0; }
+  .dot-b { background: #ffa940; }
+  .dot-c { background: #8bc34a; }
+  .dot-gone { opacity: .25; transform: translateY(8px); }
+  .add-sym { font-size: 30px; font-weight: 800; color: var(--accent-deep); }
+  .add-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 10px 0; color: var(--accent-deep); }
+  .add-eq { font-size: 24px; font-weight: 800; margin-top: 6px; }
+  .model { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">加法模型：数量关系的建立 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>加法模型：部分 + 部分 = 总量；总量 − 部分 = 另一部分。见到"一共"用加法，见到"还剩/剩下"用减法。</p>
+      <p><b>孩子容易走神的地方：</b>应用题分不清加还是减；可先问他"求的是总量还是部分"，再定加减。</p>
+      <p><b>建议：</b>本课约 8 分钟；让孩子用自己的玩具编"一共/还剩"两个小题。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-021</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  function dots(n, cls) {
+    var h = "";
+    for (var i = 0; i < n; i++) { h += '<span class="dot-item ' + cls + '"></span>'; }
+    return h;
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看「一共」和「还剩」怎么算！",
+      voice: "有五个苹果，三个梨，一共有几个水果？五加三等于八。这么简单的道理，却藏着数学的大模型：部分加部分等于总量。今天我们把它找出来。",
+      body: function () {
+        return '' +
+          '<h2>一共 / 还剩</h2>' +
+          '<p>5 个苹果 + 3 个梨 → <span class="big">一共几个？</span></p>' +
+          '<p>8 个水果吃掉 5 个 → <span class="big">还剩几个？</span></p>' +
+          '<div class="hint">👆 这两个问题，一个用加法，一个用减法。</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "加法模型动画",
+      task: "咱们这一步要做的：看动画理解「部分+部分=总量」！",
+      voice: "看动画。五个苹果是一部分，三个梨是另一部分。两部分合在一起，就是总量八个。记住：部分加部分等于总量。",
+      body: function () {
+        return '' +
+          '<h2>看动画：部分 + 部分 = 总量</h2>' +
+          '<div class="add-zone" id="add1"></div>' +
+          '<div class="add-tip" id="add1-tip">准备开始…</div>' +
+          '<div class="model">模型：部分 + 部分 = 总量</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "减法模型动画",
+      task: "咱们这一步要做的：看动画理解「总量-部分=另一部分」！",
+      voice: "反过来。总量八个，拿走一部分苹果五个，剩下的就是梨三个。总量减部分，等于另一部分。这就是加法的好兄弟——减法模型。",
+      body: function () {
+        return '' +
+          '<h2>看动画：总量 − 部分 = 另一部分</h2>' +
+          '<div class="add-zone" id="add2"></div>' +
+          '<div class="add-tip" id="add2-tip">准备开始…</div>' +
+          '<div class="model">模型：总量 − 部分 = 另一部分</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道，用模型想问题！",
+      voice: "现在考考你！先想清楚求的是总量还是部分，再用模型。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：解一道生活应用题，领奖！",
+      voice: "Boss 来啦！一本书八十八页，看了三十五页，还剩多少页没看？求的是部分，用减法。",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：还剩多少页？</h2>' +
+          '<p class="big">一本书 88 页，看了 35 页，还剩 ? 页</p>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2：5 + 3 = 8 ========== */
+  function runAdd1() {
+    var box = document.getElementById("add1");
+    if (!box) { return; }
+    var tip = document.getElementById("add1-tip");
+    box.innerHTML = '' +
+      '<div class="dots-group" id="gA">' + dots(5, "dot-a") + "</div>" +
+      '<span class="add-sym">+</span>' +
+      '<div class="dots-group" id="gB">' + dots(3, "dot-b") + "</div>" +
+      '<span class="add-sym">=</span>' +
+      '<div class="dots-group" id="gC" style="border-style:solid;border-color:#8bc34a">' + dots(8, "dot-c") + "</div>";
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 苹果 5 个是一部分（蓝），梨 3 个是另一部分（橙）"; }
+      document.getElementById("gA").classList.add("hl");
+      document.getElementById("gB").classList.add("hl");
+    }, 600);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 两部分合起来 → 总量 8 个（绿）"; }
+      document.getElementById("gC").classList.add("hl");
+    }, 2800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 5 + 3 = 8：部分 + 部分 = 总量"; }
+    }, 4300);
+  }
+
+  /* ========== S3：8 − 5 = 3 ========== */
+  function runAdd2() {
+    var box = document.getElementById("add2");
+    if (!box) { return; }
+    var tip = document.getElementById("add2-tip");
+    box.innerHTML = '<div class="dots-group" id="g2" style="border-style:solid;border-color:#4a7fe0">' + dots(8, "dot-a") + "</div>";
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 总量 8 个水果（蓝）"; }
+    }, 600);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 拿走 5 个苹果（变灰）→ 剩下的就是梨"; }
+      var g = document.getElementById("g2");
+      var ds = g.querySelectorAll(".dot-item");
+      for (var i = 0; i < 5; i++) { (function (i) { setTimeout(function () { ds[i].classList.add("dot-gone"); }, 300 + i * 300); })(i); }
+    }, 2400);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 8 − 5 = 3：总量 − 部分 = 另一部分"; }
+    }, 4800);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "一班 24 人，二班 26 人，两个班一共多少人？", right: "50", opts: ["50", "2", "48"] },
+    { q: "一共 60 个苹果，拿走 25 个，还剩多少个？", right: "35", opts: ["35", "85", "25"] },
+    { q: "部分 + 部分 = 总量，那 总量 − 一个部分 = ?", right: "另一个部分", opts: ["另一个部分", "总量", "两个部分"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "先想求总量还是部分：「一共」求总量用加，「还剩」求部分用减";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">还剩多少页没看？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">53</div>' +
+      '<div class="opt" data-ok="0">123</div>' +
+      '<div class="opt" data-ok="0">35</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 加法模型你会用啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "求「还剩」= 部分 → 减法：88 − 35 = 53";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runAdd1(); }
+    if (step.id === "s3") { runAdd2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "加法模型：部分 + 部分 = 总量；总量 − 部分 = 另一部分。见到「一共」用加法，见到「还剩/剩下」用减法。",
+      attention: "孩子应用题分不清加减；可先问他「求的是总量还是部分」，再定加减。",
+      tip: "本课约 8 分钟；让孩子用自己的玩具编「一共/还剩」两个小题。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

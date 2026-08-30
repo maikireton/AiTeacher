@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>综合实践：寻找宝藏 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .map { margin: 8px 0; }
+  .map svg { max-width: 470px; width: 100%; }
+  .map .loc { fill: #c9ced9; transition: all .4s; }
+  .map .loc.on { fill: #ffa940; }
+  .map .loclab { font-size: 13px; font-weight: 700; fill: #4a5568; }
+  .map .path { stroke: #c9ced9; stroke-width: 3; stroke-dasharray: 6 5; }
+  .map .treasure { opacity: .12; transition: opacity .5s; }
+  .map .treasure.on { opacity: 1; }
+  .lv-tip { font-size: 15px; font-weight: 700; min-height: 24px; margin: 6px 0; color: var(--accent-deep); }
+  .lv-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">综合实践：寻找宝藏 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>综合实践课：把本册的数位（万以上数）、角、口算串成寻宝闯关，答对点亮藏宝图。</p>
+      <p><b>孩子容易走神的地方：</b>一路连题会腻；关卡+地图+星星的节奏能保持注意力，答错可重试并给提示。</p>
+      <p><b>建议：</b>本课约 10 分钟；让孩子独立闯关，家长只做"军师"给提示不给答案。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-023</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+
+  var progress = { s2: false, s3: false, s4: false };
+  function doneCount() { return (progress.s2 ? 1 : 0) + (progress.s3 ? 1 : 0) + (progress.s4 ? 1 : 0); }
+
+  /* 绘制藏宝图：4 个地点 + 宝藏 */
+  function drawMap(containerId, extraOn) {
+    var m = document.getElementById(containerId);
+    if (!m) { return; }
+    var on = doneCount() + (extraOn || 0);
+    var svg = svgEl("svg", { viewBox: "0 0 470 150", width: "470", height: "150" });
+    var path = svgEl("path", { d: "M 70 110 L 155 55 L 245 110 L 335 55 L 420 105", class: "path", fill: "none" });
+    svg.appendChild(path);
+    var locs = [
+      { x: 70, y: 110, name: "村庄" },
+      { x: 155, y: 55, name: "山洞" },
+      { x: 245, y: 110, name: "大树" },
+      { x: 335, y: 55, name: "城堡" }
+    ];
+    locs.forEach(function (l, i) {
+      var c = svgEl("circle", { cx: l.x, cy: l.y, r: 13, class: "loc" + (i < on ? " on" : "") });
+      svg.appendChild(c);
+      var t = svgEl("text", { x: l.x, y: l.y + 34, class: "loclab", "text-anchor": "middle" });
+      t.textContent = l.name;
+      svg.appendChild(t);
+    });
+    // 宝藏
+    var tr = svgEl("text", { x: 434, y: 105, "font-size": "34", class: "treasure" + (on >= 4 ? " on" : "") });
+    tr.textContent = "🎁";
+    svg.appendChild(tr);
+    var tl = svgEl("text", { x: 434, y: 140, class: "loclab", "text-anchor": "middle" });
+    tl.textContent = "宝藏";
+    svg.appendChild(tl);
+    m.innerHTML = "";
+    m.appendChild(svg);
+  }
+
+  /* 通用关卡题 */
+  function renderLevel(containerId, title, question, opts, right, onRight) {
+    var box = document.getElementById(containerId);
+    if (!box) { return; }
+    box.innerHTML = '<div class="lv-title">' + title + "</div>" +
+      '<div class="q">' + question + "</div>" +
+      '<div class="opts">' + opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div>";
+    var tried = false;
+    var optEls = box.querySelectorAll(".opt");
+    var msg = box.querySelector(".qmsg");
+    optEls.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        if (ok) {
+          o.classList.add("right");
+          optEls.forEach(function (x) { x.classList.add("locked"); });
+          msg.className = "qmsg ok";
+          msg.textContent = "答对啦！⭐ +1 点亮一个地点！";
+          onRight();
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          msg.className = "qmsg no";
+          msg.textContent = "差一点！看看提示再试一次";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1300);
+        }
+      });
+    });
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：认识藏宝图，准备出发！",
+      voice: "欢迎来到藏宝岛！地图上有四个地点：村庄、山洞、大树、城堡。每答对一道题，就点亮一个地点，得到宝藏线索。答对四道，宝藏就属于你！",
+      body: function () {
+        return '' +
+          '<h2>出发寻宝！</h2>' +
+          '<p>四道关卡，考的是本册学过的真本事：</p>' +
+          '<p>数位 · 角 · 口算 · 大数</p>' +
+          '<div class="hint">👆 准备一支笔一张纸，闯关开始！</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "关卡①：村庄·数位",
+      task: "咱们这一步要做的：答对数位题，点亮村庄！",
+      voice: "第一关，村庄的门卫考你数位。三千零五十万，写作几？从四个答案里选一个。",
+      body: function () {
+        return '' +
+          '<h2>关卡① 村庄·数位</h2>' +
+          '<div class="map" id="map"></div>' +
+          '<div class="quiz" id="lv2"></div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "关卡②：山洞·角",
+      task: "咱们这一步要做的：答对角的问题，点亮山洞！",
+      voice: "第二关，山洞里的精灵考你角。一百二十度是什么角？想想九十度和一百八十度之间。",
+      body: function () {
+        return '' +
+          '<h2>关卡② 山洞·角</h2>' +
+          '<div class="map" id="map"></div>' +
+          '<div class="quiz" id="lv3"></div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "关卡③：大树·口算",
+      task: "咱们这一步要做的：答对口算题，点亮大树！",
+      voice: "第三关，大树爷爷考你口算。三百六十除以四十，先划掉末尾的零再算。",
+      body: function () {
+        return '' +
+          '<h2>关卡③ 大树·口算</h2>' +
+          '<div class="map" id="map"></div>' +
+          '<div class="quiz" id="lv4"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关：城堡·开宝箱",
+      task: "咱们这一步要做的：答对最后一道，开宝箱领奖！",
+      voice: "最后一关，城堡国王出综合谜题：四的后面有八个零，这个数读作多少？答对就开宝箱！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关 城堡·开宝箱</h2>' +
+          '<div class="map" id="map"></div>' +
+          '<div class="quiz" id="lv5"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== 关卡启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") {
+      drawMap("map");
+      renderLevel("lv2", "村庄·数位", "三千零五十万 写作？", ["30500000", "35000000", "3050000"], "30500000", function () {
+        if (!progress.s2) { progress.s2 = true; apiRef.addStars(1); apiRef.comboHit(); drawMap("map"); }
+      });
+    }
+    if (step.id === "s3") {
+      drawMap("map");
+      renderLevel("lv3", "山洞·角", "120° 是什么角？", ["钝角", "锐角", "平角"], "钝角", function () {
+        if (!progress.s3) { progress.s3 = true; apiRef.addStars(1); apiRef.comboHit(); drawMap("map"); }
+      });
+    }
+    if (step.id === "s4") {
+      drawMap("map");
+      renderLevel("lv4", "大树·口算", "360 ÷ 40 = ?", ["9", "90", "8"], "9", function () {
+        if (!progress.s4) { progress.s4 = true; apiRef.addStars(1); apiRef.comboHit(); drawMap("map"); }
+      });
+    }
+    if (step.id === "s5") {
+      drawMap("map", 0);
+      renderLevel("lv5", "城堡·综合谜题", "400000000 读作？", ["四亿", "四十亿", "四千万"], "四亿", function () {
+        var rs = document.getElementById("result-stars");
+        if (rs) {
+          var n = apiRef.stars() + 2;
+          rs.innerHTML = "🎁 宝箱打开！宝藏属于你！<br>共获得 <b>" + n + "</b> 颗星，你是寻宝大王！";
+        }
+        apiRef.addStars(2); apiRef.comboHit();
+        drawMap("map", 1);
+      });
+    }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "综合实践：把本册的数位（万以上数）、角、口算串成寻宝闯关，答对点亮藏宝图。",
+      attention: "孩子一路连题会腻；关卡+地图+星星的节奏能保持注意力，答错可重试并给提示。",
+      tip: "本课约 10 分钟；让孩子独立闯关，家长只做「军师」给提示不给答案。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
