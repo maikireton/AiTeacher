@@ -30,6 +30,24 @@
   .lgroup .lname { font-size: 12px; color: var(--text-2); font-weight: 700; }
   .lgroup.hl .lname { color: var(--accent-deep); }
 
+  /* S2 分级动画：大数分家 */
+  .big-number { display: flex; justify-content: center; gap: 6px; margin: 12px auto 6px; flex-wrap: wrap; }
+  .dcell {
+    width: 52px; height: 58px; border-radius: 10px; border: 2px dashed transparent;
+    background: rgba(0,0,0,.05); font-size: 26px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(.5); transition: all .35s;
+  }
+  .dcell.on { opacity: 1; transform: scale(1); }
+  .dcell.g-hl { border-color: var(--accent-deep); background: rgba(155,187,244,.18); box-shadow: 0 0 0 3px rgba(155,187,244,.18); }
+  .dcell.w-hl { border-color: #8bc34a; background: rgba(139,195,74,.16); box-shadow: 0 0 0 3px rgba(139,195,74,.16); }
+  .big-marks { display: flex; justify-content: center; gap: 18px; margin-top: 8px; }
+  .gmark { padding: 3px 16px; border-radius: 999px; font-size: 14px; font-weight: 700; opacity: 0; transform: translateY(8px); transition: all .3s; }
+  .gmark.show { opacity: 1; transform: translateY(0); }
+  #mark-g.show { background: rgba(155,187,244,.25); color: var(--accent-deep); }
+  #mark-w.show { background: rgba(139,195,74,.22); color: #3a9411; }
+  .big-tip { margin-top: 8px; font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; }
+
   /* 练习 */
   .quiz { width: 100%; max-width: 480px; }
   .quiz .q { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
@@ -287,15 +305,52 @@
   }
 
   /* ========== S2 分级动画 ========== */
+  /* 动画演示：大数 30500000 的 8 个数字逐个点亮，从右往左依次圈出个级、万级 */
   function runNumlineDemo() {
     var box = el("numline-demo");
     if (!box) { return; }
-    box.innerHTML = '<div class="numline">' +
-      '<span class="lgroup grade-万"><span class="lname">万级</span>' +
-        "<span class='ncell grade-万'>千</span><span class='ncell grade-万'>百</span><span class='ncell grade-万'>十</span><span class='ncell grade-万'>万</span></span>" +
-      '<span class="lgroup grade-个"><span class="lname">个级</span>' +
-        "<span class='ncell grade-个'>千</span><span class='ncell grade-个'>百</span><span class='ncell grade-个'>十</span><span class='ncell grade-个'>个</span></span>" +
-      "</div>";
+    box.innerHTML =
+      '<div class="big-number">' +
+        '<span class="dcell" data-g="w">3</span>' +
+        '<span class="dcell" data-g="w">0</span>' +
+        '<span class="dcell" data-g="w">5</span>' +
+        '<span class="dcell" data-g="w">0</span>' +
+        '<span class="dcell" data-g="g">0</span>' +
+        '<span class="dcell" data-g="g">0</span>' +
+        '<span class="dcell" data-g="g">0</span>' +
+        '<span class="dcell" data-g="g">0</span>' +
+      '</div>' +
+      '<div class="big-marks">' +
+        '<span class="gmark" id="mark-w">万级</span>' +
+        '<span class="gmark" id="mark-g">个级</span>' +
+      '</div>' +
+      '<div class="big-tip" id="big-tip"></div>';
+
+    var cells = box.querySelectorAll(".dcell");
+    var tip = box.querySelector("#big-tip");
+    var markG = box.querySelector("#mark-g");
+    var markW = box.querySelector("#mark-w");
+
+    // 1) 数字从左到右逐个点亮
+    for (var i = 0; i < cells.length; i++) {
+      (function (c, idx) {
+        setTimeout(function () { if (c && c.classList) { c.classList.add("on"); } }, 120 * idx);
+      })(cells[i], i);
+    }
+    // 2) 从右往左：先圈个级（右侧 4 位）
+    setTimeout(function () {
+      var gs = box.querySelectorAll('[data-g="g"]');
+      for (var j = 0; j < gs.length; j++) { gs[j].classList.add("g-hl"); }
+      if (markG) { markG.classList.add("show"); }
+      if (tip) { tip.textContent = "从右边起，这 4 位是「个级」"; }
+    }, 8 * 120 + 400);
+    // 3) 再圈万级（左侧 4 位）并总结
+    setTimeout(function () {
+      var ws = box.querySelectorAll('[data-g="w"]');
+      for (var k = 0; k < ws.length; k++) { ws[k].classList.add("w-hl"); }
+      if (markW) { markW.classList.add("show"); }
+      if (tip) { tip.textContent = "再往左 4 位是「万级」→ 每 4 位 1 级！"; }
+    }, 8 * 120 + 1500);
   }
 
   /* ========== S3 读数演示动画 ========== */
