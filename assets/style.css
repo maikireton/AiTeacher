@@ -1,0 +1,112 @@
+/* ============================================================
+ * AI 教师 · 统一样式（style.css）
+ * 服务于：导航主页 index.html / 学科索引页 / 后续课件播放器
+ * 风格：极简、单一视觉焦点、低饱和、移动端可读
+ * ============================================================ */
+:root {
+  --text: #1A1B1C;
+  --text-2: #6B7280;
+  --bg: #F4F3EE;
+  --card: #FFFFFF;
+  --border: #E4E3DD;
+  --accent: #9BBBF4;
+  --accent-deep: #6b8fd8;
+  --green: #52C41A;
+  --yellow: #FAAD14;
+  --red: #EA6668;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { min-height: 100%; }
+body {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Roboto", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.container { max-width: 960px; margin: 0 auto; padding: 20px 16px 48px; }
+
+/* ---------- 顶部栏 ---------- */
+.topbar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.brand { font-size: 22px; font-weight: 700; color: var(--text); }
+.brand small { font-size: 13px; color: var(--text-2); font-weight: 400; margin-left: 6px; }
+.btn-home {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  color: var(--text); text-decoration: none; font-size: 14px;
+}
+.btn-home:active { background: #eef0f5; }
+.search {
+  flex: 1 1 220px; min-width: 0; min-height: 44px; padding: 0 14px;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--card);
+  font-size: 15px; color: var(--text); outline: none;
+}
+.search:focus { border-color: var(--accent-deep); }
+
+/* ---------- 筛选区 ---------- */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.fbtn {
+  min-height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--card); color: var(--text-2); font-size: 13px; cursor: pointer;
+}
+.fbtn.on { background: rgba(155,187,244,0.22); border-color: var(--accent-deep); color: var(--text); font-weight: 600; }
+.fgroup { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-right: 8px; }
+.fgroup b { font-size: 12px; color: var(--text-2); font-weight: 400; margin-right: 2px; }
+
+/* ---------- 知识点卡片 ---------- */
+.list { display: flex; flex-direction: column; gap: 10px; }
+.kp {
+  display: block; padding: 14px 16px; background: var(--card);
+  border: 1px solid var(--border); border-radius: 14px; text-decoration: none; color: var(--text);
+}
+.kp:active { background: #eef0f5; }
+.kp .name { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.kp .summary { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+.kp .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tag {
+  display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px;
+  background: rgba(0,0,0,0.05); color: var(--text-2);
+}
+.tag.grade { background: rgba(155,187,244,0.18); color: var(--accent-deep); }
+.tag.diff-基础 { background: rgba(82,196,26,0.14); color: #3a9411; }
+.tag.diff-提高 { background: rgba(250,173,20,0.18); color: #b07900; }
+.tag.diff-挑战 { background: rgba(234,102,104,0.16); color: #c23a3d; }
+.tag.src-custom { background: rgba(148,216,195,0.2); color: #2f8a6b; }
+.dot-weak {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--red);
+  display: inline-block; margin-right: 6px;
+}
+.kp.todo { opacity: 0.55; cursor: default; }
+.kp.todo .soon { font-size: 12px; color: var(--text-2); }
+.kp.revise { border-color: var(--yellow); }
+.kp.revise .revise-tip { font-size: 12px; color: #b07900; }
+
+/* ---------- 导航主页 ---------- */
+.hero { margin: 28px 0 20px; }
+.hero h1 { font-size: 30px; font-weight: 800; }
+.hero p { color: var(--text-2); font-size: 14px; margin-top: 4px; }
+.subject-cards { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0 24px; }
+.subj {
+  flex: 1 1 220px; min-width: 0; padding: 20px; background: var(--card);
+  border: 1px solid var(--border); border-radius: 16px; text-decoration: none; color: var(--text);
+}
+.subj:active { background: #eef0f5; }
+.subj .sname { font-size: 20px; font-weight: 700; }
+.subj .smeta { font-size: 13px; color: var(--text-2); margin-top: 6px; }
+.home-search-title { font-size: 14px; color: var(--text-2); margin: 14px 0 8px; }
+
+/* ---------- 底部 ---------- */
+.foot { margin-top: 28px; font-size: 12px; color: var(--text-2); text-align: center; }
+.foot .ver { margin-top: 2px; }
+
+/* ---------- 空态 ---------- */
+.empty { padding: 40px 16px; text-align: center; color: var(--text-2); font-size: 14px; }
+
+@media (max-width: 480px) {
+  body { font-size: 14px; }
+  .hero h1 { font-size: 24px; }
+  .kp .name { font-size: 15px; }
+}

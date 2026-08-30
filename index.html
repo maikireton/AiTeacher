@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 教师 · 主页</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <span class="brand">AI 教师 <small>家庭知识课件库</small></span>
+  </header>
+
+  <div class="hero">
+    <h1>今天想学点什么？</h1>
+    <p>语文 · 数学 · 英语，从教材知识清单开始，一点一点打牢基础。</p>
+  </div>
+
+  <div id="subj" class="subject-cards"></div>
+
+  <div class="home-search-title">全局搜索知识点</div>
+  <input id="home-search" class="search" type="search" placeholder="输入关键词，如：小数、乘法、观潮…" autocomplete="off">
+  <div id="home-results" class="list" style="margin-top:10px"></div>
+
+  <footer class="foot">
+    <div>AI 教师 · 单一数据源驱动</div>
+    <div class="ver" id="ver"></div>
+  </footer>
+</div>
+
+<script src="assets/knowledge-base.js"></script>
+<script src="assets/kb-utils.js"></script>
+<script>
+(function () {
+  "use strict";
+  try {
+    var util = window.KB;
+    var KB = window.KNOWLEDGE_BASE;
+    if (!util || !KB) { console.error("[主页] 数据源未加载"); return; }
+
+    /* 学科入口卡片 */
+    var subjEl = document.getElementById("subj");
+    if (subjEl) {
+      var html = "";
+      KB.subjects.forEach(function (s) {
+        var list = util.bySubject(s.id);
+        var done = list.filter(function (k) { return k.status === "已完成"; }).length;
+        html += '<a class="subj" href="' + s.id + '/index.html">';
+        html += '<div class="sname">' + s.name + "</div>";
+        html += '<div class="smeta">' + list.length + " 个知识点 · 已完成 " + done + " 个</div>";
+        html += "</a>";
+      });
+      subjEl.innerHTML = html;
+    }
+
+    /* 全局搜索 */
+    var box = document.getElementById("home-search");
+    var res = document.getElementById("home-results");
+    if (box && res) {
+      box.addEventListener("input", function () {
+        var q = box.value.trim();
+        if (!q) { res.innerHTML = ""; return; }
+        var hits = util.search(q).slice(0, 20);
+        if (!hits.length) { res.innerHTML = '<div class="empty">没有找到「' + q + "」，换个关键词试试～</div>"; return; }
+        var h = "";
+        hits.forEach(function (k) {
+          var ok = k.status === "已完成" && k.file;
+          h += '<a class="kp' + (ok ? "" : " todo") + '" href="' + (ok ? k.file : "javascript:void(0)") + '">';
+          h += '<div class="name">' + k.name + ' <span class="tag">' + util.subjectName(k.subject) + "</span></div>";
+          h += '<div class="summary">' + k.summary + "</div>";
+          h += '<div class="tags"><span class="tag grade">' + k.grade + "年级·" + (k.term || "") + "</span>";
+          h += '<span class="tag">' + (k.status === "已完成" ? "已完成" : "课件制作中") + "</span></div>";
+          h += "</a>";
+        });
+        res.innerHTML = h;
+      });
+    }
+
+    var verEl = document.getElementById("ver");
+    if (verEl) { verEl.textContent = "数据版本 v" + KB.version + " · 更新于 " + KB.updatedAt; }
+  } catch (e) {
+    console.error("[主页] 渲染失败:", e);
+  }
+})();
+</script>
+</body>
+</html>
