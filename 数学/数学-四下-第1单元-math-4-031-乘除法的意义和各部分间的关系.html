@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>乘除法的意义和各部分间的关系 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .md-box { margin: 12px 0; }
+  .md-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .md-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .grp { display: flex; justify-content: center; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .grp-box { display: flex; flex-direction: column; align-items: center; opacity: 0; transition: all .4s; }
+  .grp-box.show { opacity: 1; }
+  .grp-box .dots { display: flex; gap: 4px; }
+  .grp-box .dot { width: 22px; height: 22px; border-radius: 5px; background: linear-gradient(180deg,#7eb6ff,#4a7fe0); }
+  .grp-box.hl .dot { background: linear-gradient(180deg,#ffd591,#ffa940); }
+  .grp-box .glab { font-size: 14px; font-weight: 800; color: var(--text-2); margin-top: 4px; }
+  .md-expr { font-size: 28px; font-weight: 800; color: #d97706; text-align: center; margin: 8px 0; }
+  .tri { display: flex; justify-content: center; gap: 30px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+  .tri-card { background: #f4f8ff; border: 2px solid var(--border); border-radius: 14px; padding: 10px 18px; text-align: center; opacity: 0; transition: all .35s; }
+  .tri-card.show { opacity: 1; }
+  .tri-card.hl { border-color: var(--accent-deep); background: #e8f1ff; }
+  .tri-card b { font-size: 24px; color: #2e7d32; }
+  .tri-card .n { font-size: 18px; font-weight: 800; color: var(--text-2); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">乘除法的意义和各部分间的关系 <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>乘法是求几个相同加数的和的简便运算；除法是已知积与一个因数求另一个因数。因数×因数=积；被除数÷除数=商，乘除互逆。</p>
+      <p><b>孩子容易走神的地方：</b>"被除数=商×除数""除数=被除数÷商"关系记混；用三角关系图记：大数=两个小数之积。</p>
+      <p><b>建议：</b>本课约 8 分钟；用 3 组 4 个方块摆一摆，推 12÷4=3 和 12÷3=4。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-031</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看 4+4+4 可以怎么写！",
+      voice: "3 组方块，每组 4 个，一共多少个？4 加 4 加 4 等于 12。写起来很长，用乘法就简单：3 乘 4 等于 12！今天学乘除法的意义。",
+      body: function () {
+        return '' +
+          '<h2>乘法是简便运算</h2>' +
+          '<p>4 + 4 + 4 = ? → 4 × 3 = ?</p>' +
+          '<div class="hint">👆 乘法 = 求几个相同加数的和</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "乘法的意义动画",
+      task: "咱们这一步要做的：看动画 3 组方块合成 12！",
+      voice: "看动画。出现 3 组方块，每组 4 个。4 加 4 加 4 太长了，用乘法：3 乘 4 等于 12。3 和 4 叫因数，12 叫积。",
+      body: function () {
+        return '' +
+          '<h2>看动画：4 × 3 = 12</h2>' +
+          '<div class="md-box" id="d1">' +
+          '<div class="grp" id="grp"></div>' +
+          "</div>" +
+          '<div class="md-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="md-rule">因数 × 因数 = 积</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "乘除互逆关系动画",
+      task: "咱们这一步要做的：看动画三角关系！",
+      voice: "看动画。12 是老大，4 和 3 是两个小兄弟。3 乘 4 等于 12。反过来，12 除以 4 等于 3，12 除以 3 等于 4。一乘两除，三个算式一家亲。",
+      body: function () {
+        return '' +
+          '<h2>看动画：乘除互逆三角关系</h2>' +
+          '<div class="md-box" id="d2">' +
+          '<div class="tri">' +
+          '<div class="tri-card" id="tc1"><b>12</b><div class="n">（老大）</div></div>' +
+          '<div class="tri-card" id="tc2"><b>4</b><div class="n">小兄弟 A</div></div>' +
+          '<div class="tri-card" id="tc3"><b>3</b><div class="n">小兄弟 B</div></div>' +
+          "</div>" +
+          '<div class="md-expr" id="tri-expr">3 × 4 = 12</div>' +
+          "</div>" +
+          '<div class="md-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="md-rule">12÷4=3，12÷3=4；大数 = 两个小数之积</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道乘除关系题！",
+      voice: "现在考考你！乘除法各部分关系。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：求被除数，领奖！",
+      voice: "Boss 来啦！被除数除以 4 等于 6，被除数是多少？被除数等于商乘除数，6 乘 4 等于 24！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：□ ÷ 4 = 6</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    var grp = document.getElementById("grp");
+    var h = "";
+    for (var g = 0; g < 3; g++) {
+      h += '<div class="grp-box" data-g="' + g + '"><div class="dots">';
+      for (var i = 0; i < 4; i++) { h += '<div class="dot"></div>'; }
+      h += "</div><div class='glab'>第 " + (g + 1) + " 组</div></div>";
+    }
+    grp.innerHTML = h;
+    var boxes = grp.querySelectorAll(".grp-box");
+    boxes.forEach(function (b, i) {
+      setTimeout(function () {
+        b.classList.add("show");
+        if (tip) { tip.textContent = "① 第 " + (i + 1) + " 组出现：每组 4 个（4 加 4 加 4…）"; }
+      }, 700 * (i + 1));
+    });
+    setTimeout(function () {
+      boxes.forEach(function (b) { b.classList.add("hl"); });
+      if (tip) { tip.textContent = "② 3 组 × 4 = 12 → 用乘法更简便 ✅"; }
+      grp.insertAdjacentHTML("beforeend", '<div class="md-expr" style="width:100%">4 × 3 = 12（3 和 4 是因数，12 是积）</div>');
+    }, 700 * 3 + 900);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    var expr = document.getElementById("tri-expr");
+    setTimeout(function () { document.getElementById("tc1").classList.add("show", "hl"); if (tip) { tip.textContent = "① 12 是老大（积）"; } }, 700);
+    setTimeout(function () { document.getElementById("tc2").classList.add("show"); if (tip) { tip.textContent = "② 4 和 3 是它的两个因数"; } }, 1800);
+    setTimeout(function () { document.getElementById("tc3").classList.add("show"); }, 2200);
+    setTimeout(function () { if (tip) { tip.textContent = "③ 3 × 4 = 12（相乘得老大）"; } expr.textContent = "3 × 4 = 12"; }, 3200);
+    setTimeout(function () { if (tip) { tip.textContent = "④ 12 ÷ 4 = 3（老大除以一个因数）"; } expr.textContent = "12 ÷ 4 = 3"; }, 4600);
+    setTimeout(function () { if (tip) { tip.textContent = "⑤ 12 ÷ 3 = 4 ✅ 一乘两除三式一家"; } expr.textContent = "12 ÷ 3 = 4"; }, 6000);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "3 × 8 = 24 中，哪个是「积」？", right: "24", opts: ["24", "3", "8"] },
+    { q: "□ ÷ 5 = 7，□ = ?", right: "35", opts: ["35", "12", "2"] },
+    { q: "由 4 × 6 = 24 可知 24 ÷ 4 = ?", right: "6", opts: ["6", "4", "24"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "因数=积÷另一因数；被除数=商×除数；除数=被除数÷商";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">□ ÷ 4 = 6，□ 里是多少？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">24</div>' +
+      '<div class="opt" data-ok="0">10</div>' +
+      '<div class="opt" data-ok="0">1.5</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 乘除关系你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "被除数 = 商 × 除数 = 6 × 4 = 24";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "乘法是求几个相同加数的和的简便运算；除法是已知积与一个因数求另一个因数。因数×因数=积；被除数÷除数=商，乘除互逆。",
+      attention: "孩子容易把「被除数=商×除数」「除数=被除数÷商」记混；用三角关系图记：大数=两个小数之积。",
+      tip: "本课约 8 分钟；用 3 组 4 个方块摆一摆，推 12÷4=3 和 12÷3=4。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

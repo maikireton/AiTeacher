@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>有关 0 的运算 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .zr-box { margin: 12px 0; }
+  .zr-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .zr-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .zr-cards { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+  .zr-card { width: 150px; background: #f4f8ff; border: 2px solid var(--border); border-radius: 14px; padding: 10px; text-align: center; opacity: 0; transition: all .35s; }
+  .zr-card.show { opacity: 1; }
+  .zr-card.hl { border-color: var(--accent-deep); background: #e8f1ff; transform: scale(1.05); }
+  .zr-card .e { font-size: 24px; font-weight: 800; color: #d97706; }
+  .zr-card .r { font-size: 18px; font-weight: 800; color: #2e7d32; margin-top: 4px; }
+  .zr-apple { display: flex; justify-content: center; gap: 20px; align-items: center; flex-wrap: wrap; min-height: 60px; }
+  .zr-apple .group { text-align: center; font-size: 34px; }
+  .zr-apple .who { font-size: 15px; font-weight: 700; color: var(--text-2); }
+  .zr-big { font-size: 30px; font-weight: 800; color: #c0392b; text-align: center; margin: 10px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">有关 0 的运算 <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>a+0=a、a−0=a、a−a=0、0×a=0、0÷a=0（a≠0）；0 不能作除数。</p>
+      <p><b>孩子容易走神的地方：</b>0 作除数（如 5÷0）会出错；用"分给 0 个人没意义"来理解"0 不能作除数"。</p>
+      <p><b>建议：</b>本课约 8 分钟；把 0 的性质做成口诀：加零减零不变，同数相减是零，零乘任何数得零。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-033</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想 5+0 等于几！",
+      voice: "5 加 0 等于几？还是 5！0 好神奇，跟它加减不改变。今天把 0 的脾气摸清楚。",
+      body: function () {
+        return '' +
+          '<h2>0 的小把戏</h2>' +
+          '<p class="zr-big">5 + 0 = 5，5 × 0 = 0</p>' +
+          '<div class="hint">👆 0 有 5 条重要性质，还有 1 条"禁区"</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "0 的五条性质动画",
+      task: "咱们这一步要做的：看动画点亮 0 的 5 条性质！",
+      voice: "看动画。0 有五条性质：任何数加 0 等于它自己；任何数减 0 等于它自己；同一个数相减等于 0；0 乘任何数等于 0；0 除以非零的数等于 0。",
+      body: function () {
+        return '' +
+          '<h2>看动画：0 的 5 条性质</h2>' +
+          '<div class="zr-box" id="d1">' +
+          '<div class="zr-cards">' +
+          '<div class="zr-card" id="zc1"><div class="e">a + 0</div><div class="r">= a</div></div>' +
+          '<div class="zr-card" id="zc2"><div class="e">a − 0</div><div class="r">= a</div></div>' +
+          '<div class="zr-card" id="zc3"><div class="e">a − a</div><div class="r">= 0</div></div>' +
+          '<div class="zr-card" id="zc4"><div class="e">0 × a</div><div class="r">= 0</div></div>' +
+          '<div class="zr-card" id="zc5"><div class="e">0 ÷ a (a≠0)</div><div class="r">= 0</div></div>' +
+          "</div>" +
+          "</div>" +
+          '<div class="zr-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="zr-rule">口诀：加零减零不变，同数相减是零，零乘任何数得零，零除以非零数得零</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "0 不能作除数动画",
+      task: "咱们这一步要做的：看动画知道 0 不能当除数！",
+      voice: "看动画。0 个苹果分给 3 个人，每人 0 个，可以。但 3 个苹果分给 0 个人，没有对象可分，没意义！所以 0 不能作除数，0 作除数没有意义。",
+      body: function () {
+        return '' +
+          '<h2>看动画：0 不能作除数</h2>' +
+          '<div class="zr-box" id="d2">' +
+          '<div class="zr-apple">' +
+          '<div class="group">🍎🍎🍎<div class="who">分给 3 人</div><div>3 ÷ 3 = 1</div></div>' +
+          '<div class="group">0 个🍎<div class="who">分给 3 人</div><div>0 ÷ 3 = 0</div></div>' +
+          '<div class="group">🍎🍎🍎<div class="who">分给 0 人？</div><div style="color:#c0392b;font-weight:800">❌ 没意义</div></div>' +
+          "</div>" +
+          "</div>" +
+          '<div class="zr-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="zr-rule">0 不能作除数（除数不能为 0）</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道 0 的运算题！",
+      voice: "现在考考你！0 的运算。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：找不能算的算式，领奖！",
+      voice: "Boss 来啦！下面哪道算式不能算？0 除以 5 可以算，等于 0；但 5 除以 0 不能算，因为 0 不能作除数！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：哪个不能算？</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    var names = ["① 加 0 不变", "② 减 0 不变", "③ 同数相减 = 0", "④ 0 × 任何数 = 0", "⑤ 0 ÷ 非零数 = 0"];
+    for (var i = 1; i <= 5; i++) {
+      (function (i) {
+        setTimeout(function () {
+          document.getElementById("zc" + i).classList.add("show", "hl");
+          if (tip) { tip.textContent = names[i - 1]; }
+        }, 800 * i);
+      })(i);
+    }
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 0 的 5 条性质记牢啦！"; } }, 800 * 6);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    var groups = document.querySelectorAll("#d2 .group");
+    groups.forEach(function (g, i) {
+      setTimeout(function () {
+        g.style.opacity = "0.25";
+        if (i === 0) { g.style.opacity = "1"; if (tip) { tip.textContent = "① 3 个苹果分 3 人 → 3÷3=1"; } }
+        if (i === 1) { if (tip) { tip.textContent = "② 0 个苹果分 3 人 → 0÷3=0（可以）"; } }
+        if (i === 2) { if (tip) { tip.textContent = "③ 分给 0 人？没人可分 → 没意义 ❌"; } }
+      }, 1100 * i);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 所以 0 不能作除数"; } }, 1100 * 3 + 400);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "7 + 0 = ?", right: "7", opts: ["7", "0", "70"] },
+    { q: "8 − 8 = ?", right: "0", opts: ["0", "8", "1"] },
+    { q: "0 × 99 = ?", right: "0", opts: ["0", "99", "990"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "0 的性质：加减不变、同数相减得0、0乘得0、0除以非零得0";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">下面哪道算式「不能算」？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">5 ÷ 0</div>' +
+      '<div class="opt" data-ok="0">0 ÷ 5</div>' +
+      '<div class="opt" data-ok="0">0 × 5</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 0 的运算你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "0 ÷ 5 = 0、0 × 5 = 0 都可以；只有 5 ÷ 0 不行（0 不能作除数）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1900);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "a+0=a、a−0=a、a−a=0、0×a=0、0÷a=0（a≠0）；0 不能作除数。",
+      attention: "孩子容易把 5÷0 当 0；用「分给 0 个人没意义」理解「0 不能作除数」。",
+      tip: "本课约 8 分钟；把 0 的性质做成口诀：加零减零不变，同数相减是零，零乘任何数得零。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
