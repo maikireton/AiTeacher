@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>除数是两位数的口算除法 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .ok-wrap { display: flex; gap: 18px; justify-content: center; align-items: center; flex-wrap: wrap; margin: 14px 0; }
+  .ok-cell { font-size: 28px; font-weight: 800; background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 14px 20px; transition: all .4s; opacity: 0; }
+  .ok-cell.show { opacity: 1; }
+  .ok-cell.hl { border-color: var(--accent-deep); background: rgba(155,187,244,.16); }
+  .ok-cell.green { border-color: #8bc34a; color: #2e7d32; background: rgba(139,195,74,.14); }
+  .ok-cell .cut { position: relative; color: var(--text-2); }
+  .ok-cell .cut::after { content: ""; position: absolute; left: -4px; right: -4px; top: 50%; border-top: 3px solid var(--red); transform: rotate(-8deg); }
+  .ok-arrow { font-size: 28px; color: var(--text-2); opacity: 0; transition: opacity .3s; }
+  .ok-arrow.show { opacity: 1; }
+  .ok-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">除数是两位数的口算除法 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>整十数除法口算：想乘法算除法（如 20×4=80 → 80÷20=4）；或末尾 0 对 0 划掉再算表内除法。</p>
+      <p><b>孩子容易走神的地方：</b>划 0 时两边划的个数不一致、或忘记想乘法先；要强调「想乘法算除法」最稳。</p>
+      <p><b>建议：</b>本课约 8 分钟；先让孩子报乘法口诀，再报除法答案。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-017</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：口算 80 ÷ 20！",
+      voice: "八十除以二十，口算怎么最快？想一下，二十乘几等于八十呢？想乘法，除法的答案就出来了。今天我们学除数是两位数的口算。",
+      body: function () {
+        return '' +
+          '<h2>80 ÷ 20 = ？</h2>' +
+          '<p>有 80 个苹果，每 20 个装一袋，能装几袋？</p>' +
+          '<p class="big">80 ÷ 20</p>' +
+          '<div class="hint">👆 想一想：20 × 几 = 80？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "想乘法算除法",
+      task: "咱们这一步要做的：看动画学会「想乘法」！",
+      voice: "看动画。想乘法算除法：二十乘四等于八十，所以八十除以二十等于四。先想乘法口诀，除法口算就不难。",
+      body: function () {
+        return '' +
+          '<h2>看动画：80 ÷ 20</h2>' +
+          '<div class="ok-wrap" id="ok1"></div>' +
+          '<div class="ok-tip" id="ok1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "划零法口算",
+      task: "咱们这一步要做的：看动画学会「零对零划掉再算」！",
+      voice: "再看个大的：二百四十除以三十。把被除数和除数末尾的零先划掉，变成二十四除以三，等于八。记住：末尾的零，被除数和除数各划掉几个，再算。",
+      body: function () {
+        return '' +
+          '<h2>看动画：240 ÷ 30</h2>' +
+          '<div class="ok-wrap" id="ok2"></div>' +
+          '<div class="ok-tip" id="ok2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道口算！",
+      voice: "现在轮到你啦！先想乘法，或者先划零，很快就能算出来。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：口算一个大数除法，领奖！",
+      voice: "Boss 来啦！三百六十除以四十，先划掉末尾一个零，变成三十六除以四，等于几？",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：360 ÷ 40 = ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function okcell(cls, html) { return '<span class="ok-cell ' + cls + '">' + html + "</span>"; }
+  function showCells(box) { box.querySelectorAll(".ok-cell").forEach(function (c, i) { setTimeout(function () { c.classList.add("show"); }, i * 700); }); }
+
+  /* ========== S2：80 ÷ 20 = 4 ========== */
+  function runOk1() {
+    var box = document.getElementById("ok1");
+    if (!box) { return; }
+    var tip = document.getElementById("ok1-tip");
+    box.innerHTML = okcell("", "80 ÷ 20 = ?") + '<span class="ok-arrow">→</span>' +
+      okcell("", "想：20 × 4 = 80") + '<span class="ok-arrow">→</span>' +
+      okcell("green", "所以 80 ÷ 20 = 4");
+    showCells(box);
+    var arrs = box.querySelectorAll(".ok-arrow");
+    arrs.forEach(function (a, i) { setTimeout(function () { a.classList.add("show"); }, 600 + i * 700); });
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 想乘法算除法：20 × 4 = 80"; }
+      var cs = box.querySelectorAll(".ok-cell");
+      if (cs[1]) { cs[1].classList.add("hl"); }
+    }, 800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 因为 4 × 20 = 80，所以 80 ÷ 20 = 4 ✅"; }
+      var cs = box.querySelectorAll(".ok-cell");
+      if (cs[2]) { cs[2].classList.add("hl"); }
+    }, 2400);
+  }
+
+  /* ========== S3：240 ÷ 30 = 8 ========== */
+  function runOk2() {
+    var box = document.getElementById("ok2");
+    if (!box) { return; }
+    var tip = document.getElementById("ok2-tip");
+    box.innerHTML = okcell("", "240 ÷ 30 = ?") + '<span class="ok-arrow">→</span>' +
+      okcell("", '<span class="cut">24</span>0 ÷ <span class="cut">3</span>0') + '<span class="ok-arrow">→</span>' +
+      okcell("green", "24 ÷ 3 = 8");
+    showCells(box);
+    var arrs = box.querySelectorAll(".ok-arrow");
+    arrs.forEach(function (a, i) { setTimeout(function () { a.classList.add("show"); }, 600 + i * 900); });
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 末尾的 0 各划掉一个（红斜线）：240→24，30→3"; }
+      var cs = box.querySelectorAll(".ok-cell");
+      if (cs[1]) { cs[1].classList.add("hl"); }
+    }, 1000);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 变成 24 ÷ 3 = 8 ✅（零对零划掉再算）"; }
+      var cs = box.querySelectorAll(".ok-cell");
+      if (cs[2]) { cs[2].classList.add("hl"); }
+    }, 3600);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "60 ÷ 20 = ?", right: "3", opts: ["3", "30", "4"] },
+    { q: "120 ÷ 30 = ?", right: "4", opts: ["4", "40", "3"] },
+    { q: "240 ÷ 40 = ?", right: "6", opts: ["6", "60", "5"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "想乘法算除法，或零对零划掉再算表内除法";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">360 ÷ 40 = ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">9</div>' +
+      '<div class="opt" data-ok="0">90</div>' +
+      '<div class="opt" data-ok="0">8</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 口算你过关啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "划掉末尾 0：36 ÷ 4 = 9";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runOk1(); }
+    if (step.id === "s3") { runOk2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "整十数除法口算：想乘法算除法（20×4=80 → 80÷20=4）；或末尾 0 对 0 划掉再算表内除法。",
+      attention: "孩子容易划 0 时两边个数不一致、或忘记先想乘法；要强调「想乘法算除法」最稳。",
+      tip: "本课约 8 分钟；先让孩子报乘法口诀，再报除法答案。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

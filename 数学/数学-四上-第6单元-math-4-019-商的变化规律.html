@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>商的变化规律 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .qc-box { margin: 12px 0; }
+  .qc-row { display: flex; align-items: center; gap: 12px; justify-content: center; margin: 8px 0; flex-wrap: wrap; }
+  .qc-eq { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 26px; background: var(--card); border: 2px solid var(--border); border-radius: 12px; padding: 10px 18px; opacity: 0; transition: all .35s; }
+  .qc-eq.show { opacity: 1; }
+  .qc-eq.hl { border-color: var(--accent-deep); background: rgba(155,187,244,.15); }
+  .qc-eq.same { border-color: #8bc34a; color: #2e7d32; background: rgba(139,195,74,.12); }
+  .qc-ch { font-size: 20px; font-weight: 800; color: var(--accent-deep); opacity: 0; transition: opacity .3s; }
+  .qc-ch.show { opacity: 1; }
+  .qc-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .qc-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 12px; font-size: 14px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">商的变化规律 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>被除数和除数同时乘（或除以）相同的数（0 除外），商不变。</p>
+      <p><b>孩子容易走神的地方：</b>只变被除数或只变除数（那商就变了）；要强调「同时、相同、0 除外」。</p>
+      <p><b>建议：</b>本课约 8 分钟；让孩子自己说「被除数 ×10，除数也 ×10，商不变」。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-019</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  function eq(html) { return '<span class="qc-eq">' + html + "</span>"; }
+  function ch(html) { return '<span class="qc-ch">' + html + "</span>"; }
+  function sh(box, sel) { var r = box.querySelector(sel); if (r) { r.classList.add("show"); } }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：观察三组算式，发现秘密！",
+      voice: "这里有三个除法算式，被除数和除数都变了，可答案居然一样！里面藏着除法的大秘密，叫商不变规律。今天我们把它找出来。",
+      body: function () {
+        return '' +
+          '<h2>商不变？</h2>' +
+          '<p class="big">16÷8=2　160÷80=2　1600÷800=2</p>' +
+          '<p>被除数变大了，除数也变大了，商却都是 2！</p>' +
+          '<div class="hint">👆 观察：被除数和除数同时怎么变？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "同时乘，商不变",
+      task: "咱们这一步要做的：看动画发现「同时 × 相同数」！",
+      voice: "看动画。十六除以八等于二。把被除数乘十变成一百六十，除数也乘十变成八十，商还是二。再乘十，变成一千六百除以八百，商还是二。被除数和除数同时乘相同的数，商不变。",
+      body: function () {
+        return '' +
+          '<h2>看动画：同时 ×10</h2>' +
+          '<div class="qc-box" id="qc1"></div>' +
+          '<div class="qc-tip" id="qc1-tip">准备开始…</div>' +
+          '<div class="qc-rule">被除数、除数同时乘相同的数（0 除外），商不变</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "同时除以，商不变",
+      task: "咱们这一步要做的：看动画发现「同时 ÷ 相同数」也行！",
+      voice: "反过来。一千六百除以八百等于二。同时除以十，变成一百六十除以八十，还是二。再除十，变成十六除以八，还是二。被除数和除数同时除以相同的数，商也不变。",
+      body: function () {
+        return '' +
+          '<h2>看动画：同时 ÷10</h2>' +
+          '<div class="qc-box" id="qc2"></div>' +
+          '<div class="qc-tip" id="qc2-tip">准备开始…</div>' +
+          '<div class="qc-rule">被除数、除数同时除以相同的数（0 除外），商不变</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道，用商不变快算！",
+      voice: "现在轮到你啦！被除数和除数同时变，商不变，直接报答案。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算一个同时 ×10 的，领奖！",
+      voice: "Boss 来啦！六百除以三十等于二十。那被除数和除数同时乘十，变成六千除以三百，商还是多少？",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：6000 ÷ 300 = ?</h2>' +
+          '<p class="big">600 ÷ 30 = 20，6000 ÷ 300 = ?</p>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2：同时 ×10 ========== */
+  function runQc1() {
+    var box = document.getElementById("qc1");
+    if (!box) { return; }
+    var tip = document.getElementById("qc1-tip");
+    box.innerHTML = '' +
+      '<div class="qc-row" data-k="r1">' + eq("16 ÷ 8 = 2") + "</div>" +
+      '<div class="qc-row" data-k="r2">' + eq("160 ÷ 80 = 2") + ch(" 同时 ×10 ") + ch(" 商不变 ") + "</div>" +
+      '<div class="qc-row" data-k="r3">' + eq("1600 ÷ 800 = 2") + ch(" 同时 ×10 ") + ch(" 商不变 ") + "</div>";
+    sh(box, '[data-k="r1"]');
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 16 和 8 同时 ×10 → 160 和 80，商还是 2"; }
+      sh(box, '[data-k="r2"]');
+      var es = box.querySelectorAll('[data-k="r2"] .qc-eq');
+      if (es[0]) { es[0].classList.add("hl"); }
+      var cs = box.querySelectorAll('[data-k="r2"] .qc-ch');
+      setTimeout(function () { cs.forEach(function (c) { c.classList.add("show"); }); }, 400);
+    }, 1200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 再同时 ×10 → 1600 和 800，商还是 2"; }
+      sh(box, '[data-k="r3"]');
+      var es = box.querySelectorAll('[data-k="r3"] .qc-eq');
+      if (es[0]) { es[0].classList.add("hl"); }
+      var cs = box.querySelectorAll('[data-k="r3"] .qc-ch');
+      setTimeout(function () { cs.forEach(function (c) { c.classList.add("show"); }); }, 400);
+    }, 3800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 被除数和除数同时 × 相同数 → 商不变"; }
+      box.querySelectorAll('[data-k="r2"] .qc-eq, [data-k="r3"] .qc-eq').forEach(function (e) { e.classList.add("same"); });
+    }, 6400);
+  }
+
+  /* ========== S3：同时 ÷10 ========== */
+  function runQc2() {
+    var box = document.getElementById("qc2");
+    if (!box) { return; }
+    var tip = document.getElementById("qc2-tip");
+    box.innerHTML = '' +
+      '<div class="qc-row" data-k="r1">' + eq("1600 ÷ 800 = 2") + "</div>" +
+      '<div class="qc-row" data-k="r2">' + eq("160 ÷ 80 = 2") + ch(" 同时 ÷10 ") + ch(" 商不变 ") + "</div>" +
+      '<div class="qc-row" data-k="r3">' + eq("16 ÷ 8 = 2") + ch(" 同时 ÷10 ") + ch(" 商不变 ") + "</div>";
+    sh(box, '[data-k="r1"]');
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 1600 和 800 同时 ÷10 → 160 和 80，商还是 2"; }
+      sh(box, '[data-k="r2"]');
+      var es = box.querySelectorAll('[data-k="r2"] .qc-eq');
+      if (es[0]) { es[0].classList.add("hl"); }
+      var cs = box.querySelectorAll('[data-k="r2"] .qc-ch');
+      setTimeout(function () { cs.forEach(function (c) { c.classList.add("show"); }); }, 400);
+    }, 1200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 再同时 ÷10 → 16 和 8，商还是 2"; }
+      sh(box, '[data-k="r3"]');
+      var es = box.querySelectorAll('[data-k="r3"] .qc-eq');
+      if (es[0]) { es[0].classList.add("hl"); }
+      var cs = box.querySelectorAll('[data-k="r3"] .qc-ch');
+      setTimeout(function () { cs.forEach(function (c) { c.classList.add("show"); }); }, 400);
+    }, 3800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 被除数和除数同时 ÷ 相同数 → 商不变"; }
+      box.querySelectorAll('[data-k="r2"] .qc-eq, [data-k="r3"] .qc-eq').forEach(function (e) { e.classList.add("same"); });
+    }, 6400);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "20÷5=4，那么 200÷50 = ?", right: "4", opts: ["4", "40", "2"] },
+    { q: "480÷80=6，那么 48÷8 = ?", right: "6", opts: ["6", "60", "5"] },
+    { q: "被除数和除数同时乘 5，商？", right: "不变", opts: ["不变", "也乘 5", "除以 5"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "被除数和除数同时乘/除以相同数（0 除外），商不变";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">6000 ÷ 300 = ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">20</div>' +
+      '<div class="opt" data-ok="0">200</div>' +
+      '<div class="opt" data-ok="0">2</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 商不变规律你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "同时 ×10：600→6000，30→300，商还是 20";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runQc1(); }
+    if (step.id === "s3") { runQc2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "被除数和除数同时乘（或除以）相同的数（0 除外），商不变。",
+      attention: "孩子容易只变被除数或只变除数（那商就变了）；要强调「同时、相同、0 除外」三个条件。",
+      tip: "本课约 8 分钟；让孩子自己说「被除数 ×10，除数也 ×10，商不变」。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
