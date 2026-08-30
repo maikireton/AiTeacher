@@ -46,7 +46,7 @@
       /* ================= 数学 · 四年级上册（2026 新版教材） ================= */
 
       // 第1单元 万以上数的认识
-      { id: "math-4-001", name: "亿以内数的读法", subject: "math", grade: 4, term: "上册", unit: "第1单元·万以上数的认识", module: "number", difficulty: "基础", source: "syllabus", prerequisiteIds: ["math-3-003"], status: "待制作", file: "", summary: "分级读亿以内数，先读亿级再读万级", keywords: ["读数","大数","亿以内"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "math-4-001", name: "亿以内数的读法", subject: "math", grade: 4, term: "上册", unit: "第1单元·万以上数的认识", module: "number", difficulty: "基础", source: "syllabus", prerequisiteIds: ["math-3-003"], status: "已完成", file: "数学/数学-四上-第1单元-math-4-001-亿以内数的读法.html", summary: "分级读亿以内数，先读亿级再读万级", keywords: ["读数","大数","亿以内"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
       { id: "math-4-002", name: "亿以内数的写法", subject: "math", grade: 4, term: "上册", unit: "第1单元·万以上数的认识", module: "number", difficulty: "基础", source: "syllabus", prerequisiteIds: ["math-4-001"], status: "待制作", file: "", summary: "按数级写亿以内数，0 的占位", keywords: ["写数","大数","占位"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
       { id: "math-4-003", name: "亿以内数的大小比较", subject: "math", grade: 4, term: "上册", unit: "第1单元·万以上数的认识", module: "number", difficulty: "基础", source: "syllabus", prerequisiteIds: ["math-4-001"], status: "待制作", file: "", summary: "位数多的大，同位数比高位", keywords: ["比较","大数"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
       { id: "math-4-004", name: "数的改写（整万、整亿）", subject: "math", grade: 4, term: "上册", unit: "第1单元·万以上数的认识", module: "number", difficulty: "基础", source: "syllabus", prerequisiteIds: ["math-4-001"], status: "待制作", file: "", summary: "整万/整亿数改写成万、亿作单位", keywords: ["改写","万","亿","单位"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },

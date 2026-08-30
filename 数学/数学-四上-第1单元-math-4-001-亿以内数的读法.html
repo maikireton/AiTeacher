@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>亿以内数的读法 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  /* ---------- 课件播放器专用样式 ---------- */
+  .player { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px 18px; }
+  .task-line { background: rgba(155,187,244,0.16); color: var(--accent-deep); border-radius: 10px; padding: 8px 14px; font-size: 13px; margin-bottom: 14px; }
+  .task-line b { font-weight: 700; }
+  .stage { min-height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 8px 4px; }
+  .stage h2 { font-size: 22px; margin-bottom: 10px; }
+  .stage p { color: var(--text-2); font-size: 15px; max-width: 560px; }
+  .stage .big { font-size: 20px; font-weight: 800; letter-spacing: 2px; margin: 8px 0; }
+  .stage .demo { margin: 16px 0; width: 100%; max-width: 600px; }
+  .stage .hint { font-size: 13px; color: var(--text-2); margin-top: 12px; }
+  .fact { display: inline-block; background: rgba(155,187,244,0.12); border: 1px dashed var(--accent-deep); border-radius: 12px; padding: 12px 16px; margin: 6px; font-size: 15px; }
+  .fact b { font-size: 22px; color: var(--accent-deep); }
+
+  /* 数位顺序表动画 */
+  .numline { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 10px 0; }
+  .ncell { width: 56px; height: 56px; border-radius: 10px; border: 2px solid var(--border); background: var(--card); font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center; transition: all .3s; }
+  .ncell.grade-万 { border-color: #8bc34a; background: rgba(139,195,74,.12); }
+  .ncell.grade-个 { border-color: var(--accent-deep); background: rgba(155,187,244,.12); }
+  .ncell.grade-亿 { border-color: #ff9800; background: rgba(255,152,0,.12); }
+  .ncell.hl { transform: scale(1.12); box-shadow: 0 0 0 4px rgba(155,187,244,.25); }
+  .lgroup { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
+  .lgroup .lname { font-size: 12px; color: var(--text-2); font-weight: 700; }
+  .lgroup.hl .lname { color: var(--accent-deep); }
+
+  /* 练习 */
+  .quiz { width: 100%; max-width: 480px; }
+  .quiz .q { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+  .opts { display: flex; flex-direction: column; gap: 10px; }
+  .opt { display: flex; align-items: center; justify-content: center; min-height: 52px; border: 2px solid var(--border); border-radius: 12px; font-size: 17px; background: var(--card); cursor: pointer; }
+  .opt:active { background: #eef0f5; }
+  .opt.right { border-color: var(--green); background: rgba(82,196,26,.12); }
+  .opt.wrong { border-color: var(--red); background: rgba(234,102,104,.12); }
+  .opt.locked { pointer-events: none; opacity: .6; }
+  .qmsg { min-height: 24px; font-size: 14px; margin-top: 10px; }
+  .qmsg.ok { color: var(--green); font-weight: 700; }
+  .qmsg.no { color: #b07900; }
+  .qnext { margin-top: 12px; min-height: 44px; padding: 0 22px; border-radius: 12px; border: none; background: var(--accent-deep); color: #fff; font-size: 15px; cursor: pointer; }
+  .qnext:disabled { background: var(--border); cursor: default; }
+
+  /* 星星 / 连击 */
+  .score-row { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 12px; font-size: 14px; color: var(--text-2); }
+  .star { font-size: 20px; }
+  .combo { color: #b07900; font-weight: 700; }
+
+  /* 结算 */
+  .result-big { font-size: 40px; margin: 6px 0; }
+  .boss { margin-top: 14px; font-size: 15px; color: var(--text-2); }
+
+  /* 控制栏 */
+  .controls { display: flex; gap: 10px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+  .cbtn { flex: 1 1 0; min-width: 76px; min-height: 48px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); font-size: 14px; color: var(--text); cursor: pointer; }
+  .cbtn.on { background: rgba(155,187,244,.22); border-color: var(--accent-deep); font-weight: 700; }
+  .cbtn:disabled { opacity: .4; cursor: default; }
+  .cbtn.main { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); }
+  .dots { display: flex; gap: 8px; justify-content: center; margin: 14px 0 4px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+  .dot.done { background: var(--accent-deep); }
+  .dot.cur { background: var(--accent-deep); box-shadow: 0 0 0 4px rgba(155,187,244,.3); }
+
+  /* 家长模式 */
+  .parent-panel { margin-top: 16px; border: 1px dashed var(--border); border-radius: 12px; padding: 12px 14px; }
+  .parent-panel summary { cursor: pointer; color: var(--text-2); font-size: 13px; }
+  .parent-panel .pbody { font-size: 13px; color: var(--text-2); margin-top: 10px; }
+  .parent-panel .pbody p { margin: 6px 0; }
+  .parent-panel .pbody b { color: var(--text); }
+
+  @media (max-width: 480px) {
+    .stage h2 { font-size: 19px; }
+    .ncell { width: 46px; height: 46px; font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">亿以内数的读法 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>读亿以内的数，先分级（四位一级），从最高级读起，读完一级要加上"万"；中间有 0 只读一个 0，末尾的 0 不读。</p>
+      <p><b>孩子容易走神的地方：</b>分级后"忘记加万"和"多个 0 乱读"是两个高频错误，陪学时重点看练习第 2、3 题。</p>
+      <p><b>建议时长：</b>本课约 8 分钟；今天累计学习超过 20 分钟就提醒休息。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-001</div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ========== 五段式步骤定义 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看生活里的大数，找找读数的感觉！",
+      voice: "先别急着读，我们先看看生活里的大数。你平时见过的最大的数是多少？一万、十万还是一百万？",
+      body: function () {
+        return '' +
+          '<h2>生活里的大数</h2>' +
+          '<div>' +
+            '<span class="fact">地球到太阳约 <b>1 5000 0000</b> 千米</span>' +
+            '<span class="fact">宁波人口约 <b>960 万</b></span>' +
+          '</div>' +
+          '<p>这些数比咱们以前学的大多啦！它们叫<b>大数</b>。今天，我们就来学会怎么读它们。</p>' +
+          '<div class="hint">👆 仔细看这些数，都有好多 0 哦</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "认识分级",
+      task: "咱们这一步要做的：给大数分分家，学会四位一级！",
+      voice: "读大数有个秘诀，就是分级。从右边开始，每四个数位是一级。个位十位百位千位，是个级；万位十万位百万位千万位，是万级。",
+      body: function () {
+        return '' +
+          '<h2>给大数"分家"：四位一级</h2>' +
+          '<div class="demo" id="numline-demo"></div>' +
+          '<p>从右边起，<b>每 4 位是一级</b>：个级、万级、亿级。</p>' +
+          '<div class="hint">👆 点数一数：是不是每 4 个数位是一级？</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "读数方法",
+      task: "咱们这一步要做的：学会读大数的三步口诀，跟着读一个！",
+      voice: "读数分三步。第一步，先分级；第二步，从最高级读起，读完一级加上它的名字，万级要加万；第三步，每级中间有零，只读一个零，末尾的零不读。我们来读一个：三千零五十万六千。",
+      body: function () {
+        return '' +
+          '<h2>读数三步口诀</h2>' +
+          '<div class="demo" id="read-demo">' +
+            '<div class="numline" id="numline">' +
+              '<span class="lgroup grade-万" id="g-万"><span class="lname">万级</span><span class="ncell grade-万">3</span><span class="ncell grade-万">0</span><span class="ncell grade-万">5</span><span class="ncell grade-万">0</span></span>' +
+              '<span class="lgroup grade-个" id="g-个"><span class="lname">个级</span><span class="ncell grade-个">6</span><span class="ncell grade-个">0</span><span class="ncell grade-个">0</span><span class="ncell grade-个">0</span></span>' +
+            '</div>' +
+          '</div>' +
+          '<p class="big" id="read-result"></p>' +
+          '<div class="hint">👆 点击「下一步」之前，先自己试着读一读中间这个数</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道题，把读法用起来！",
+      voice: "现在来练一练。一共有三道题，答对就能得到星星。错也没关系，我们再试一次！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>' +
+          '<div class="score-row" id="qscore"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "小结闯关",
+      task: "咱们这一步要做的：读一个超大数当大 Boss，然后领奖！",
+      voice: "最后来一个大家伙。30500060，你能读对吗？先分级，再一级一级读。读对的话，今天你就是大数小勇士！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：读一个超大数</h2>' +
+          '<div class="numline">' +
+            '<span class="ncell grade-万">3</span><span class="ncell grade-万">0</span><span class="ncell grade-万">5</span><span class="ncell grade-万">0</span>' +
+            '<span class="ncell grade-个">0</span><span class="ncell grade-个">0</span><span class="ncell grade-个">6</span><span class="ncell grade-个">0</span>' +
+          '</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>' +
+          '<div class="boss" id="boss-tip"></div>';
+      }
+    }
+  ];
+
+  /* ========== 状态 ========== */
+  var state = { cur: 0, stars: 0, combo: 0, auto: false, voice: true };
+  var quizDone = { q1: false, q2: false, q3: false };
+  var bossDone = false;
+
+  var el = function (id) { return document.getElementById(id); };
+  var stage = el("stage"), taskLine = el("task-line"), dots = el("dots");
+  var scoreRow = el("score-row");
+
+  /* ========== 语音 ========== */
+  function speak(text) {
+    if (!state.voice || !("speechSynthesis" in window)) { return; }
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = "zh-CN";
+      u.rate = 0.92;
+      u.pitch = 1.05;
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* 语音失败不阻塞学习 */ }
+  }
+  function stopSpeak() { try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {} }
+
+  /* ========== 渲染 ========== */
+  function renderDots() {
+    var h = "";
+    steps.forEach(function (_, i) {
+      h += '<span class="dot' + (i < state.cur ? " done" : "") + (i === state.cur ? " cur" : "") + '"></span>';
+    });
+    dots.innerHTML = h;
+  }
+
+  function renderScore() {
+    var h = '<span class="star">⭐×' + state.stars + '</span>';
+    if (state.combo >= 2) { h += '<span class="combo">🔥 连击 ×' + state.combo + "</span>"; }
+    scoreRow.innerHTML = h;
+  }
+
+  function render() {
+    var s = steps[state.cur];
+    taskLine.innerHTML = "🎯 <b>任务：</b>" + s.task;
+    stage.innerHTML = s.body();
+    renderDots();
+    renderScore();
+
+    // 步骤进入后的动画与语音
+    if (s.id === "s2") { runNumlineDemo(); }
+    if (s.id === "s3") { runReadDemo(); }
+    if (s.id === "s4") { startQuiz(); }
+    if (s.id === "s5") { startBoss(); }
+    speak(s.voice);
+
+    el("btn-prev").disabled = state.cur === 0;
+    el("btn-next").disabled = false;
+    el("btn-next").textContent = state.cur === steps.length - 1 ? "完成 🎉" : "下一步";
+  }
+
+  /* ========== S2 分级动画 ========== */
+  function runNumlineDemo() {
+    var box = el("numline-demo");
+    if (!box) { return; }
+    box.innerHTML = '<div class="numline">' +
+      '<span class="lgroup grade-万"><span class="lname">万级</span>' +
+        "<span class='ncell grade-万'>千</span><span class='ncell grade-万'>百</span><span class='ncell grade-万'>十</span><span class='ncell grade-万'>万</span></span>" +
+      '<span class="lgroup grade-个"><span class="lname">个级</span>' +
+        "<span class='ncell grade-个'>千</span><span class='ncell grade-个'>百</span><span class='ncell grade-个'>十</span><span class='ncell grade-个'>个</span></span>" +
+      "</div>";
+  }
+
+  /* ========== S3 读数演示动画 ========== */
+  function runReadDemo() {
+    var groups = ["g-万", "g-个"];
+    var i = 0;
+    var timer = setInterval(function () {
+      if (state.cur !== 2) { clearInterval(timer); return; }
+      if (i < groups.length) {
+        var g = el(groups[i]);
+        if (g) {
+          g.classList.add("hl");
+          g.querySelectorAll(".ncell").forEach(function (c, idx) {
+            setTimeout(function () { c.classList.add("hl"); }, idx * 200);
+          });
+        }
+        i++;
+      } else {
+        clearInterval(timer);
+        var r = el("read-result");
+        if (r) { r.textContent = "读出结果：三千零五十万六千"; }
+        if (state.voice) { speak("三千零五十万六千。万级读作三千零五十，要加一个万字。个级是六个零，末尾的零不读。"); }
+      }
+    }, 1200);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { num: "3200000", right: "三百二十万", opts: ["三百二十万", "三千二百万", "三十二万"] },
+    { num: "4050000", right: "四百零五万", opts: ["四十五万", "四百零五万", "四千零五十万"] },
+    { num: "60000000", right: "六千万", opts: ["六百万", "六亿", "六千万"] }
+  ];
+
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+
+  function renderQuiz() {
+    var box = el("quiz"), score = el("qscore");
+    if (!box) { return; }
+    // 找到第一个未完成题目
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：读出 <b>" + q.num + "</b></div>" +
+      '<div class="opts">' + q.opts.map(function (o) { return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>"; }).join("") + "</div>" +
+      '<div class="qmsg"></div><button class="qnext" disabled>下一题</button>';
+    score.innerHTML = '<span class="star">⭐×' + state.stars + "</span>" +
+      (state.combo >= 2 ? '<span class="combo">🔥 连击 ×' + state.combo + "</span>" : "");
+
+    var opts = box.querySelectorAll(".opt");
+    var tried = false;
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          state.stars++; state.combo++;
+          msg.className = "qmsg ok";
+          msg.textContent = "答对啦！⭐ +1" + (state.combo >= 2 ? "（连击 +" + state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          state.combo = 0;
+          msg.className = "qmsg no";
+          msg.textContent = "差一点点～ 再试一次！先分级：四位一级，中间有 0 只读一个 0";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1200);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss 关 ========== */
+  function startBoss() {
+    var box = el("boss-quiz"), tip = el("boss-tip"), rs = el("result-stars");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">读出这个数：<b>30500060</b></div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">三千零五十万零六十</div>' +
+      '<div class="opt" data-ok="0">三千零五十万六十</div>' +
+      '<div class="opt" data-ok="0">三亿零五百万六十</div>' +
+      "</div><div class='qmsg'></div>";
+    tip.textContent = "小提示：先分级 3050 ｜ 0060，万级末尾的 0 不读，但个级前两个 0 要读一个 0 哦";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          state.stars += 2; state.combo++;
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 今天你是大数小勇士！";
+          bossDone = true;
+          rs.innerHTML = "🏆 共获得 <b>" + state.stars + "</b> 颗星" +
+            (state.stars >= 8 ? "（全部拿下！）" : state.stars >= 5 ? "（很不错！）" : "（下次再来！）");
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          state.combo = 0;
+          msg.className = "qmsg no";
+          msg.textContent = "再试一次！注意：万级末尾的 0 不读，个级开头连续的 0 只读一个";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+  }
+
+  /* ========== 控制栏 ========== */
+  var btnPrev = el("btn-prev"), btnNext = el("btn-next"), btnAuto = el("btn-auto"), btnVoice = el("btn-voice");
+
+  btnPrev.addEventListener("click", function () {
+    stopSpeak();
+    if (state.cur > 0) { state.cur--; }
+    render();
+  });
+  btnNext.addEventListener("click", function () {
+    stopSpeak();
+    if (state.cur < steps.length - 1) { state.cur++; render(); }
+    else { render(); /* 结束，停留在结算 */ }
+  });
+  btnVoice.addEventListener("click", function () {
+    state.voice = !state.voice;
+    btnVoice.classList.toggle("on", state.voice);
+    if (!state.voice) { stopSpeak(); }
+  });
+  btnAuto.addEventListener("click", function () {
+    state.auto = !state.auto;
+    btnAuto.classList.toggle("on", state.auto);
+    if (state.auto) { startAuto(); }
+    else { stopSpeak(); }
+  });
+
+  /* 自动播放：讲解步等语音读完再前进；练习步自动暂停等孩子 */
+  function startAuto() {
+    var timer = setInterval(function () {
+      if (!state.auto) { clearInterval(timer); return; }
+      if (state.cur === 3 || state.cur === 4) {
+        // 练习步不自动前进
+        return;
+      }
+      if (state.cur < steps.length - 1) {
+        state.cur++;
+        render();
+        // 进入练习步后关闭自动播放等待孩子
+        if (state.cur === 3) { state.auto = false; btnAuto.classList.remove("on"); }
+      } else {
+        clearInterval(timer);
+      }
+    }, 3000);
+  }
+
+  /* 初始化 */
+  render();
+  el("btn-prev").disabled = true;
+})();
+</script>
+</body>
+</html>

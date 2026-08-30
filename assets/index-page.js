@@ -91,7 +91,8 @@
         var right = "";
         if (stt === "待制作") { cls = "todo"; right = '<span class="soon">课件制作中…</span>'; }
         else if (stt === "待修订") { cls = "revise"; right = '<span class="revise-tip">待按课本校对</span>'; }
-        var href = (stt === "已完成" && k.file) ? k.file : "javascript:void(0)";
+        var base = window.INDEX_BASE || "";
+        var href = (stt === "已完成" && k.file) ? base + k.file : "javascript:void(0)";
 
         html += '<a class="kp ' + cls + '" href="' + href + '"' +
           (stt !== "已完成" ? ' aria-disabled="true"' : "") + ">";
