@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>几分之几与分数大小比较 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .fr-box { margin: 12px 0; }
+  .pizza-wrap { display: flex; justify-content: center; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .pizza { text-align: center; }
+  .pizza svg { width: 130px; height: 130px; }
+  .fc-label { font-size: 20px; font-weight: 800; min-height: 28px; }
+  .fc-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .fc-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .frac { font-size: 26px; font-weight: 800; color: #d97706; }
+  .cmp { display: flex; justify-content: center; gap: 16px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+  .cmp-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .frac-bar { display: flex; width: 170px; height: 30px; border: 2px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .frac-bar .cell { flex: 1; border-right: 1px solid #fff; transition: background .3s; }
+  .frac-bar .cell:last-child { border-right: none; }
+  .frac-bar .cell.fill { background: linear-gradient(180deg,#7eb6ff,#4a7fe0); }
+  .frac-bar .cell.empty { background: #eef2f7; }
+  .cmp-sym { font-size: 34px; font-weight: 800; color: var(--accent-deep); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">几分之几与分数大小比较 <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>平均分成几份、取几份就是几分之几；同分母比分子，同分子比分母（分母小的反而大）。</p>
+      <p><b>孩子容易走神的地方：</b>同分子比较时以为分母大的大；可用"同样一份，分得越多越小"来理解。</p>
+      <p><b>建议：</b>本课约 8 分钟；用披萨图比大小，先画格子涂色再下结论。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-117</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+  function slicePath(cx, cy, r, a1, a2) {
+    var x1 = cx + r * Math.cos(a1 * Math.PI / 180), y1 = cy + r * Math.sin(a1 * Math.PI / 180);
+    var x2 = cx + r * Math.cos(a2 * Math.PI / 180), y2 = cy + r * Math.sin(a2 * Math.PI / 180);
+    var large = (a2 - a1) > 180 ? 1 : 0;
+    return "M" + cx + " " + cy + " L" + x1.toFixed(1) + " " + y1.toFixed(1) + " A" + r + " " + r + " 0 " + large + " 1 " + x2.toFixed(1) + " " + y2.toFixed(1) + " Z";
+  }
+  function pizza(n, fills) {
+    var svg = svgEl("svg", { viewBox: "0 0 120 120", width: "120", height: "120" });
+    for (var i = 0; i < n; i++) {
+      var a1 = -90 + i * (360 / n), a2 = -90 + (i + 1) * (360 / n);
+      var fill = fills.indexOf(i) >= 0 ? "#ffd591" : "#ffe9c2";
+      var p = svgEl("path", { d: slicePath(60, 60, 52, a1, a2), fill: fill, stroke: "#e8890c", "stroke-width": 2 });
+      svg.appendChild(p);
+    }
+    return svg;
+  }
+  function barHTML(cells, fills) {
+    var h = "";
+    for (var i = 0; i < cells; i++) {
+      h += '<span class="cell ' + (fills.indexOf(i) >= 0 ? "fill" : "empty") + '"></span>';
+    }
+    return '<div class="frac-bar">' + h + "</div>";
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看取 3 块是几分之几！",
+      voice: "披萨平均切成四块，吃掉三块，吃掉的是四分之三。今天认识几分之几，还会比大小。",
+      body: function () {
+        return '' +
+          '<h2>几分之几</h2>' +
+          '<p>🍕 切成 4 块，取 3 块 → <span class="frac">3/4</span>（四分之三）</p>' +
+          '<div class="hint">👆 分子=取了几份，分母=分成几份</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "认识几分之几",
+      task: "咱们这一步要做的：看动画数一数取了几份！",
+      voice: "看动画。第一个披萨平均切成四份，取其中的三份，就是四分之三。第二个披萨平均切成五份，取两份，就是五分之二。",
+      body: function () {
+        return '' +
+          '<h2>看动画：3/4 和 2/5</h2>' +
+          '<div class="fc-box" id="f1">' +
+          '<div class="pizza-wrap">' +
+          '<div class="pizza" id="pz1"><div class="fc-label">1/4？</div></div>' +
+          '<div class="pizza" id="pz2"><div class="fc-label">1/5？</div></div>' +
+          "</div>" +
+          "</div>" +
+          '<div class="fc-tip" id="f1-tip">准备开始…</div>' +
+          '<div class="fc-rule">分子 = 取了几份，分母 = 平均分成几份</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "分数比大小动画",
+      task: "咱们这一步要做的：看动画学会两个比较方法！",
+      voice: "看动画。先看分母相同的：五分之三比五分之二多，因为都是分成五份，三份比两份多，所以五分之三更大。再看分子相同的：二分之一和四分之一，都是取一份，但二分之一的分法少，每份大，所以二分之一更大。",
+      body: function () {
+        return '' +
+          '<h2>看动画：分数比大小</h2>' +
+          '<div class="cmp">' +
+          '<div class="cmp-col"><div class="fc-label">3/5</div><div id="b35"></div></div>' +
+          '<span class="cmp-sym" id="sym1">?</span>' +
+          '<div class="cmp-col"><div class="fc-label">2/5</div><div id="b25"></div></div>' +
+          "</div>" +
+          '<div class="cmp">' +
+          '<div class="cmp-col"><div class="fc-label">1/2</div><div id="b12"></div></div>' +
+          '<span class="cmp-sym" id="sym2">?</span>' +
+          '<div class="cmp-col"><div class="fc-label">1/4</div><div id="b14"></div></div>' +
+          "</div>" +
+          '<div class="fc-tip" id="f2-tip">准备开始…</div>' +
+          '<div class="fc-rule">同分母比分子；同分子比分母（分母小反而大）</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道分数题！",
+      voice: "现在考考你！几分之几和比大小。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：比大小收尾，领奖！",
+      voice: "Boss 来啦！七分之三和七分之五，谁大？分母相同都是七，分子五大，所以七分之五大！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：3/7 ○ 5/7</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runF1() {
+    var tip = document.getElementById("f1-tip");
+    var l1 = document.querySelector("#pz1 .fc-label"), l2 = document.querySelector("#pz2 .fc-label");
+    setTimeout(function () {
+      document.getElementById("pz1").insertBefore(pizza(4, [0]), l1);
+      document.getElementById("pz2").insertBefore(pizza(5, [0]), l2);
+      if (tip) { tip.textContent = "① 分成 4 份取 1 份 = 1/4；分成 5 份取 1 份 = 1/5"; }
+    }, 700);
+    setTimeout(function () {
+      document.getElementById("pz1").innerHTML = ""; document.getElementById("pz1").innerHTML = ""; document.getElementById("pz2").innerHTML = "";
+      document.getElementById("pz1").innerHTML = ""; document.getElementById("pz2").innerHTML = "";
+      l1 = document.createElement("div"); l1.className = "fc-label"; l1.innerHTML = '<span class="frac">3/4</span>';
+      l2 = document.createElement("div"); l2.className = "fc-label"; l2.innerHTML = '<span class="frac">2/5</span>';
+      document.getElementById("pz1").appendChild(pizza(4, [0, 1, 2])); document.getElementById("pz1").appendChild(l1);
+      document.getElementById("pz2").appendChild(pizza(5, [0, 1])); document.getElementById("pz2").appendChild(l2);
+      if (tip) { tip.textContent = "② 取 3 份 = 3/4；取 2 份 = 2/5"; }
+    }, 2800);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 取几份，分子就是几"; } }, 4800);
+  }
+  function runF2() {
+    var tip = document.getElementById("f2-tip");
+    var b35 = document.getElementById("b35"), b25 = document.getElementById("b25");
+    var b12 = document.getElementById("b12"), b14 = document.getElementById("b14");
+    setTimeout(function () {
+      b35.innerHTML = barHTML(5, [0, 1, 2]); b25.innerHTML = barHTML(5, [0, 1]);
+      if (tip) { tip.textContent = "① 同分母（都是 5）：3 格比 2 格多 → 3/5 > 2/5"; }
+      document.getElementById("sym1").textContent = ">";
+    }, 800);
+    setTimeout(function () {
+      b12.innerHTML = barHTML(2, [0]); b14.innerHTML = barHTML(4, [0]);
+      if (tip) { tip.textContent = "② 同分子（都是 1）：分 2 份的每份大 → 1/2 > 1/4"; }
+      document.getElementById("sym2").textContent = ">";
+    }, 3000);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 同分母比分子；同分子比分母（分母小反而大）"; } }, 5200);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "切成 4 份取 3 份是？", right: "3/4", opts: ["3/4", "1/4", "4/3"] },
+    { q: "3/5 和 2/5 谁大？", right: "3/5", opts: ["3/5", "2/5", "一样大"] },
+    { q: "1/2 和 1/4 谁大？", right: "1/2", opts: ["1/2", "1/4", "一样大"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "同分母比分子；同分子比分母（分母小反而大）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">3/7 ○ 5/7，选哪个符号？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">&lt;（3/7 更小）</div>' +
+      '<div class="opt" data-ok="0">&gt;（3/7 更大）</div>' +
+      '<div class="opt" data-ok="0">=</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 分数比大小你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "同分母比分子：3 < 5 → 3/7 < 5/7";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runF1(); }
+    if (step.id === "s3") { runF2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "平均分成几份、取几份就是几分之几；同分母比分子，同分子比分母（分母小的反而大）。",
+      attention: "孩子同分子比较时以为分母大的大；可用「同样一份，分得越多越小」来理解。",
+      tip: "本课约 8 分钟；用披萨图比大小，先画格子涂色再下结论。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

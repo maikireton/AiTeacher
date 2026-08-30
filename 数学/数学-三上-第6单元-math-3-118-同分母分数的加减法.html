@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>同分母分数的加减法 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .fd-box { margin: 12px 0; }
+  .fd-row { display: flex; justify-content: center; gap: 16px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+  .fd-expr { font-size: 30px; font-weight: 800; color: #d97706; }
+  .frac-bar { display: flex; width: 200px; height: 34px; border: 2px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .frac-bar .cell { flex: 1; border-right: 1px solid #fff; transition: background .3s, opacity .4s; }
+  .frac-bar .cell:last-child { border-right: none; }
+  .frac-bar .cell.fill { background: linear-gradient(180deg,#7eb6ff,#4a7fe0); }
+  .frac-bar .cell.add { background: linear-gradient(180deg,#ffd591,#ffa940); }
+  .frac-bar .cell.empty { background: #eef2f7; }
+  .frac-bar .cell.dim { opacity: .25; }
+  .fd-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .fd-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">同分母分数的加减法 <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>同分母分数相加减：分母不变，分子相加减；1 减几分之几，先把 1 化成同分母的分数。</p>
+      <p><b>孩子容易走神的地方：</b>把分母也加减（1/4+2/4 算成 3/8）；强调"分母是份数，不变"。</p>
+      <p><b>建议：</b>本课约 8 分钟；用格子条摆一摆：涂几格加几格、涂几格减几格。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-118</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  function bar(cells, fills, cls) {
+    var h = "";
+    for (var i = 0; i < cells; i++) {
+      h += '<span class="cell ' + (fills.indexOf(i) >= 0 ? (cls || "fill") : "empty") + '"></span>';
+    }
+    return '<div class="frac-bar">' + h + "</div>";
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看 2/7 + 3/7 怎么加！",
+      voice: "一张大饼分成七份，吃了两份，又吃三份，一共吃了多少？二加三等于五，所以是七分之五！今天学分数加减法。",
+      body: function () {
+        return '' +
+          '<h2>分数加减</h2>' +
+          '<p class="fd-expr">2/7 + 3/7 = ?</p>' +
+          '<p>分母都是 7，只把分子 2+3 加起来。</p>' +
+          '<div class="hint">👆 分母不变，分子相加减</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "同分母加法动画",
+      task: "咱们这一步要做的：看动画数格子加一加！",
+      voice: "看动画。七份的大饼，先涂蓝两份，再涂橙三份。一共涂了五份，就是七分之五。分母还是七，分子二加三等于五。",
+      body: function () {
+        return '' +
+          '<h2>看动画：2/7 + 3/7 = 5/7</h2>' +
+          '<div class="fd-box" id="d1">' +
+          '<div class="fd-row"><div id="bar1"></div></div>' +
+          '<div class="fd-expr" id="d1-expr">2/7 + 3/7 = ?</div>' +
+          "</div>" +
+          '<div class="fd-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="fd-rule">分母不变，分子相加：2 + 3 = 5</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "同分母减法与 1 减分数",
+      task: "咱们这一步要做的：看动画学会减法和 1 减分数！",
+      voice: "看动画。先看减法：八分之五，去掉两份，还剩三份，等于八分之三。再看 1 减分数：把 1 看成六分之六，减去六分之四，还剩六分之二。",
+      body: function () {
+        return '' +
+          '<h2>看动画：5/8 - 2/8，1 - 4/6</h2>' +
+          '<div class="fd-box" id="d2">' +
+          '<div class="fd-row"><div id="bar2"></div></div>' +
+          '<div class="fd-expr">5/8 - 2/8 = ?</div>' +
+          '<div class="fd-row" style="margin-top:10px"><div id="bar3"></div></div>' +
+          '<div class="fd-expr">1 - 4/6 = ?</div>' +
+          "</div>" +
+          '<div class="fd-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="fd-rule">1 可以化成分子分母相同的分数（1 = 6/6）</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道分数计算题！",
+      voice: "现在考考你！同分母分数加减。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算一道分数加法，领奖！",
+      voice: "Boss 来啦！九分之二加九分之四。分母都是九，分子二加四等于六，等于九分之六！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：2/9 + 4/9 = ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    var b = document.getElementById("bar1");
+    setTimeout(function () { b.innerHTML = bar(7, [0, 1]); if (tip) { tip.textContent = "① 涂蓝 2 份 = 2/7"; } }, 800);
+    setTimeout(function () {
+      b.innerHTML = bar(7, [0, 1], "fill") + "";
+      b.innerHTML = "";
+      // 重新画：前2蓝后3橙
+      var h = "";
+      for (var i = 0; i < 7; i++) { h += '<span class="cell ' + (i < 2 ? "fill" : i < 5 ? "add" : "empty") + '"></span>'; }
+      b.innerHTML = '<div class="frac-bar">' + h + "</div>";
+      if (tip) { tip.textContent = "② 再涂橙 3 份 = 3/7"; }
+    }, 2600);
+    setTimeout(function () { if (tip) { tip.textContent = "③ 一共 5 份 → 2/7 + 3/7 = 5/7 ✅"; } document.getElementById("d1-expr").textContent = "2/7 + 3/7 = 5/7"; }, 4400);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 分母不变，分子 2+3=5"; } }, 5800);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    var b2 = document.getElementById("bar2");
+    var b3 = document.getElementById("bar3");
+    setTimeout(function () {
+      b2.innerHTML = bar(8, [0, 1, 2, 3, 4]);
+      if (tip) { tip.textContent = "① 5/8：涂 5 份（蓝）"; }
+    }, 700);
+    setTimeout(function () {
+      b2.innerHTML = "";
+      var h = "";
+      for (var i = 0; i < 8; i++) { h += '<span class="cell ' + (i < 5 ? "fill" : "empty") + (i >= 3 && i < 5 ? " dim" : "") + '"></span>'; }
+      b2.innerHTML = '<div class="frac-bar">' + h + "</div>";
+      if (tip) { tip.textContent = "② 去掉 2 份（变浅）→ 剩 3 份 = 3/8"; }
+    }, 2800);
+    setTimeout(function () {
+      b3.innerHTML = bar(6, [0, 1, 2, 3, 4, 5]);
+      if (tip) { tip.textContent = "③ 1 = 6/6：先涂满 6 份"; }
+    }, 4800);
+    setTimeout(function () {
+      b3.innerHTML = "";
+      var h = "";
+      for (var i = 0; i < 6; i++) { h += '<span class="cell ' + (i < 2 ? "fill" : "empty") + (i >= 2 ? " dim" : "") + '"></span>'; }
+      b3.innerHTML = '<div class="frac-bar">' + h + "</div>";
+      if (tip) { tip.textContent = "④ 去掉 4 份 → 剩 2 份 = 2/6 ✅"; }
+    }, 6600);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 5/8−2/8=3/8；1−4/6=2/6"; } }, 8000);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "2/5 + 1/5 = ?", right: "3/5", opts: ["3/5", "3/10", "1/5"] },
+    { q: "5/8 - 2/8 = ?", right: "3/8", opts: ["3/8", "7/8", "3/16"] },
+    { q: "1 - 3/7 = ?", right: "4/7", opts: ["4/7", "3/7", "7/4"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "分母不变，分子相加减；1 化成同分母再算";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">2/9 + 4/9 = ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">6/9</div>' +
+      '<div class="opt" data-ok="0">6/18</div>' +
+      '<div class="opt" data-ok="0">2/9</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 分数加减你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "分母不变，分子 2+4=6 → 6/9";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "同分母分数相加减：分母不变，分子相加减；1 减几分之几，先把 1 化成同分母的分数。",
+      attention: "孩子容易把分母也加减（1/4+2/4 算成 3/8）；强调「分母是份数，不变」。",
+      tip: "本课约 8 分钟；用格子条摆一摆：涂几格加几格、涂几格减几格。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
