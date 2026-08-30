@@ -129,7 +129,7 @@
     return null;
   }
 
-  /* 播放按钮：试听当前所选音色 */
+  /* 播放按钮：用所选音色朗读测试句 */
   function preview() {
     var v = pickVoice();
     if (!v || !("speechSynthesis" in window)) { return; }
