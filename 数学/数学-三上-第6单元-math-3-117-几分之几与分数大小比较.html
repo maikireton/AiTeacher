@@ -119,8 +119,8 @@
           '<h2>看动画：3/4 和 2/5</h2>' +
           '<div class="fc-box" id="f1">' +
           '<div class="pizza-wrap">' +
-          '<div class="pizza" id="pz1"><div class="fc-label">1/4？</div></div>' +
-          '<div class="pizza" id="pz2"><div class="fc-label">1/5？</div></div>' +
+          '<div class="pizza" id="pz1"><div class="fc-label" id="pz1-label">1/4？</div></div>' +
+          '<div class="pizza" id="pz2"><div class="fc-label" id="pz2-label">1/5？</div></div>' +
           "</div>" +
           "</div>" +
           '<div class="fc-tip" id="f1-tip">准备开始…</div>' +
@@ -176,7 +176,7 @@
 
   function runF1() {
     var tip = document.getElementById("f1-tip");
-    var l1 = document.querySelector("#pz1 .fc-label"), l2 = document.querySelector("#pz2 .fc-label");
+    var l1 = document.getElementById("pz1-label"), l2 = document.getElementById("pz2-label");
     setTimeout(function () {
       document.getElementById("pz1").insertBefore(pizza(4, [0]), l1);
       document.getElementById("pz2").insertBefore(pizza(5, [0]), l2);
