@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>空气可以被压缩 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .syr-wrap { margin: 14px auto; width: 100%; max-width: 600px; }
+  .syr { display: inline-block; font-size: 90px; transition: transform .4s ease; }
+  .syr.compress { transform: scaleY(.72); }
+  .syr.expand { transform: scaleY(1); }
+  .cmp-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .cmp-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 14px 18px; min-width: 190px; }
+  .cmp-card b { font-size: 18px; }
+  .cmp-card .li { font-size: 13px; color: var(--text-2); text-align: left; margin-top: 6px; line-height: 1.8; }
+  .btn-lab { min-height: 44px; padding: 0 20px; border-radius: 12px; border: none; background: var(--accent-deep); color: #fff; font-size: 15px; cursor: pointer; margin: 6px; }
+  .btn-lab:active { opacity: .85; }
+  .lab-readout { font-size: 22px; font-weight: 800; margin-top: 8px; }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">空气可以被压缩 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>用注射器做实验：堵住口子压活塞，空气被「压缩」体积变小；松手又能弹回。而水几乎压不动——气体易压缩、液体难压缩，这是空气的重要特征。</p>
+      <p><b>孩子容易走神的地方：</b>压缩空气的「弹性」看不见。陪学时让他亲手压注射器，感受「压下去要用力、松手弹回来」，并把压缩前后的活塞位置说清楚。</p>
+      <p><b>建议：</b>本课约 8 分钟；强调「压缩」= 挤小体积，不是「消失」；空气一点都没少，只是挤在一起。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-003</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想生活里的「空气弹簧」，感受空气会缩！",
+      voice: "你骑过有气轮胎的自行车吗？轮胎里面是空气，坐上去软软的、还会弹回来。篮球一拍就弹起来，也是因为里面的空气能缩能弹。空气为什么这么有弹性？今天就来解开它！",
+      body: function () {
+        return '' +
+          '<h2>会弹回来的空气</h2>' +
+          '<div class="cmp-row">' +
+            '<div class="cmp-card"><b>🚲 自行车轮胎</b><div class="li">坐上去软软的<br>空气被压小又弹回</div></div>' +
+            '<div class="cmp-card"><b>🏀 篮球</b><div class="li">一拍就弹起来<br>里面是「空气弹簧」</div></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s1-tip">空气好像会缩，还会弹回来？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：玩注射器实验室，亲手压一压空气！",
+      voice: "拿出注射器，吸一点空气，堵住口子，再用力压活塞。你看！活塞压下去了，里面的空气被挤得越来越小，这就是压缩。再松手，活塞又弹回来了！空气被压小的时候，并没有消失，只是挤在一起了。来，点一下按钮亲手试试！",
+      body: function () {
+        return '' +
+          '<h2>注射器实验室</h2>' +
+          '<div class="syr-wrap">' +
+            '<div class="syr" id="syr">💉</div>' +
+            '<div class="lab-readout" id="lab-readout">空气体积：100%</div>' +
+            '<div>' +
+              '<button class="btn-lab" id="btn-press">⬇ 压缩空气</button>' +
+              '<button class="btn-lab" id="btn-release">⬆ 松手弹回</button>' +
+            '</div>' +
+            '<div class="fc-tip" id="s2-tip">堵住口子，压活塞试试！</div>' +
+          '</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：比较空气和水，谁更容易被压缩！",
+      voice: "再来个对比实验。同样用注射器：第一支吸满水，堵住口子用力压——压不动！因为水是液体，很难被压缩。第二支吸满空气，堵住口子压——一下子压进去了！因为空气是气体，很容易被压缩。这是空气和水的大不同。",
+      body: function () {
+        return '' +
+          '<h2>空气 vs 水：谁更好压？</h2>' +
+          '<div class="cmp-row">' +
+            '<div class="cmp-card"><b>💨 空气</b><div class="li">· 气体<br>· 很容易被压缩<br>· 体积能缩小</div></div>' +
+            '<div class="cmp-card"><b>💧 水</b><div class="li">· 液体<br>· 很难被压缩<br>· 体积几乎不变</div></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">结论：气体易压缩，液体难压缩</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，检验你的压缩知识！",
+      voice: "考考你！关于压缩空气，你能答对吗？答对拿星星，错了再试一次！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：当小工程师，破最后的谜案！",
+      voice: "最后一关！压缩空气有很多本领：篮球里的空气让它能弹起来，自行车轮胎里的空气让它软软的有弹性。如果压缩空气的不是空气而是水，篮球还能弹起来吗？当然不能！因为水压不动。记住：空气能被压缩，是因为它是气体。",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="cmp-card" style="width:auto"><b>空气可以被压缩</b><div class="li">压下去体积变小（压缩）→ 松手弹回（扩张）<br>气体易压缩，液体难压缩</div></div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S2 注射器互动 ---------- */
+  function runS2() {
+    var syr = document.getElementById("syr");
+    var ro = document.getElementById("lab-readout");
+    var tip = document.getElementById("s2-tip");
+    var pressed = false;
+    document.getElementById("btn-press").addEventListener("click", function () {
+      if (!pressed) {
+        pressed = true;
+        syr.classList.add("compress");
+        if (ro) { ro.textContent = "空气体积：40%！"; }
+        if (tip) { tip.textContent = "空气被压缩，体积变小，但它还在！"; }
+      }
+    });
+    document.getElementById("btn-release").addEventListener("click", function () {
+      pressed = false;
+      syr.classList.remove("compress");
+      syr.classList.add("expand");
+      setTimeout(function () { syr.classList.remove("expand"); }, 500);
+      if (ro) { ro.textContent = "空气体积：弹回 100%"; }
+      if (tip) { tip.textContent = "松手弹回！空气有弹性"; }
+    });
+  }
+
+  /* ---------- S3 对比 ---------- */
+  function runS3() {
+    var tip = document.getElementById("s3-tip");
+    if (tip) { tip.textContent = "结论：空气（气体）容易被压缩，水（液体）几乎压不动"; }
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "堵住注射器口压活塞，里面的空气会？", right: "体积变小（被压缩）", opts: ["体积变小（被压缩）", "全部消失", "变成水"] },
+    { q: "松手后活塞弹回来，说明压缩的空气？", right: "有弹性，想恢复原来的样子", opts: ["讨厌活塞", "有弹性，想恢复原来的样子", "变重了"] },
+    { q: "用注射器吸满水堵住压，会怎样？", right: "几乎压不动，水很难压缩", opts: ["一下压到底", "几乎压不动，水很难压缩", "水变成空气"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "想想实验：压缩=挤小体积，不是消失";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：篮球能弹起来，主要靠里面的什么？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">能被压缩又有弹性的空气</div>' +
+      '<div class="opt" data-ok="0">灌满了水</div>' +
+      '<div class="opt" data-ok="0">一颗铁球</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是空气工程师！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "水压不动，只有能压缩的空气才有弹性";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { /* 静态 */ }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "空气可以被压缩（体积变小、松手弹回），水几乎压不动；气体易压缩、液体难压缩。",
+      attention: "孩子易把「压缩」理解为空气消失；陪学时让他亲手压注射器并说清活塞位置变化。",
+      tip: "本课约 8 分钟；可用打气筒、气球在家复现，问孩子「空气去哪了」（答：挤小了）。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

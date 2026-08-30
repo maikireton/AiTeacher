@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>空气流动有力量·风的成因 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .wind-box { margin: 12px auto; width: 100%; max-width: 620px; }
+  .wind-pic { font-size: 52px; display: inline-block; }
+  .pinwheel { display: inline-block; font-size: 64px; animation: spin 1.2s linear infinite; }
+  @keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  .force-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .force-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 12px 16px; min-width: 150px; font-size: 14px; font-weight: 700; }
+  .force-card small { display: block; font-weight: 400; color: var(--text-2); margin-top: 4px; }
+  .cause-seq { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+  .cause-step { background: #f6f8fc; border: 2px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 14px; font-weight: 700; opacity: .35; transition: all .4s; }
+  .cause-step.on { opacity: 1; border-color: #ff9800; background: rgba(255,152,0,.12); transform: translateY(-3px); }
+  .cause-arr { font-size: 24px; font-weight: 800; color: var(--text-2); }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">空气流动有力量·风的成因 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>流动的空气就是风，风有力量（能吹动风车、推动帆船）。风的成因：热空气上升，冷空气流过来补充，空气流动就形成了风。</p>
+      <p><b>孩子容易走神的地方：</b>「风看不见」，成因又抽象。可带他做小实验：把纸条放在嘴前吹气、用扇子扇风车，再用「蜡烛+纸条」观察热空气上升，把「看不见的风」变成「看得见的力」。</p>
+      <p><b>建议：</b>本课约 8 分钟；重点不是背「成因」，而是亲手感受到「空气流动 = 风 = 有力量」。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-005</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：用嘴、用手，感受「看不见的风」！",
+      voice: "先感受一下！你对着手心轻轻吹一口气，手心是不是凉凉的？再把纸片放在嘴前吹，纸片飞起来了吗？这阵「气」就是流动的空气，它一动，就变成了风，还能推动东西呢！",
+      body: function () {
+        return '' +
+          '<h2>风，看不见却能感觉到</h2>' +
+          '<div class="force-row">' +
+            '<div class="force-card">😮 吹手心<small>凉凉的风</small></div>' +
+            '<div class="force-card">📄 吹纸片<small>纸片被推动</small></div>' +
+            '<div class="force-card">🌀 扇风车<small>风车转起来</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s1-tip">这些「风」都是空气在流动！</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：认识风的三个本领，见证空气的力量！",
+      voice: "空气流动起来就是风，风有三个本领。第一，风能转动风车，风能吹动风筝；第二，风能推动帆船航行，这是风的力量；第三，大风还能卷起树叶、吹弯树枝。你看，空气一流动，力量可不小！",
+      body: function () {
+        return '' +
+          '<h2>风的三个本领</h2>' +
+          '<div class="force-row" id="frow">' +
+            '<div class="force-card">🎏 吹动风筝<small>风车风筝上天</small></div>' +
+            '<div class="force-card">⛵ 推动帆船<small>船在海上航行</small></div>' +
+            '<div class="force-card">🍂 卷起树叶<small>树叶满天飞</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：揭开风的成因——空气为什么会流动！",
+      voice: "现在来解开风的秘密。空气为什么会流动？因为冷热不一样！热空气变轻会上升，旁边冷一些的空气就会跑过来补充它的位置，空气一流动，就形成了风。你见过烧开水、点蜡烛时烟往上飘吗？那就是热空气在上升。",
+      body: function () {
+        return '' +
+          '<h2>风的成因：冷热造成流动</h2>' +
+          '<div class="cause-seq" id="cseq">' +
+            '<div class="cause-step">① 热空气变轻上升</div>' +
+            '<div class="cause-arr">→</div>' +
+            '<div class="cause-step">② 冷空气跑过来补位</div>' +
+            '<div class="cause-arr">→</div>' +
+            '<div class="cause-step">③ 空气流动 = 风</div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，当追风小达人！",
+      voice: "考考你！关于风和空气流动，你能答对吗？答对拿星星！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：破最后的谜案，拿走大奖励！",
+      voice: "最后一关！为什么有太阳晒的地方容易刮风？因为太阳晒热了地面，地面上的空气变热上升，旁边的冷空气跑过来补充，风就来了。记住口诀：热空气上升，冷空气补位，空气流动就是风！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="cause-step on" style="opacity:1">空气流动 = 风 = 有力量</div>' +
+          '<div class="hint">风车的秘密：流动的空气推着叶片转 🌀</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S2 ---------- */
+  function runS2() {
+    var cards = document.querySelectorAll("#frow .force-card");
+    var tip = document.getElementById("s2-tip");
+    cards.forEach(function (c, i) {
+      setTimeout(function () {
+        c.style.borderColor = "#6b8fd8"; c.style.background = "rgba(155,187,244,.14)";
+        var msgs = ["风能吹动风筝、转动风车", "风能推动帆船——这是风的力量", "大风还能卷起树叶"];
+        if (tip) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1600);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 空气流动起来，力量可大啦！"; } }, 900 + 3 * 1600);
+  }
+
+  /* ---------- S3 成因步骤 ---------- */
+  function runS3() {
+    var stepsEl = document.querySelectorAll("#cseq .cause-step");
+    var tip = document.getElementById("s3-tip");
+    stepsEl.forEach(function (st, i) {
+      setTimeout(function () {
+        st.classList.add("on");
+        var msgs = ["热空气变轻，往上飘", "冷空气跑过来补上位置", "空气流动起来，就形成了风"];
+        if (tip) { tip.textContent = msgs[i]; }
+      }, 1000 + i * 1900);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 冷热不一样 → 空气流动 → 风"; } }, 1000 + 3 * 1900);
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "风到底是什么？", right: "流动的空气", opts: ["天上的白云", "流动的空气", "会飞的鸟"] },
+    { q: "风能推动帆船，这说明？", right: "流动的空气有力量", opts: ["船自己会走", "流动的空气有力量", "海里有大鱼拉船"] },
+    { q: "为什么会有风？", right: "热空气上升，冷空气流过来补位", opts: ["太阳在呼吸", "热空气上升，冷空气流过来补位", "海水在翻动"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "想想：风=流动的空气，冷热让空气流动";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：太阳晒热地面后，为什么会刮风？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">地面空气变热上升，冷空气补位形成风</div>' +
+      '<div class="opt" data-ok="0">太阳直接吹出风</div>' +
+      '<div class="opt" data-ok="0">地面在呼吸</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是追风小达人！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "热空气上升、冷空气补位，空气流动就是风";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { /* 静态 */ }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "空气流动就是风，风有力量；成因：热空气上升、冷空气补位，空气流动形成风。",
+      attention: "「风看不见」且成因抽象；多让孩做吹纸条、扇风车实验，把风变成看得见的力。",
+      tip: "本课约 8 分钟；可在家用蜡烛（家长陪护）+纸条观察热空气上升。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

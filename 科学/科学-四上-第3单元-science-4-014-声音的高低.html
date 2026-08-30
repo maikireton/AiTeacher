@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>声音的高低 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .pitch-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .pitch-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 12px 16px; min-width: 160px; font-size: 14px; font-weight: 700; }
+  .pitch-card small { display: block; font-weight: 400; color: var(--text-2); margin-top: 4px; }
+  .string { width: 220px; height: 130px; margin: 12px auto; position: relative; background: linear-gradient(#f4e6c4, #e8d5a8); border-radius: 12px; }
+  .str { position: absolute; left: 0; right: 0; top: 50%; height: 4px; background: #333; border-radius: 2px; }
+  .str.fast { animation: shake .12s linear infinite; }
+  .str.slow { animation: shake .32s linear infinite; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  .btn-lab { min-height: 44px; padding: 0 20px; border-radius: 12px; border: none; background: var(--accent-deep); color: #fff; font-size: 15px; cursor: pointer; margin: 6px; }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">声音的高低 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>声音有高低（音高）。振动越快，声音越高；振动越慢，声音越低。同样长度下，弦绷得越紧、越短、越细，振动越快、音越高。</p>
+      <p><b>孩子容易走神的地方：</b>「高低」和「强弱」易混淆。可引导孩子对比：敲鼓是强弱（响不响），唱歌的音阶是高低（do re mi）。用「小鸟叫（高）vs 大象吼（低）」帮助理解。</p>
+      <p><b>建议：</b>本课约 8 分钟；可用橡皮筋绷紧/放松、长短不一的吸管做听音实验。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-014</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：听一听，谁的声音高、谁的声音低！",
+      voice: "小鸟唱歌，叽叽叽，声音又尖又高；大象吼叫，呜——，声音又粗又低。同样是声音，为什么有的高有的低？今天我们就来研究声音的高低。",
+      body: function () {
+        return '' +
+          '<h2>谁高谁低</h2>' +
+          '<div class="pitch-row">' +
+            '<div class="pitch-card">🐦 小鸟叫<small>声音又尖又高</small></div>' +
+            '<div class="pitch-card">🐘 大象吼<small>声音又粗又低</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s1-tip">高低不一样，是什么在变？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：认识「振动快慢」，声音高低的秘密！",
+      voice: "声音的高低的秘密是「振动快慢」。振动得越快，声音越高；振动得越慢，声音越低。你可以这样想：小鸟的叫声振动特别快，所以又尖又高；大象的叫声振动慢，所以又粗又低。记住：振动快=高，振动慢=低。",
+      body: function () {
+        return '' +
+          '<h2>振动快慢 = 高低</h2>' +
+          '<div class="pitch-row">' +
+            '<div class="pitch-card">⚡ 振动快<small>声音高（尖）</small></div>' +
+            '<div class="pitch-card">🐢 振动慢<small>声音低（粗）</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：玩橡皮筋吉他，听出高低的变化！",
+      voice: "来！拨动橡皮筋试试。橡皮筋绷得紧，振动快，声音高；绷得松，振动慢，声音低。把橡皮筋按短一点，振动也变快，声音变高。你来玩一玩，听听高低是怎么变的！",
+      body: function () {
+        return '' +
+          '<h2>橡皮筋吉他</h2>' +
+          '<div class="string" id="strbox">' +
+            '<div class="str" id="str"></div>' +
+          '</div>' +
+          '<div>' +
+            '<button class="btn-lab" id="btn-tight">绷紧（变高）</button>' +
+            '<button class="btn-lab" id="btn-loose">放松（变低）</button>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">拨一拨，听听高低变化！</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，当音高小达人！",
+      voice: "考考你！声音的高低，你搞清楚了吗？答对拿星星！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：破最后的谜案，拿走大奖励！",
+      voice: "最后一关！琴弦短的时候声音高，长的时候声音低——这是为什么？因为弦越短振动越快，声音越高；弦越长振动越慢，声音越低。记住：振动快声音高，振动慢声音低，这就是音高的秘密！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="pitch-card" style="width:auto"><b>声音的高低（音高）</b><small>振动快 → 声音高<br>振动慢 → 声音低</small></div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S2 ---------- */
+  function runS2() {
+    var tip = document.getElementById("s2-tip");
+    if (tip) { tip.textContent = "振动快 = 声音高；振动慢 = 声音低"; }
+  }
+
+  /* ---------- S3 橡皮筋互动 ---------- */
+  function runS3() {
+    var str = document.getElementById("str");
+    var tip = document.getElementById("s3-tip");
+    var mode = "mid";
+    document.getElementById("btn-tight").addEventListener("click", function () {
+      mode = "tight";
+      str.classList.remove("slow");
+      str.classList.add("fast");
+      str.style.height = "5px";
+      if (tip) { tip.textContent = "绷紧：振动快，声音高！"; }
+    });
+    document.getElementById("btn-loose").addEventListener("click", function () {
+      mode = "loose";
+      str.classList.remove("fast");
+      str.classList.add("slow");
+      str.style.height = "8px";
+      if (tip) { tip.textContent = "放松：振动慢，声音低"; }
+    });
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "小鸟的叫声又尖又高，是因为振动？", right: "快", opts: ["快", "慢", "没有振动"] },
+    { q: "声音的高低（音高）由什么决定？", right: "振动的快慢", opts: ["振动的快慢", "敲的力度", "声音的颜色"] },
+    { q: "橡皮筋绷得越紧，声音会？", right: "越高", opts: ["越高", "越低", "消失"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "记住：振动快声音高，振动慢声音低";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：同样绷紧，琴弦越短，声音会？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">越高（振动越快）</div>' +
+      '<div class="opt" data-ok="0">越低（振动越慢）</div>' +
+      '<div class="opt" data-ok="0">没有声音</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是音高小达人！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "弦越短振动越快，声音越高";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "声音高低（音高）由振动快慢决定：振动快声音高、振动慢声音低；弦紧/短/细音高。",
+      attention: "孩子易混淆高低与强弱；用小鸟/大象、do-re-mi 帮孩子区分音高与音量。",
+      tip: "本课约 8 分钟；可用橡皮筋、不同长度吸管在家做听音实验。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

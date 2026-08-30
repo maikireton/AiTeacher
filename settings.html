@@ -9,7 +9,8 @@
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
   .card h2 { font-size: 16px; margin-bottom: 4px; }
   .card .desc { font-size: 13px; color: var(--text-2); margin-bottom: 12px; }
-  .field { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .field { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .field label { flex: 0 0 76px; font-size: 14px; font-weight: 700; color: var(--text); }
   .field select {
     flex: 1 1 240px; min-width: 0; min-height: 44px; padding: 0 12px;
     border: 1px solid var(--border); border-radius: 12px; background: var(--card);
@@ -18,7 +19,7 @@
   .field select:focus { border-color: var(--accent-deep); }
   .btn { min-height: 44px; padding: 0 18px; border-radius: 12px; border: none; background: var(--accent-deep); color: #fff; font-size: 14px; cursor: pointer; }
   .btn:active { opacity: .85; }
-  .status { font-size: 13px; color: var(--text-2); margin-top: 10px; min-height: 20px; }
+  .status { font-size: 13px; color: var(--text-2); margin-top: 6px; min-height: 20px; }
   .status.ok { color: var(--green); }
   .status.warn { color: #b07900; }
   .note { font-size: 12px; color: var(--text-2); background: rgba(0,0,0,.04); border-radius: 10px; padding: 10px 12px; margin-top: 12px; }
@@ -33,12 +34,18 @@
 
   <div class="card">
     <h2>语音 · 音色</h2>
-    <div class="desc">课件讲解使用中文（普通话）语音。这里只提供<strong>简体中文（zh-cn）音色</strong>，点「播放」可以听一下效果，选择后所有课件都会用这个声音讲解。</div>
+    <div class="desc">课件讲解支持中文（普通话）和英文。下面可以<strong>分别选择中文音色和英文音色</strong>，选择后所有课件都会用你选的声音讲解。</div>
     <div class="field">
-      <select id="voice-select" aria-label="选择简体中文音色">
+      <label for="voice-zh">中文音色</label>
+      <select id="voice-zh" aria-label="选择简体中文音色">
         <option value="">加载中…</option>
       </select>
-      <button class="btn" id="btn-preview">播放</button>
+    </div>
+    <div class="field">
+      <label for="voice-en">英文音色</label>
+      <select id="voice-en" aria-label="选择英文音色">
+        <option value="">加载中…</option>
+      </select>
     </div>
     <div class="status" id="voice-status"></div>
     <div class="note" id="voice-note"></div>
@@ -47,8 +54,8 @@
   <div class="card">
     <h2>说明</h2>
     <div class="desc">
-      <p>· 音色来自你电脑系统自带的简体中文（普通话）语音，数量取决于系统安装了哪些中文语音包。</p>
-      <p>· 想换更多好听的声音：Windows 到「设置 → 时间和语言 → 语音」、macOS 到「系统设置 → 辅助功能 → 朗读内容」里添加中文语音。</p>
+      <p>· 音色来自你电脑系统自带的语音，数量取决于系统安装了哪些语音包。</p>
+      <p>· 想换更多好听的声音：Windows 到「设置 → 时间和语言 → 语音」、macOS 到「系统设置 → 辅助功能 → 朗读内容」里添加中文/英文语音。</p>
       <p>· 建议用 Chrome / Edge 浏览器打开课件，语音效果最好。</p>
     </div>
   </div>
@@ -62,7 +69,8 @@
 (function () {
   "use strict";
   var SETTINGS_KEY = "aiTeacher:settings";
-  var select = document.getElementById("voice-select");
+  var selZh = document.getElementById("voice-zh");
+  var selEn = document.getElementById("voice-en");
   var statusEl = document.getElementById("voice-status");
   var noteEl = document.getElementById("voice-note");
 
@@ -80,81 +88,77 @@
     try { window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch (e) { /* 降级：仅本次会话生效 */ }
   }
 
-  var zhVoices = [];
+  var zhVoices = [], enVoices = [];
   function collectVoices() {
-    if (!("speechSynthesis" in window)) { return []; }
+    if (!("speechSynthesis" in window)) { return; }
     var all = window.speechSynthesis.getVoices() || [];
-    /* 只保留简体中文普通话（zh-cn）音色 */
-    return all.filter(function (v) {
-      return (v.lang || "").toLowerCase().indexOf("zh-cn") === 0;
+    zhVoices = all.filter(function (v) { return (v.lang || "").toLowerCase().indexOf("zh") === 0; });
+    enVoices = all.filter(function (v) { return (v.lang || "").toLowerCase().indexOf("en") === 0; });
+  }
+
+  function fillSelect(sel, list, savedURI) {
+    if (!list.length) {
+      sel.innerHTML = '<option value="">（未检测到音色）</option>';
+      return;
+    }
+    var html = "";
+    var found = false;
+    list.forEach(function (v) {
+      var selAttr = v.voiceURI === savedURI ? " selected" : "";
+      if (v.voiceURI === savedURI) { found = true; }
+      html += '<option value="' + v.voiceURI.replace(/"/g, "&quot;") + '"' + selAttr + ">" +
+        (v.name || v.voiceURI || "未知音色") + "（" + v.lang + "）</option>";
     });
+    sel.innerHTML = html;
+    if (savedURI && !found && list[0]) { sel.value = list[0].voiceURI; }
   }
 
   function render() {
-    zhVoices = collectVoices();
+    collectVoices();
     var saved = readSettings();
-    var savedURI = saved && saved.voice ? saved.voice.uri : "";
+    var savedZh = saved && saved.voice ? saved.voice.uri : "";
+    var savedEn = saved && saved.voiceEn ? saved.voiceEn.uri : "";
 
-    if (!zhVoices.length) {
-      select.innerHTML = '<option value="">（未检测到简体中文音色）</option>';
+    if (!zhVoices.length && !enVoices.length) {
+      selZh.innerHTML = '<option value="">（未检测到语音）</option>';
+      selEn.innerHTML = '<option value="">（未检测到语音）</option>';
       statusEl.className = "status warn";
-      statusEl.textContent = "没有找到简体中文（zh-cn）语音。请换用 Chrome/Edge 浏览器，或在系统设置里添加中文语音后刷新本页。";
-      noteEl.textContent = "当前设备可用的简体中文音色：0 个";
+      statusEl.textContent = "没有找到可用语音。请换用 Chrome/Edge 浏览器，或在系统设置里添加语音后刷新本页。";
+      noteEl.textContent = "当前设备可用语音：中文 0 个 · 英文 0 个";
       return;
     }
 
-    var html = "";
-    var found = false;
-    zhVoices.forEach(function (v) {
-      var sel = v.voiceURI === savedURI ? " selected" : "";
-      if (v.voiceURI === savedURI) { found = true; }
-      var label = (v.name || v.voiceURI || "未知音色") + "（" + v.lang + "）";
-      html += '<option value="' + v.voiceURI.replace(/"/g, "&quot;") + '"' + sel + ">" + label + "</option>";
-    });
-    select.innerHTML = html;
-    // 保存的音色已不存在时回退到第一个
-    if (savedURI && !found && zhVoices[0]) { select.value = zhVoices[0].voiceURI; }
+    fillSelect(selZh, zhVoices, savedZh);
+    fillSelect(selEn, enVoices, savedEn);
 
+    var zhName = selZh.options[selZh.selectedIndex] ? selZh.options[selZh.selectedIndex].text.split("（")[0] : "默认";
+    var enName = selEn.options[selEn.selectedIndex] ? selEn.options[selEn.selectedIndex].text.split("（")[0] : "默认";
     statusEl.className = "status";
-    statusEl.textContent = "已选择：" + (select.options[select.selectedIndex] ? select.options[select.selectedIndex].text.split("（")[0] : "");
-    noteEl.textContent = "当前设备可用的简体中文音色：" + zhVoices.length + " 个";
+    statusEl.textContent = "中文音色：" + zhName + "　·　英文音色：" + enName;
+    noteEl.textContent = "当前设备可用音色：中文 " + zhVoices.length + " 个 · 英文 " + enVoices.length + " 个";
   }
 
-  function pickVoice() {
-    var uri = select.value;
+  function pick(sel, list) {
+    var uri = sel.value;
     if (!uri) { return null; }
-    for (var i = 0; i < zhVoices.length; i++) {
-      if (zhVoices[i].voiceURI === uri) { return zhVoices[i]; }
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].voiceURI === uri) { return list[i]; }
     }
     return null;
   }
 
-  /* 播放按钮：用所选音色朗读测试句 */
-  function preview() {
-    var v = pickVoice();
-    if (!v || !("speechSynthesis" in window)) { return; }
-    try {
-      window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance("你好，我是你的小老师。这个声音好不好听？");
-      u.lang = v.lang || "zh-CN";
-      u.voice = v;
-      u.rate = 0.92;
-      u.pitch = 1.05;
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* 忽略 */ }
-  }
-  var btnPreview = document.getElementById("btn-preview");
-  if (btnPreview) { btnPreview.addEventListener("click", preview); }
-
   /* 选择变化：保存 */
-  select.addEventListener("change", function () {
-    var v = pickVoice();
-    var uri = v ? v.voiceURI : "";
-    var name = v ? v.name : "";
-    saveSettings({ voice: { uri: uri, name: name } });
+  function onChange(sel, list, key) {
+    var v = pick(sel, list);
+    var s = readSettings() || {};
+    s[key] = v ? { uri: v.voiceURI, name: v.name } : null;
+    saveSettings(s);
     statusEl.className = "status ok";
-    statusEl.textContent = "已保存音色：" + (name || uri || "默认");
-  });
+    var label = key === "voiceEn" ? "英文音色" : "中文音色";
+    statusEl.textContent = "已保存" + label + "：" + (v ? v.name : "默认");
+  }
+  selZh.addEventListener("change", function () { onChange(selZh, zhVoices, "voice"); });
+  selEn.addEventListener("change", function () { onChange(selEn, enVoices, "voiceEn"); });
 
   /* voiceschanged 事件（语音列表异步加载） */
   if ("speechSynthesis" in window) {

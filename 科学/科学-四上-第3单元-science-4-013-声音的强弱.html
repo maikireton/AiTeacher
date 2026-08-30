@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>声音的强弱 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .vol-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .vol-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 12px 16px; min-width: 150px; font-size: 14px; font-weight: 700; }
+  .vol-card small { display: block; font-weight: 400; color: var(--text-2); margin-top: 4px; }
+  .drum { display: inline-block; font-size: 70px; }
+  .drum-big { animation: drum 1s ease-in-out infinite; }
+  @keyframes drum { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+  .btn-lab { min-height: 44px; padding: 0 20px; border-radius: 12px; border: none; background: var(--accent-deep); color: #fff; font-size: 15px; cursor: pointer; margin: 6px; }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">声音的强弱 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>声音有强弱（音量大小）。轻轻敲鼓声音弱、用力敲鼓声音强——因为振动幅度（振幅）不同：振动幅度大，声音强；振动幅度小，声音弱。</p>
+      <p><b>孩子容易走神的地方：</b>把「强弱」和「高低」混淆。本课只讲强弱（音量），重点是让孩子亲手「轻敲/重敲」对比，说出「用力越大越响」。</p>
+      <p><b>建议：</b>本课约 8 分钟；家长可用鼓、桌子、琴键带孩子对比轻重敲击，注意控制音量、别太吵。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-013</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：轻轻敲、重重敲，听一听声音的变化！",
+      voice: "用手轻轻敲桌子——声音小；再重重敲一下——声音大。同样一张桌子，为什么声音不一样？因为用力不一样！今天我们就来研究：声音的强弱跟什么有关系。",
+      body: function () {
+        return '' +
+          '<h2>轻轻敲 vs 重重敲</h2>' +
+          '<div class="vol-row">' +
+            '<div class="vol-card">☝️ 轻轻敲<small>声音弱（小）</small></div>' +
+            '<div class="vol-card">✊ 重重敲<small>声音强（大）</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s1-tip">用力不一样，声音不一样！</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：认识「振幅」，声音强弱的开关！",
+      voice: "声音的强弱跟一个词有关，叫「振幅」。振幅就是振动的幅度、范围。用力敲鼓，鼓面振动得幅度大，振幅大，声音就强、就响；轻轻敲鼓，鼓面振动得幅度小，振幅小，声音就弱、就轻。记住：振幅大声音强，振幅小声音弱。",
+      body: function () {
+        return '' +
+          '<h2>振幅决定强弱</h2>' +
+          '<div class="drum drum-big" id="drum">🥁</div>' +
+          '<div class="fc-tip" id="s2-tip">振动幅度大 = 声音强；幅度小 = 声音弱</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：亲手敲鼓，听出强弱的变化！",
+      voice: "来！点「轻轻敲」，鼓面小幅振动，发出轻轻的声音；点「用力敲」，鼓面大幅振动，发出响亮的声音。你听出来了吗？用力越大，振动幅度越大，声音就越强。",
+      body: function () {
+        return '' +
+          '<h2>敲鼓实验</h2>' +
+          '<div>' +
+            '<div class="drum" id="drum2">🥁</div>' +
+          '</div>' +
+          '<div>' +
+            '<button class="btn-lab" id="btn-soft">轻轻敲</button>' +
+            '<button class="btn-lab" id="btn-hard">用力敲</button>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">听一听，两次声音哪里不一样？</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，当音量小专家！",
+      voice: "考考你！声音的强弱，你搞清楚了吗？答对拿星星！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：破最后的谜案，拿走大奖励！",
+      voice: "最后一关！同一把吉他，用力拨弦和轻轻拨弦，声音有什么不同？用力拨，弦振动幅度大，声音强；轻轻拨，弦振动幅度小，声音弱。记住：强弱 = 音量，由振动幅度（振幅）决定！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="vol-card" style="width:auto"><b>声音的强弱（音量）</b><small>振动幅度大 → 声音强<br>振动幅度小 → 声音弱</small></div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S2 ---------- */
+  function runS2() {
+    var tip = document.getElementById("s2-tip");
+    if (tip) { tip.textContent = "振幅（振动幅度）大 = 声音强，振幅小 = 声音弱"; }
+  }
+
+  /* ---------- S3 敲鼓互动 ---------- */
+  function runS3() {
+    var drum2 = document.getElementById("drum2");
+    var tip = document.getElementById("s3-tip");
+    document.getElementById("btn-soft").addEventListener("click", function () {
+      drum2.classList.remove("drum-big");
+      drum2.style.transform = "scale(1.05)";
+      setTimeout(function () { drum2.style.transform = "scale(1)"; }, 300);
+      if (tip) { tip.textContent = "轻轻敲：振幅小，声音弱"; }
+    });
+    document.getElementById("btn-hard").addEventListener("click", function () {
+      drum2.classList.add("drum-big");
+      if (tip) { tip.textContent = "用力敲：振幅大，声音强！"; }
+      setTimeout(function () { drum2.classList.remove("drum-big"); }, 1000);
+    });
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "声音的强弱也叫？", right: "音量", opts: ["音量", "音高", "音色"] },
+    { q: "用力敲鼓，声音会？", right: "更强（更响）", opts: ["更强（更响）", "更弱（更轻）", "没有声音"] },
+    { q: "声音的强弱由什么决定？", right: "振动幅度（振幅）", opts: ["振动幅度（振幅）", "振动的颜色", "声音的形状"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "记住：振幅大声音强，振幅小声音弱";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：同一把吉他，用力拨弦和轻轻拨弦，声音会？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">用力拨声音强，轻轻拨声音弱</div>' +
+      '<div class="opt" data-ok="0">声音完全一样</div>' +
+      '<div class="opt" data-ok="0">轻轻拨声音更响</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是音量小专家！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "用力大→振幅大→声音强；用力小→振幅小→声音弱";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "声音强弱（音量）由振动幅度（振幅）决定：振幅大声音强、振幅小声音弱。",
+      attention: "孩子易混淆「强弱」与「高低」；本课只讲强弱，重点做轻重敲击对比。",
+      tip: "本课约 8 分钟；可在家用鼓/桌子对比轻重敲击，提醒别太吵。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

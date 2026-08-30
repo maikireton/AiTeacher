@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>声音的传播 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .media-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .media-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 12px 16px; min-width: 150px; font-size: 14px; font-weight: 700; }
+  .media-card small { display: block; font-weight: 400; color: var(--text-2); margin-top: 4px; }
+  .ring { width: 220px; height: 220px; margin: 12px auto; position: relative; }
+  .wave { position: absolute; inset: 0; margin: auto; width: 30px; height: 30px; background: rgba(155,187,244,.35); border-radius: 50%; }
+  .wave:nth-child(2) { animation: expand 2s ease-out infinite; }
+  .wave:nth-child(3) { animation: expand 2s ease-out infinite .4s; }
+  .wave:nth-child(4) { animation: expand 2s ease-out infinite .8s; }
+  .wave:nth-child(5) { animation: expand 2s ease-out infinite 1.2s; }
+  @keyframes expand { 0% { transform: scale(.4); opacity: .9; } 100% { transform: scale(4); opacity: 0; } }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">声音的传播 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>声音靠物质（介质）传播：空气、水、固体都能传声；真空不能传声。声音像水波一样一圈圈向外传，传到耳朵里我们才听到。</p>
+      <p><b>孩子容易走神的地方：</b>「声音怎么跑的」看不见。可用「电话线」实验：两个纸杯+棉线拉直，一人说一人听；再对比「隔着空气说」与「贴着桌子敲」的感受。</p>
+      <p><b>建议：</b>本课约 8 分钟；强调「没有介质（真空）就没声音」，宇航员在太空中对话要用电台。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-016</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：猜一猜，声音是怎么跑到耳朵里的！",
+      voice: "你在教室这头说话，同学在教室那头也能听到。声音又没有长腿，它是怎么跑过去的？它像水里的波纹一样，一圈一圈地往外传。传到耳朵里，我们就听到啦！",
+      body: function () {
+        return '' +
+          '<h2>声音会「跑」</h2>' +
+          '<div class="media-row">' +
+            '<div class="media-card">🗣️ 这边说话<small>声音发出来</small></div>' +
+            '<div class="media-card">👂 那边听到<small>声音传过来</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s1-tip">声音没有腿，却会一圈圈往外跑</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：看声音波纹一圈圈传开，认识「介质」！",
+      voice: "看动画！声音像水波一样，从声源一圈一圈向外传开。声音要跑，需要「介质」帮忙。空气是介质，所以声音能在空气里传；水是介质，所以水里能听到声音；桌子是介质，耳朵贴在桌子上也能听到敲击声。声音跑过的「路」，就是介质。",
+      body: function () {
+        return '' +
+          '<h2>声音像水波一样传开</h2>' +
+          '<div class="ring" id="ring">' +
+            '<div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">一圈一圈，传到耳朵里</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：比较空气、水、固体，谁都能传声！",
+      voice: "来比较三种介质。第一，空气：你说话，同学在空气里听到。第二，水：把手机调成震动放进水盆（家长帮忙），水里也能听到声音。第三，固体：耳朵贴在桌面上，轻轻敲桌子，听得清清楚楚。空气、水、固体都能传声。",
+      body: function () {
+        return '' +
+          '<h2>三种介质都传声</h2>' +
+          '<div class="media-row" id="mrow">' +
+            '<div class="media-card">💨 空气<small>说话能听到</small></div>' +
+            '<div class="media-card">💧 水<small>水里也能听</small></div>' +
+            '<div class="media-card">🪵 固体<small>贴桌面听得清</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，当传声小专家！",
+      voice: "考考你！声音是怎么传播的，你搞清楚了吗？答对拿星星！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：破最后的谜案，拿走大奖励！",
+      voice: "最后一关！宇航员在太空中，就算面对面大喊也听不到声音，这是为什么？因为太空中没有空气，没有介质，声音就传不出去！所以他们要用无线电对话。记住：声音需要介质，真空不能传声！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="media-card" style="width:auto"><b>声音靠介质传播</b><small>空气、水、固体都能传声<br>真空（没有空气）不能传声</small></div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S2 ---------- */
+  function runS2() {
+    var tip = document.getElementById("s2-tip");
+    if (tip) { tip.textContent = "声音像水波一圈圈传开，靠介质帮忙"; }
+  }
+
+  /* ---------- S3 ---------- */
+  function runS3() {
+    var cards = document.querySelectorAll("#mrow .media-card");
+    var tip = document.getElementById("s3-tip");
+    cards.forEach(function (c, i) {
+      setTimeout(function () {
+        c.style.borderColor = "#6b8fd8"; c.style.background = "rgba(155,187,244,.14)";
+        var msgs = ["空气能传声：说话听得到", "水能传声：水里也能听", "固体能传声：贴桌面听得清"];
+        if (tip) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1600);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 空气、水、固体都能传声"; } }, 900 + 3 * 1600);
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "声音传播需要什么？", right: "介质（空气、水、固体）", opts: ["介质（空气、水、固体）", "光线", "风"] },
+    { q: "耳朵贴在桌面上能听到敲击声，是因为？", right: "固体（桌子）能传声", opts: ["固体（桌子）能传声", "声音会转弯", "桌子会说话"] },
+    { q: "真空中（没有空气）声音会？", right: "无法传播", opts: ["无法传播", "传得更快", "变成回声"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "记住：声音靠介质（空气/水/固体）传播";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：宇航员在太空中大喊，为什么对方听不到？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">太空中没有空气，真空不能传声</div>' +
+      '<div class="opt" data-ok="0">宇航员喊得太小声</div>' +
+      '<div class="opt" data-ok="0">太空里没有耳朵</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是传声小专家！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "真空（没有介质）不能传声，要用无线电";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "声音靠介质传播：空气、水、固体都能传声；真空不能传声。像水波一圈圈传开。",
+      attention: "声音传播看不见；可用纸杯棉线电话实验，直观感受声音沿固体传播。",
+      tip: "本课约 8 分钟；可在家做「纸杯电话」，边玩边说清声音靠什么传。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>保护听力 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .ear { display: inline-block; font-size: 80px; }
+  .protect-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .protect-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 12px 16px; min-width: 150px; font-size: 14px; font-weight: 700; }
+  .protect-card small { display: block; font-weight: 400; color: var(--text-2); margin-top: 4px; }
+  .protect-card.bad { border-color: #ffb3b3; background: rgba(255,107,107,.08); }
+  .protect-card.good { border-color: #7fe0a0; background: rgba(82,196,26,.08); }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">保护听力 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>耳朵很娇贵，太强、太久的声音会伤害听力。保护听力：远离噪音、控制音量、不长时间戴耳机、不往耳朵里塞东西、耳朵不舒服及时告诉大人。</p>
+      <p><b>孩子容易走神的地方：</b>「伤害」看不见摸不着。可把「噪音」比作「打耳朵的拳头」，结合生活场景（大声外放、工地、鞭炮）让孩子判断对错。</p>
+      <p><b>建议：</b>本课约 8 分钟；重点让孩子把保护听力变成习惯：用耳音量不超一半、时间不超 40 分钟。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-017</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看耳朵有多娇贵，认识听力伤害！",
+      voice: "我们的耳朵能听到好多声音：鸟叫、音乐、悄悄话。可是耳朵也很娇贵，如果声音太强、太久，就会伤害它。你有没有过：听到很大的声音，耳朵嗡嗡响？那就是耳朵在喊「疼」！",
+      body: function () {
+        return '' +
+          '<h2>耳朵的「警报」</h2>' +
+          '<div class="ear">👂</div>' +
+          '<div class="fc-tip" id="s1-tip">耳朵嗡嗡响，是它在喊「疼」</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：认识哪些声音会伤害耳朵！",
+      voice: "来认识伤害耳朵的「噪音」：工地上轰隆隆的大机器、很响的鞭炮、长时间大声外放的音乐、耳机开到最大声……这些太强或太久的声音，会一点一点伤害我们的听力。听力受伤了，很难恢复，所以一定要保护好。",
+      body: function () {
+        return '' +
+          '<h2>伤害耳朵的噪音</h2>' +
+          '<div class="protect-row" id="nrow">' +
+            '<div class="protect-card bad">🏗️ 工地巨响<small>轰隆隆</small></div>' +
+            '<div class="protect-card bad">🧨 鞭炮<small>噼里啪啦</small></div>' +
+            '<div class="protect-card bad">📢 大声外放<small>开最大声</small></div>' +
+            '<div class="protect-card bad">🎧 耳机太大<small>长时间听</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：学习保护听力的好办法，当耳朵守护者！",
+      voice: "怎么保护听力呢？记住五个好办法：第一，远离噪音，遇到大声捂住耳朵；第二，控制音量，听音乐开小声一点；第三，耳机不长时间戴；第四，不往耳朵里塞东西；第五，耳朵不舒服，马上告诉爸爸妈妈。",
+      body: function () {
+        return '' +
+          '<h2>保护听力五招</h2>' +
+          '<div class="protect-row" id="prow">' +
+            '<div class="protect-card good">🙉 远离噪音<small>大声捂耳朵</small></div>' +
+            '<div class="protect-card good">🔉 控制音量<small>开小声</small></div>' +
+            '<div class="protect-card good">⏱️ 少戴耳机<small>不超40分钟</small></div>' +
+            '<div class="protect-card good">🚫 不塞耳朵<small>不玩危险物</small></div>' +
+            '<div class="protect-card good">📞 不舒服就说<small>告诉大人</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，当耳朵守护小卫士！",
+      voice: "考考你！保护听力的好习惯，你记住了吗？答对拿星星！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：破最后的谜案，拿走大奖励！",
+      voice: "最后一关！小明听音乐把耳机开到最大声，还听了两个小时。他这样做对吗？当然不对！太大声、太久，会伤害听力。记住口诀：音量要小、时间要短、噪音要躲、耳朵要爱！",
+      body: function () {
+        return '' +
+          '<h2>听力守护小结</h2>' +
+          '<div class="protect-card good" style="width:auto"><b>保护听力口诀</b><small>音量要小 · 时间要短 · 噪音要躲 · 耳朵要爱</small></div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S2 ---------- */
+  function runS2() {
+    var cards = document.querySelectorAll("#nrow .protect-card");
+    var tip = document.getElementById("s2-tip");
+    cards.forEach(function (c, i) {
+      setTimeout(function () {
+        c.style.transform = "translateY(-3px)";
+        var msgs = ["工地巨响，会震伤耳朵", "鞭炮太响，快捂耳朵", "大声外放，伤听力", "耳机开太大、太久，很伤耳朵"];
+        if (tip) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1500);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 这些噪音都要躲开！"; } }, 900 + 4 * 1500);
+  }
+
+  /* ---------- S3 ---------- */
+  function runS3() {
+    var cards = document.querySelectorAll("#prow .protect-card");
+    var tip = document.getElementById("s3-tip");
+    cards.forEach(function (c, i) {
+      setTimeout(function () {
+        c.style.transform = "translateY(-3px)";
+      }, 800 + i * 900);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "五招记牢，保护听力！"; } }, 800 + 5 * 900);
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "下面哪个会伤害听力？", right: "长时间听最大声的耳机", opts: ["长时间听最大声的耳机", "安静地读书", "小声聊天"] },
+    { q: "听到很响的鞭炮声，应该？", right: "捂住耳朵、远离它", opts: ["捂住耳朵、远离它", "凑近看", "捂住眼睛"] },
+    { q: "用耳机听音乐，正确的做法是？", right: "音量开小、时间不长", opts: ["音量开小、时间不长", "开最大声", "戴着睡一晚上"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "记住：远离噪音、控制音量、少戴耳机、不塞耳朵";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：小明把耳机开最大声听了 2 小时，正确做法是？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">把音量调小、缩短时间，保护好耳朵</div>' +
+      '<div class="opt" data-ok="0">继续听，没关系</div>' +
+      '<div class="opt" data-ok="0">把耳机塞进耳朵更里面</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是耳朵守护者！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "音量要小、时间要短，爱护耳朵";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "保护听力：远离噪音、控制音量、少戴耳机、不塞耳朵、不舒服告诉大人；听力受伤难恢复。",
+      attention: "「伤害」看不见；用生活场景（大声外放/鞭炮/工地）帮孩子判断对错，把护耳变习惯。",
+      tip: "本课约 8 分钟；和孩子约定：耳机音量不超过一半、每次不超过 40 分钟。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

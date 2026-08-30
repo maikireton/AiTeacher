@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>空气有质量 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .scale { margin: 12px auto; width: 100%; max-width: 560px; }
+  .scale-pic { font-size: 72px; }
+  .bal-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .bal-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 14px 18px; min-width: 200px; }
+  .bal-card b { font-size: 18px; }
+  .bal-card .li { font-size: 13px; color: var(--text-2); text-align: left; margin-top: 6px; line-height: 1.8; }
+  .hint2 { font-size: 13px; color: var(--text-2); margin-top: 12px; }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">空气有质量 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>空气虽然很轻，但和石头、水一样有质量。用「充气皮球 vs 瘪皮球」在自制天平上比一比，充气的更重——这就是空气有质量的证据。</p>
+      <p><b>孩子容易走神的地方：</b>觉得「看不见的空气不可能有重量」。陪学时带他做天平实验，观察充气皮球那一端下沉，直观看到「空气变重了」。</p>
+      <p><b>建议：</b>本课约 8 分钟；强调「很轻 ≠ 没有」，科学要讲证据。可用气球+小木棍自制天平在家玩。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-004</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：猜猜看，空气到底有没有重量！",
+      voice: "拿两个一模一样的气球，一个吹得鼓鼓的，一个是瘪的。如果放在天平两端，你猜哪边会更重？有人说都是气球，一样重；可真的会一样吗？让我们用实验来揭晓！",
+      body: function () {
+        return '' +
+          '<h2>两个气球，一样重吗？</h2>' +
+          '<div class="scale-pic">🎈 🆚 🎈</div>' +
+          '<div class="fc-tip" id="s1-tip">一个鼓鼓的，一个瘪瘪的，谁更重？</div>' +
+          '<div class="hint2">先猜一猜，再往下看实验 👇</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：看「充气气球称重」实验，找到证据！",
+      voice: "看实验！把鼓气球和瘪气球放在天平两端。鼓气球那边慢慢沉下去了！说明鼓气球更重。多出来的重量是什么？就是吹进去的空气！空气有质量，虽然每一点点都很轻，但一整个气球的空气加起来，就能把天平压沉下去。",
+      body: function () {
+        return '' +
+          '<h2>气球称重实验</h2>' +
+          '<div class="scale">' +
+            '<div class="scale-pic">⚖️</div>' +
+            '<div class="fc-tip" id="s2-tip">鼓气球端沉下去 → 空气有质量</div>' +
+          '</div>' +
+          '<div class="hint2">鼓气球 = 瘪气球 + 空气，所以更重</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：比较空气和石头，认识「轻」但「有」！",
+      voice: "石头很重，水不轻不重，空气特别特别轻。可是轻不等于没有！一立方米空气大约有 1.29 千克重，比一袋米还沉呢。教室里的空气加起来，有几百千克重。只是因为空气充满每个角落，我们感觉不到它的重量。",
+      body: function () {
+        return '' +
+          '<h2>谁轻谁重</h2>' +
+          '<div class="bal-row">' +
+            '<div class="bal-card"><b>🪨 石头</b><div class="li">重<br>看得见摸得着</div></div>' +
+            '<div class="bal-card"><b>💧 水</b><div class="li">中等<br>看得见摸得着</div></div>' +
+            '<div class="bal-card"><b>💨 空气</b><div class="li">很轻，但有质量<br>看不见摸不着</div></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">轻 ≠ 没有质量，科学要看证据</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，当称重小侦探！",
+      voice: "考考你！关于空气的质量，你能答对吗？答对拿星星！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：破最后的谜案，拿走大奖励！",
+      voice: "最后一关！把瘪气球吹成鼓气球，再放回天平，结果会是？当然是鼓气球更重！因为吹进去的空气有质量。记住一句话：空气有质量，只是特别轻。看不见，不等于没有！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="bal-card" style="width:auto"><b>空气有质量</b><div class="li">充气气球更重 = 空气的质量<br>很轻 ≠ 没有，科学讲证据</div></div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S2 称重动画 ---------- */
+  function runS2() {
+    var tip = document.getElementById("s2-tip");
+    if (!tip) { return; }
+    var msgs = ["① 天平两端：鼓气球 vs 瘪气球", "② 鼓气球那边……慢慢沉下去了！", "③ 多出来的重量就是空气！空气有质量"];
+    msgs.forEach(function (m, i) {
+      setTimeout(function () { tip.textContent = m; }, 900 + i * 1800);
+    });
+  }
+
+  /* ---------- S3 ---------- */
+  function runS3() {
+    var tip = document.getElementById("s3-tip");
+    if (tip) { tip.textContent = "结论：空气很轻但有质量；一立方米空气约 1.29 千克"; }
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "鼓气球比瘪气球重，多出来的重量是？", right: "吹进去的空气", opts: ["气球皮变厚了", "吹进去的空气", "是手指的力量"] },
+    { q: "下面哪个说法对？", right: "空气很轻，但有质量", opts: ["空气很轻，但有质量", "空气完全没有质量", "空气比石头还重"] },
+    { q: "证明空气有质量，最好的办法是？", right: "用天平称鼓气球和瘪气球", opts: ["用眼睛看空气", "用天平称鼓气球和瘪气球", "闻一闻空气"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "想想实验：鼓气球比瘪气球多的是空气";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：两个一样的气球，一个充气一个不充，放天平上会怎样？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">充气的气球更重，空气有质量</div>' +
+      '<div class="opt" data-ok="0">一样重，空气没重量</div>' +
+      '<div class="opt" data-ok="0">不充气的更重</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是称重小侦探！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "吹进去的空气有质量，所以更重";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "空气有质量：充气气球比瘪气球重，多出的重量就是空气；空气很轻但有质量。",
+      attention: "孩子易认为「看不见的没有重量」；重点用天平对比实验给证据，避免只背结论。",
+      tip: "本课约 8 分钟；可在家用气球+小木棍自制天平复现实验。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

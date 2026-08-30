@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>认识呼吸器官 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .body-track { margin: 12px auto; width: 100%; max-width: 620px; }
+  .organ { display: inline-flex; flex-direction: column; align-items: center; margin: 6px; opacity: .35; transition: all .4s; }
+  .organ.on { opacity: 1; transform: translateY(-4px); }
+  .organ .ico { font-size: 44px; }
+  .organ .nm { font-size: 13px; font-weight: 700; color: var(--text-2); margin-top: 2px; }
+  .breath { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .bstep { background: #f6f8fc; border: 2px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 14px; font-weight: 700; opacity: .35; transition: all .4s; }
+  .bstep.on { opacity: 1; border-color: #52c41a; background: rgba(82,196,26,.1); }
+  .lbl { font-size: 15px; font-weight: 700; color: var(--accent-deep); }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">认识呼吸器官 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>呼吸靠一整套「呼吸器官」：鼻→咽→喉→气管→支气管→肺。吸气吸进氧气，呼气排出二氧化碳；膈肌上下动，帮肺一张一合。</p>
+      <p><b>孩子容易走神的地方：</b>以为「只有鼻子和肺在呼吸」。可让孩子把双手放胸口感受起伏，再用「深呼吸」感受气体进出身体的路线。</p>
+      <p><b>建议：</b>本课约 8 分钟；避免讲太细太深，重点是认识「一条线」和「肺是最重要的呼吸器官」。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-007</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：跟着深呼吸，感受空气跑进身体里！",
+      voice: "先来做个小动作：深深吸一口气，再慢慢呼出来。你感觉到空气是从哪里进来的？从鼻子、嘴巴，然后跑进了身体里面。其实我们每时每刻都在呼吸，一吸一呼之间，身体里发生了好多事！",
+      body: function () {
+        return '' +
+          '<h2>一呼一吸之间</h2>' +
+          '<div class="breath" id="br1">' +
+            '<div class="bstep">😤 吸气<small>空气从鼻/嘴进来</small></div>' +
+            '<div class="bstep">😮 呼气<small>气体从身体出去</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s1-tip">先深呼吸，感受空气的路线！</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：点亮呼吸器官「一条线」，认识每个小伙伴！",
+      voice: "呼吸要经过一条「空气通道」，像一个滑梯：空气从鼻子进去，经过咽喉，再通过气管，气管分成左右两条支气管，最后到达肺。肺像两个大气球，一吸就鼓起来，一呼就瘪下去。你看，不是只有鼻子和肺在帮忙哦！",
+      body: function () {
+        return '' +
+          '<h2>呼吸器官一条线</h2>' +
+          '<div class="body-track" id="track">' +
+            '<div class="organ" data-i="0"><span class="ico">👃</span><span class="nm">鼻</span></div>' +
+            '<div class="organ" data-i="1"><span class="ico">🗣️</span><span class="nm">咽·喉</span></div>' +
+            '<div class="organ" data-i="2"><span class="ico">🌀</span><span class="nm">气管</span></div>' +
+            '<div class="organ" data-i="3"><span class="ico">🌳</span><span class="nm">支气管</span></div>' +
+            '<div class="organ" data-i="4"><span class="ico">🎈🎈</span><span class="nm">肺</span></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：看「膈肌」怎么帮肺一吸一呼！",
+      voice: "肺自己不会动，是谁在帮它？是膈肌！膈肌在胸和肚子之间，像一块「横着的肌肉」。吸气时，膈肌往下沉，胸腔变大，肺像气球一样鼓起来；呼气时，膈肌往上抬，胸腔变小，肺瘪下去。你把手放在肚子上深呼吸，能感觉到肚子一鼓一瘪，那就是膈肌在帮忙！",
+      body: function () {
+        return '' +
+          '<h2>膈肌帮肺呼吸</h2>' +
+          '<div class="breath">' +
+            '<div class="bstep on">吸气：膈肌下沉<small>胸腔变大，肺鼓起来</small></div>' +
+            '<div class="bstep on">呼气：膈肌上抬<small>胸腔变小，肺瘪下去</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">手放肚子上，感受一鼓一瘪 = 膈肌在动</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，认识所有呼吸器官！",
+      voice: "考考你！关于呼吸器官，你能答对吗？答对拿星星！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：破最后的谜案，拿走大奖励！",
+      voice: "最后一关！有人说「呼吸只用鼻子就够了」，你同意吗？不对！呼吸要鼻、咽、喉、气管、支气管、肺一起配合，肺是主将，膈肌是帮手。记住这条「空气通道」，你就认识呼吸器官啦！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="lbl">鼻 → 咽·喉 → 气管 → 支气管 → 肺</div>' +
+          '<div class="hint">吸气进氧气，呼气出二氧化碳；肺是最重要的呼吸器官 🫁</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S1 ---------- */
+  function runS1() {
+    var tip = document.getElementById("s1-tip");
+    var steps = document.querySelectorAll("#br1 .bstep");
+    setTimeout(function () { steps[0].classList.add("on"); if (tip) { tip.textContent = "吸气：空气从鼻/嘴进入身体"; } }, 900);
+    setTimeout(function () { steps[1].classList.add("on"); if (tip) { tip.textContent = "呼气：气体从身体排出"; } }, 2300);
+  }
+
+  /* ---------- S2 器官点亮 ---------- */
+  function runS2() {
+    var org = document.querySelectorAll("#track .organ");
+    var tip = document.getElementById("s2-tip");
+    org.forEach(function (o, i) {
+      setTimeout(function () {
+        o.classList.add("on");
+        var msgs = ["空气从鼻子进来", "经过咽和喉", "进入气管", "气管分成支气管", "到达肺——像两个大气球"];
+        if (tip) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1500);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 呼吸器官一条线，肺最最重要！"; } }, 900 + 5 * 1500);
+  }
+
+  /* ---------- S3 ---------- */
+  function runS3() {
+    var tip = document.getElementById("s3-tip");
+    if (tip) { tip.textContent = "膈肌像一块横肌肉：下沉=吸气，上抬=呼气"; }
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "空气最先从哪里进入身体？", right: "鼻子（和嘴巴）", opts: ["耳朵", "鼻子（和嘴巴）", "眼睛"] },
+    { q: "最重要的呼吸器官是？", right: "肺", opts: ["肺", "牙齿", "头发"] },
+    { q: "帮助肺一张一合的是？", right: "膈肌", opts: ["膈肌", "舌头", "眉毛"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "想想呼吸的路线：鼻→咽喉→气管→支气管→肺";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：下面哪句话是对的？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">呼吸要靠鼻、咽喉、气管、支气管、肺一起配合</div>' +
+      '<div class="opt" data-ok="0">只有鼻子在呼吸，别的器官不帮忙</div>' +
+      '<div class="opt" data-ok="0">肺自己会动，不用膈肌帮忙</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是呼吸小专家！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "呼吸是一套器官一起配合完成的";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "呼吸器官：鼻→咽喉→气管→支气管→肺；膈肌下沉吸气、上抬呼气；肺最重要。",
+      attention: "孩子易以为只有鼻子和肺在呼吸；多让他深呼吸、手放肚子感受膈肌运动。",
+      tip: "本课约 8 分钟；用「空气通道滑梯」的比喻帮孩子记住路线。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

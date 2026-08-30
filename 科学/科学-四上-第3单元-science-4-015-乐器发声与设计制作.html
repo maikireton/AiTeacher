@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>乐器发声与设计制作 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .inst-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .inst-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 12px 16px; min-width: 150px; font-size: 14px; font-weight: 700; }
+  .inst-card small { display: block; font-weight: 400; color: var(--text-2); margin-top: 4px; }
+  .inst { display: inline-block; font-size: 64px; }
+  .design-seq { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+  .ds { background: #f6f8fc; border: 2px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 14px; font-weight: 700; opacity: .35; transition: all .4s; }
+  .ds.on { opacity: 1; border-color: #ff9800; background: rgba(255,152,0,.12); transform: translateY(-3px); }
+  .darr { font-size: 22px; font-weight: 800; color: var(--text-2); }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">乐器发声与设计制作 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>工程挑战课！用「振动产生声音、快慢决定高低」的原理，动手设计制作一件小乐器（如橡皮筋琴、吸管笛），经历「设计→制作→测试→改进」全流程。</p>
+      <p><b>孩子容易走神的地方：</b>动手前没计划就乱做。陪学时先问「你想做什么乐器、用什么材料、怎么让它发出不同的音高」，制作后一起测试改进。</p>
+      <p><b>建议：</b>本课约 10 分钟；鼓励孩子像工程师一样记录：画草图、标材料、写改进。材料用家里常见物即可。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-015</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：认识不同乐器，猜它们怎么发声！",
+      voice: "吉他、钢琴、笛子、鼓……这些乐器都能发出声音，可它们发声的办法不一样。吉他靠拨弦，鼓靠敲皮，笛子靠吹气。但不管哪种，背后都是同一个原理——振动！你能说出它们哪里在振动吗？",
+      body: function () {
+        return '' +
+          '<h2>乐器大家族</h2>' +
+          '<div class="inst-row">' +
+            '<div class="inst-card">🎸 吉他<small>拨弦振动</small></div>' +
+            '<div class="inst-card">🥁 鼓<small>敲皮振动</small></div>' +
+            '<div class="inst-card">🎹 钢琴<small>琴弦振动</small></div>' +
+            '<div class="inst-card">🎺 喇叭<small>吹气振动</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s1-tip">乐器发声，全靠振动！</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：学会用「振动快慢」设计不同音高！",
+      voice: "做乐器最重要的是能发出不同的音高。记住两个秘诀：弦绷得越紧、越短，振动越快，声音越高；弦越松、越长，振动越慢，声音越低。用这个原理，你就能做出会唱歌的乐器啦！",
+      body: function () {
+        return '' +
+          '<h2>设计音高的秘诀</h2>' +
+          '<div class="inst-row" id="mrow">' +
+            '<div class="inst-card">🪕 弦紧·短<small>振动快 → 声音高</small></div>' +
+            '<div class="inst-card">🪕 弦松·长<small>振动慢 → 声音低</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：跟着工程师四步，设计自己的小乐器！",
+      voice: "现在来设计！第一步，想清楚：我想做「橡皮筋琴」，材料是纸盒、几根橡皮筋。第二步，动手做：把橡皮筋套在纸盒上，一根紧一根松。第三步，测试：拨一拨，听声音高低。第四步，改进：发现音不准，就把橡皮筋再调一调。这就是工程师四步！",
+      body: function () {
+        return '' +
+          '<h2>工程师四步</h2>' +
+          '<div class="design-seq" id="dseq">' +
+            '<div class="ds">① 设计</div><div class="darr">→</div>' +
+            '<div class="ds">② 制作</div><div class="darr">→</div>' +
+            '<div class="ds">③ 测试</div><div class="darr">→</div>' +
+            '<div class="ds">④ 改进</div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，当乐器小设计师！",
+      voice: "考考你！乐器的发声和音高设计，你学会了吗？答对拿星星！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：挑战设计师终极大奖！",
+      voice: "最后一关！你做的橡皮筋琴，想让它发出更高的声音，可以怎么做？答案是：把橡皮筋绷得更紧，或者用更短的弦。记住：设计制作乐器 = 用振动原理 + 工程师四步。试试做出你独一无二的小乐器吧！",
+      body: function () {
+        return '' +
+          '<h2>乐器设计师小结</h2>' +
+          '<div class="inst-row">' +
+            '<div class="inst-card">🔔 发声靠振动</div>' +
+            '<div class="inst-card">🎼 高音：紧/短/快</div>' +
+            '<div class="inst-card">🎵 低音：松/长/慢</div>' +
+            '<div class="inst-card">🔧 设计→制作→测试→改进</div>' +
+          '</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S2 ---------- */
+  function runS2() {
+    var cards = document.querySelectorAll("#mrow .inst-card");
+    var tip = document.getElementById("s2-tip");
+    cards.forEach(function (c, i) {
+      setTimeout(function () {
+        c.style.borderColor = "#6b8fd8"; c.style.background = "rgba(155,187,244,.14)";
+        var msgs = ["弦紧/短 → 振动快 → 声音高", "弦松/长 → 振动慢 → 声音低"];
+        if (tip) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1700);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 紧短快=高，松长慢=低"; } }, 900 + 2 * 1700);
+  }
+
+  /* ---------- S3 四步 ---------- */
+  function runS3() {
+    var ds = document.querySelectorAll("#dseq .ds");
+    var tip = document.getElementById("s3-tip");
+    ds.forEach(function (o, i) {
+      setTimeout(function () {
+        o.classList.add("on");
+        var msgs = ["设计：想做什么、用什么材料", "制作：把橡皮筋套上纸盒", "测试：拨一拨，听高低", "改进：音不准就再调一调"];
+        if (tip) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1700);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 工程师四步，缺一不可！"; } }, 900 + 4 * 1700);
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "吉他、鼓、笛子发声，背后共同的原理是？", right: "物体振动", opts: ["物体振动", "物体发光", "物体变热"] },
+    { q: "想让弦发出更高的声音，应该？", right: "把弦绷得更紧", opts: ["把弦绷得更紧", "把弦放松", "把弦剪短到没有"] },
+    { q: "工程师做乐器的正确顺序是？", right: "设计→制作→测试→改进", opts: ["制作→改进→设计→测试", "设计→制作→测试→改进", "测试→设计→制作→改进"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "想想：紧短快=高、松长慢=低、设计→制作→测试→改进";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：想让你做的橡皮筋琴发出更高的声音，可以？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">把橡皮筋绷紧或用更短的弦</div>' +
+      '<div class="opt" data-ok="0">把橡皮筋放松</div>' +
+      '<div class="opt" data-ok="0">把纸盒剪破</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是乐器设计师！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "弦紧/短 → 振动快 → 声音高";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "乐器都靠振动发声；设计音高：弦紧/短→高、松/长→低；经历设计→制作→测试→改进。",
+      attention: "动手前先让孩子说清「做什么、用什么、怎么测」；制作后一起测试、改进，不轻易放弃。",
+      tip: "本课约 10 分钟；鼓励孩子画草图、写改进记录，用家里材料做橡皮筋琴/吸管笛。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

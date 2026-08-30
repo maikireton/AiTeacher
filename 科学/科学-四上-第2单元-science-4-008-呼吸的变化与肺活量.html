@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>呼吸的变化与肺活量 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .cmp-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .cmp-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 14px 18px; min-width: 190px; }
+  .cmp-card b { font-size: 18px; }
+  .cmp-card .li { font-size: 13px; color: var(--text-2); text-align: left; margin-top: 6px; line-height: 1.8; }
+  .lungs { display: inline-block; font-size: 70px; }
+  .lung-move { animation: lung 1.4s ease-in-out infinite; }
+  @keyframes lung { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25,0.9); } }
+  .btn-lab { min-height: 44px; padding: 0 20px; border-radius: 12px; border: none; background: var(--accent-deep); color: #fff; font-size: 15px; cursor: pointer; margin: 6px; }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+  .fc-tip2 { font-size: 13px; color: var(--text-2); margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">呼吸的变化与肺活量 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>运动时呼吸会变快、变深——因为身体需要更多氧气。肺活量=一次尽力吸气后最大呼出的气量，经常锻炼能增大肺活量，让身体更强壮。</p>
+      <p><b>孩子容易走神的地方：</b>「测量肺活量」动手感强，是吸引孩子的点；可让他先静坐数呼吸，再原地蹦跳后数呼吸，比较两次快慢。</p>
+      <p><b>建议：</b>本课约 8 分钟；鼓励孩子养成锻炼习惯，把「肺活量变大」当成通关升级的目标。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-008</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：先数数安静时的呼吸，再跑一跑数一次！",
+      voice: "来做个好玩的实验！先安静坐着，数一数一分钟呼吸多少次。然后原地蹦跳三十下，再数一次。两次一样多吗？猜一猜，运动后的呼吸会变得怎么样？",
+      body: function () {
+        return '' +
+          '<h2>呼吸会变吗？</h2>' +
+          '<div class="cmp-row">' +
+            '<div class="cmp-card"><b>🧘 安静时</b><div class="li">呼吸慢而平稳<br>一分钟约 20 次</div></div>' +
+            '<div class="cmp-card"><b>🏃 运动后</b><div class="li">呼吸变快变深<br>次数明显增多</div></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s1-tip">运动后呼吸会变快？先猜一猜！</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：看肺宝宝快跑，明白为什么运动要大口呼吸！",
+      voice: "看动画！运动的时候，身体里的肌肉跑得飞快，需要更多的氧气来加油。氧气从哪里来？从呼吸来！所以身体就加快呼吸、加深呼吸，把更多空气吸进来。肺就扑通扑通地跳，像在快跑一样。",
+      body: function () {
+        return '' +
+          '<h2>运动时，肺在快跑</h2>' +
+          '<div class="lungs lung-move" id="lungs">🫁</div>' +
+          '<div class="fc-tip" id="s2-tip">运动需要更多氧气 → 呼吸变快变深</div>' +
+          '<div class="fc-tip2">静坐时肺慢慢呼吸，运动时肺加速工作</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：认识「肺活量」，知道怎么把它变大！",
+      voice: "什么是肺活量？就是你吸足一口气，再尽量呼出去，能呼出的最大气体量。肺活量越大，说明你的肺越有劲，身体也越强壮。怎么变大？多运动、多锻炼！经常跑步游泳的孩子，肺活量会越来越大。",
+      body: function () {
+        return '' +
+          '<h2>肺活量：肺的本领</h2>' +
+          '<div class="cmp-row">' +
+            '<div class="cmp-card"><b>📏 什么是肺活量</b><div class="li">一次尽力吸气后<br>能呼出的最大气量</div></div>' +
+            '<div class="cmp-card"><b>💪 怎么变大</b><div class="li">多运动、多锻炼<br>跑步游泳都可以</div></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">肺活量越大 = 肺越有劲 = 身体越强壮</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，当呼吸小教练！",
+      voice: "考考你！关于呼吸的变化和肺活量，你能答对吗？答对拿星星！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：破最后的谜案，拿走大奖励！",
+      voice: "最后一关！有同学说「跑完步气喘吁吁是身体变差了」，你同意吗？不同意！跑完步呼吸变快，是因为身体需要更多氧气，这是身体聪明的表现。坚持锻炼，肺活量变大，跑得更快也不喘！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="cmp-card" style="width:auto"><b>运动 → 呼吸变快变深（要氧气）</b><div class="li">肺活量 = 一次最大呼气量<br>多锻炼 → 肺活量变大</div></div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S2 ---------- */
+  function runS2() {
+    var tip = document.getElementById("s2-tip");
+    if (tip) { tip.textContent = "运动需要更多氧气 → 呼吸加快加深"; }
+  }
+
+  /* ---------- S3 ---------- */
+  function runS3() {
+    var tip = document.getElementById("s3-tip");
+    if (tip) { tip.textContent = "肺活量越大 = 肺越有劲 = 身体越强壮"; }
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "运动后，我们的呼吸会？", right: "变快、变深", opts: ["变快、变深", "停下来不呼吸", "变得又慢又浅"] },
+    { q: "为什么运动时要大口呼吸？", right: "身体需要更多氧气", opts: ["嘴巴闲着没事", "身体需要更多氧气", "为了发出声音"] },
+    { q: "想让肺活量变大，最好的办法是？", right: "坚持锻炼身体", opts: ["每天躺着不动", "坚持锻炼身体", "少吃东西"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "运动要氧气 → 呼吸变快变深 → 锻炼让肺更有劲";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：跑完步气喘吁吁，说明什么？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">身体需要更多氧气，呼吸自动加快</div>' +
+      '<div class="opt" data-ok="0">身体变差了，要躺着不动</div>' +
+      '<div class="opt" data-ok="0">肺坏掉了</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是呼吸小教练！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "呼吸变快是身体聪明的表现，坚持锻炼肺活量更大";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "运动时呼吸变快变深（要氧气）；肺活量=一次最大呼气量，锻炼可增大肺活量。",
+      attention: "「肺活量」是测量动手点；可带他做静坐/蹦跳两次数呼吸的对比，直观看到变化。",
+      tip: "本课约 8 分钟；把「肺活量变大」当通关目标，鼓励孩子坚持锻炼。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>声音是怎样产生的 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .sound-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .sound-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 12px 16px; min-width: 150px; font-size: 14px; font-weight: 700; }
+  .sound-card small { display: block; font-weight: 400; color: var(--text-2); margin-top: 4px; }
+  .vib { display: inline-block; font-size: 60px; }
+  .vib-anim { animation: vib .18s ease-in-out infinite; }
+  @keyframes vib { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  .btn-lab { min-height: 44px; padding: 0 20px; border-radius: 12px; border: none; background: var(--accent-deep); color: #fff; font-size: 15px; cursor: pointer; margin: 6px; }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">声音是怎样产生的 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>声音是由物体「振动」产生的。拨动橡皮筋、敲鼓、说话时喉咙里的声带，都在快速振动；一停止振动，声音就停了。</p>
+      <p><b>孩子容易走神的地方：</b>「振动」看不见。让孩子用手摸喉咙说话、摸鼓面，感受「振动的麻感」，把看不见的振动变成摸得着的感觉。</p>
+      <p><b>建议：</b>本课约 8 分钟；多做小实验：橡皮筋、鼓、水杯敲击，每个都先「找振动」再「听声音」。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-012</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：玩一玩，听一听身边的声音！",
+      voice: "拍拍手、敲敲桌子、跺跺脚……这些声音是从哪里来的？是手在动、桌在响、脚在跺。可你有没有想过，它们为什么会发出声音？答案就藏在一个字里——「动」。今天我们就来揭开声音的秘密！",
+      body: function () {
+        return '' +
+          '<h2>声音从哪里来？</h2>' +
+          '<div class="sound-row">' +
+            '<div class="sound-card">👏 拍手<small>啪！</small></div>' +
+            '<div class="sound-card">🪘 敲鼓<small>咚咚！</small></div>' +
+            '<div class="sound-card">🗣️ 说话<small>啊——</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s1-tip">声音背后都藏着一个「动」！</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：认识「振动」，声音的秘密武器！",
+      voice: "声音的秘密武器叫「振动」。振动就是物体快速地、来回地动。拨动橡皮筋，它快速来回弹跳，发出声音；敲鼓，鼓面上下振动，发出咚咚声；你说话时，喉咙里的声带也在快速振动。物体振动，就发出声音；振动一停，声音就没了。",
+      body: function () {
+        return '' +
+          '<h2>声音 = 振动</h2>' +
+          '<div class="vib vib-anim">🎸</div>' +
+          '<div class="fc-tip" id="s2-tip">振动 → 声音；停止振动 → 声音停止</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：亲手感受「振动的麻感」！",
+      voice: "来做个身体实验！点「开始发声」，把手指轻轻放在喉咙上，说「啊——」，你会感到喉咙在轻轻地震动，这就是声带在振动。再把手放在鼓面上敲一下，鼓面的麻感也是振动。振动看得见、摸得着，一点都不神秘！",
+      body: function () {
+        return '' +
+          '<h2>感受振动</h2>' +
+          '<div>' +
+            '<div class="vib" id="throat">🗣️</div>' +
+          '</div>' +
+          '<div>' +
+            '<button class="btn-lab" id="btn-on">🔊 开始发声</button>' +
+            '<button class="btn-lab" id="btn-off">🔇 停止发声</button>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">摸一摸喉咙，感受振动！</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，当声音小侦探！",
+      voice: "考考你！声音是怎么产生的，你搞懂了吗？答对拿星星！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：破最后的谜案，拿走大奖励！",
+      voice: "最后一关！如果把正在发声的喇叭用手按住，声音会怎样？会立刻停下来！因为手把振动按住了，物体不再振动，声音就消失了。记住：声音由振动产生，振动停、声音停！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="sound-card" style="width:auto"><b>声音是由物体的振动产生的</b><small>橡皮筋弹、鼓面振、声带抖，都是振动<br>振动停止 → 声音停止</small></div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S2 ---------- */
+  function runS2() {
+    var tip = document.getElementById("s2-tip");
+    var msgs = ["振动 = 快速来回地动", "橡皮筋弹跳 → 声音", "鼓面振动 → 咚咚声", "振动停 → 声音停"];
+    msgs.forEach(function (m, i) {
+      setTimeout(function () { if (tip) { tip.textContent = m; } }, 900 + i * 1500);
+    });
+  }
+
+  /* ---------- S3 声带互动 ---------- */
+  function runS3() {
+    var throat = document.getElementById("throat");
+    var tip = document.getElementById("s3-tip");
+    document.getElementById("btn-on").addEventListener("click", function () {
+      throat.classList.add("vib-anim");
+      if (tip) { tip.textContent = "喉咙在振动！那是声带在工作"; }
+    });
+    document.getElementById("btn-off").addEventListener("click", function () {
+      throat.classList.remove("vib-anim");
+      if (tip) { tip.textContent = "振动停，声音也停了"; }
+    });
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "声音是由什么产生的？", right: "物体的振动", opts: ["物体的振动", "物体的颜色", "物体的气味"] },
+    { q: "说话时喉咙里振动的是？", right: "声带", opts: ["声带", "牙齿", "舌头"] },
+    { q: "振动停止，声音会？", right: "跟着停止", opts: ["越变越大", "跟着停止", "变成回声"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "记住：声音 = 物体的振动";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：用手按住正在发声的喇叭，声音会？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">立刻停下，因为振动被按住了</div>' +
+      '<div class="opt" data-ok="0">变得更大声</div>' +
+      '<div class="opt" data-ok="0">变成别的声音</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是声音小侦探！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "振动停止，声音就消失了";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "声音由物体振动产生；振动停止、声音停止（橡皮筋、鼓面、声带都是例子）。",
+      attention: "振动看不见；让孩子摸喉咙、摸鼓面感受麻感，把振动变摸得着。",
+      tip: "本课约 8 分钟；多玩「找振动」小实验：先找振动再听声音。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

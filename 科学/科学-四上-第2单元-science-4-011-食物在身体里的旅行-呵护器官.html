@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>食物在身体里的旅行·呵护器官 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .route { display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap; margin: 12px 0; }
+  .rs { background: #f6f8fc; border: 2px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 14px; font-weight: 700; opacity: .35; transition: all .4s; }
+  .rs.on { opacity: 1; border-color: #52c41a; background: rgba(82,196,26,.1); transform: translateY(-3px); }
+  .ra { font-size: 22px; font-weight: 800; color: var(--text-2); }
+  .protect-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .protect-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 12px 16px; min-width: 150px; font-size: 14px; font-weight: 700; }
+  .protect-card small { display: block; font-weight: 400; color: var(--text-2); margin-top: 4px; }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">食物在身体里的旅行·呵护器官 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>把前面学的串成一条「食物旅行线」：口腔→食道→胃→小肠→大肠→排出；同时学习呵护呼吸和消化器官：细嚼慢咽、规律吃饭、不挑食、远离烟尘、多锻炼。</p>
+      <p><b>孩子容易走神的地方：</b>综合回顾课容易散。重点是让孩子自己说出「食物走过了哪里」，像讲故事一样把路线讲出来，再记下保护器官的好习惯。</p>
+      <p><b>建议：</b>本课约 9 分钟；陪学时让孩子当「小导游」，带食物完成身体旅行。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-011</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：把学过的消化知识串成一条「旅行线」！",
+      voice: "前面我们认识了口腔、胃、小肠……现在，让一块小面包在身体里旅行一次！它从口腔出发，一路会遇到哪些伙伴？每经过一个地方，食物都会变一个样子。你准备好了吗？旅行开始！",
+      body: function () {
+        return '' +
+          '<h2>小面包的身体旅行</h2>' +
+          '<div class="route">' +
+            '<div class="rs">🍞 口腔</div>' +
+            '<div class="ra">→</div>' +
+            '<div class="rs">食道</div>' +
+            '<div class="ra">→</div>' +
+            '<div class="rs">胃</div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s1-tip">猜猜小面包下一站去哪？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：点亮食物旅行的完整路线！",
+      voice: "完整路线来啦！小面包从口腔出发，被嚼碎，滑过食道，来到胃里变成糊糊，再到小肠把营养吸走，剩下的到大肠回收水分，最后排出体外。一站接一站，食物完成了它的身体旅行。",
+      body: function () {
+        return '' +
+          '<h2>食物旅行完整路线</h2>' +
+          '<div class="route" id="route">' +
+            '<div class="rs">口腔</div><div class="ra">→</div>' +
+            '<div class="rs">食道</div><div class="ra">→</div>' +
+            '<div class="rs">胃</div><div class="ra">→</div>' +
+            '<div class="rs">小肠</div><div class="ra">→</div>' +
+            '<div class="rs">大肠</div><div class="ra">→</div>' +
+            '<div class="rs">排出</div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：学习呵护器官的好习惯，当健康小卫士！",
+      voice: "身体里的器官每天都为我们工作，我们要好好呵护它们。呵护消化器官：细嚼慢咽、按时吃饭、不挑食、不暴饮暴食。呵护呼吸器官：不吸二手烟、空气不好时戴口罩、多运动、不随地乱跑吸灰尘。记住这些，你就是健康小卫士！",
+      body: function () {
+        return '' +
+          '<h2>呵护器官好习惯</h2>' +
+          '<div class="protect-row">' +
+            '<div class="protect-card">🍽️ 细嚼慢咽<small>对胃和小肠好</small></div>' +
+            '<div class="protect-card">⏰ 按时吃饭<small>规律才健康</small></div>' +
+            '<div class="protect-card">🥦 不挑食<small>营养要均衡</small></div>' +
+            '<div class="protect-card">😷 远离烟尘<small>对肺好</small></div>' +
+            '<div class="protect-card">🏃 多锻炼<small>肺活量变大</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">好习惯 = 给器官最好的礼物</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，当健康小导游！",
+      voice: "考考你！食物旅行的路线和保护器官的好习惯，你记住了吗？答对拿星星！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：破最后的谜案，拿走大奖励！",
+      voice: "最后一关！爸爸正在抽烟，旁边的小明应该怎么做？当然是提醒爸爸去阳台抽、开窗通风，还要远离烟雾，保护自己的肺！呵护器官，从生活中的小事做起。你是健康小卫士，加油！",
+      body: function () {
+        return '' +
+          '<h2>健康小结</h2>' +
+          '<div class="route">' +
+            '<div class="rs on">口腔</div><div class="ra">→</div>' +
+            '<div class="rs on">食道</div><div class="ra">→</div>' +
+            '<div class="rs on">胃</div><div class="ra">→</div>' +
+            '<div class="rs on">小肠</div><div class="ra">→</div>' +
+            '<div class="rs on">大肠</div><div class="ra">→</div>' +
+            '<div class="rs on">排出</div>' +
+          '</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S1 ---------- */
+  function runS1() {
+    var tip = document.getElementById("s1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "答案是：食道 → 胃 → 小肠 → 大肠 → 排出！"; } }, 2200);
+  }
+
+  /* ---------- S2 路线点亮 ---------- */
+  function runS2() {
+    var rs = document.querySelectorAll("#route .rs");
+    var tip = document.getElementById("s2-tip");
+    rs.forEach(function (o, i) {
+      setTimeout(function () {
+        o.classList.add("on");
+        var msgs = ["口腔：嚼碎", "食道：滑下去", "胃：搅成糊糊", "小肠：吸收营养", "大肠：回收水分", "残渣排出体外"];
+        if (tip) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1400);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 小面包完成身体旅行！"; } }, 900 + 6 * 1400);
+  }
+
+  /* ---------- S3 ---------- */
+  function runS3() {
+    var tip = document.getElementById("s3-tip");
+    if (tip) { tip.textContent = "好习惯 = 给器官最好的礼物"; }
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "食物旅行的正确顺序是？", right: "口腔→食道→胃→小肠→大肠→排出", opts: ["口腔→食道→胃→小肠→大肠→排出", "口腔→胃→食道→小肠→排出→大肠", "胃→口腔→小肠→食道→大肠→排出"] },
+    { q: "对胃和小肠好的习惯是？", right: "细嚼慢咽、按时吃饭", opts: ["细嚼慢咽、按时吃饭", "狼吞虎咽", "一天不吃不喝"] },
+    { q: "身边有人抽烟，为了保护肺应该？", right: "远离烟雾、开窗通风", opts: ["凑近闻一闻", "远离烟雾、开窗通风", "自己也学抽烟"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "食物旅行：口腔→食道→胃→小肠→大肠→排出";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：下面哪个是呵护器官的正确做法？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">远离二手烟、规律吃饭、细嚼慢咽、多锻炼</div>' +
+      '<div class="opt" data-ok="0">爱吃什么就猛吃，不爱吃就不吃</div>' +
+      '<div class="opt" data-ok="0">空气不好也不戴口罩</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是健康小卫士！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "呵护器官：远离烟尘、规律饮食、坚持锻炼";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "食物旅行：口腔→食道→胃→小肠→大肠→排出；呵护器官：细嚼慢咽、规律吃饭、远离烟尘、多锻炼。",
+      attention: "综合回顾课易散；让孩子当「小导游」讲出食物路线，再记保护器官的好习惯。",
+      tip: "本课约 9 分钟；建议学完让孩子给家人讲一遍食物旅行路线。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

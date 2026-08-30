@@ -75,13 +75,21 @@
   }
   ensureReady(); // 若页面加载时列表已就绪，直接标记
 
-  /* 返回设置页保存的音色对象；未设置/已失效返回 null */
-  function pickSavedVoice() {
+  /* 返回设置页保存的音色对象；未设置/已失效返回 null
+   * lang 传 "en" 时取英文音色（voiceEn），其余取中文音色（voice）；
+   * 英文未保存时回退到中文音色，保证不会静默。 */
+  function pickSavedVoice(lang) {
     var saved = readSettings();
-    if (!saved || !saved.voice || !saved.voice.uri) { return null; }
+    var isEn = String(lang || "").toLowerCase().indexOf("en") === 0;
+    var key = isEn ? "voiceEn" : "voice";
+    var savedObj = saved && saved[key];
+    if (!savedObj || !savedObj.uri) {
+      if (isEn) { return pickSavedVoice("zh"); }
+      return null;
+    }
     var voices = getVoices();
     for (var i = 0; i < voices.length; i++) {
-      if (voices[i].voiceURI === saved.voice.uri) { return voices[i]; }
+      if (voices[i].voiceURI === savedObj.uri) { return voices[i]; }
     }
     return null;
   }
@@ -92,7 +100,7 @@
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(String(text || ""));
-      var v = pickSavedVoice();
+      var v = pickSavedVoice("zh");
       if (v) { u.voice = v; u.lang = v.lang || "zh-CN"; }
       else { u.lang = "zh-CN"; }
       u.rate = (opts && opts.rate) || 0.92;
@@ -123,15 +131,16 @@
     return /[A-Za-z]/.test(String(text || ""));
   }
 
-  /* 中英分段：字母开头的连续字母/数字/撇号段视为英文段，其余为中文段 */
+  /* 中英分段：把「以英文字母开头、连续直到遇到中文为止」的英文串视为一段英文，
+   * 其余为中文段。这样英文短语/句子（含空格与标点）会整体连读，不会逐词蹦读。 */
   function splitMixed(text) {
     text = String(text || "");
     var parts = [];
-    var re = /[A-Za-z][A-Za-z0-9'’.-]*/g;
+    var re = /[A-Za-z][A-Za-z0-9\s'’.,!?;:()\-—…“”"\/]*/g;
     var last = 0, m;
     while ((m = re.exec(text)) !== null) {
       if (m.index > last) { parts.push({ text: text.slice(last, m.index), en: false }); }
-      parts.push({ text: m[0], en: true });
+      parts.push({ text: m[0].replace(/\s+$/g, ""), en: true });
       last = m.index + m[0].length;
     }
     if (last < text.length) { parts.push({ text: text.slice(last), en: false }); }
@@ -161,6 +170,9 @@
     }
     var parts = splitMixed(text);
     var i = 0;
+    /* 开始前中断上一段语音；段与段之间用 onend 衔接、不再反复 cancel，
+     * 避免 Chrome 下 cancel()→speak() 紧连导致丢字/无声 */
+    try { window.speechSynthesis.cancel(); } catch (e) {}
     function next() {
       if (i >= parts.length) {
         if (opts && typeof opts.onEnd === "function") { try { opts.onEnd(); } catch (e) {} }
@@ -168,14 +180,14 @@
       }
       var p = parts[i++];
       try {
-        window.speechSynthesis.cancel();
         var u = new SpeechSynthesisUtterance(p.text);
         if (p.en) {
-          var ev = pickVoiceFor("en-US");
+          /* 英文段：优先用设置页保存的英文音色，未保存则按 en 前缀匹配系统音色 */
+          var ev = pickSavedVoice("en") || pickVoiceFor("en-US");
           if (ev) { u.voice = ev; u.lang = ev.lang || "en-US"; }
           else { u.lang = "en-US"; }
         } else {
-          var sv = pickSavedVoice() || pickVoiceFor("zh-CN");
+          var sv = pickSavedVoice("zh") || pickVoiceFor("zh-CN");
           if (sv) { u.voice = sv; u.lang = sv.lang || "zh-CN"; }
           else { u.lang = "zh-CN"; }
         }
