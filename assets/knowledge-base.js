@@ -15,7 +15,8 @@
     subjects: [
       { id: "chinese", name: "语文", dir: "语文", order: 1 },
       { id: "math",    name: "数学", dir: "数学", order: 2 },
-      { id: "english", name: "英语", dir: "英语", order: 3 }
+      { id: "english", name: "英语", dir: "英语", order: 3 },
+      { id: "science", name: "自然科学", dir: "科学", order: 4 }
     ],
 
     /* 知识模块字典（对应文档 §3.1） */
@@ -37,7 +38,12 @@
       { id: "vocab",    subject: "english", name: "词汇",   order: 2 },
       { id: "grammar",  subject: "english", name: "语法",   order: 3 },
       { id: "listen",   subject: "english", name: "听说",   order: 4 },
-      { id: "readwrite",subject: "english", name: "读写",   order: 5 }
+      { id: "readwrite",subject: "english", name: "读写",   order: 5 },
+      // 自然科学（按 2022 课标四大领域）
+      { id: "material", subject: "science", name: "物质科学",       order: 1 },
+      { id: "life",     subject: "science", name: "生命科学",       order: 2 },
+      { id: "earth",    subject: "science", name: "地球与宇宙科学", order: 3 },
+      { id: "tech",     subject: "science", name: "技术与工程",     order: 4 }
     ],
 
     /* ★ 知识点主表（首批：数学 4 年级，含四上·新版 / 四下·旧版 / 三下衔接） */
@@ -161,7 +167,59 @@
       { id: "english-4-003", name: "Unit3 Transportation：交通方式", subject: "english", grade: 4, term: "上册", unit: "Unit 3 Transportation", module: "vocab", difficulty: "提高", source: "syllabus", prerequisiteIds: [], status: "待制作", file: "", summary: "交通方式词汇与出行表达", keywords: ["交通","transportation","出行"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
       { id: "english-4-004", name: "Unit4 Asking for Help：求助用语", subject: "english", grade: 4, term: "上册", unit: "Unit 4 Asking for Help", module: "listen", difficulty: "基础", source: "syllabus", prerequisiteIds: [], status: "待制作", file: "", summary: "礼貌求助与应答的日常用语", keywords: ["求助","help","礼貌用语"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
       { id: "english-4-005", name: "Unit5 Safety：安全规则", subject: "english", grade: 4, term: "上册", unit: "Unit 5 Safety", module: "listen", difficulty: "提高", source: "syllabus", prerequisiteIds: [], status: "待制作", file: "", summary: "安全规则与祈使句表达", keywords: ["安全","safety","祈使句"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
-      { id: "english-4-006", name: "Unit6 Jobs：职业表达", subject: "english", grade: 4, term: "上册", unit: "Unit 6 Jobs", module: "vocab", difficulty: "基础", source: "syllabus", prerequisiteIds: [], status: "待制作", file: "", summary: "职业词汇与 I want to be 表达", keywords: ["职业","jobs","职业理想"], createdAt: "2026-08-30", updatedAt: "2026-08-30" }
+      { id: "english-4-006", name: "Unit6 Jobs：职业表达", subject: "english", grade: 4, term: "上册", unit: "Unit 6 Jobs", module: "vocab", difficulty: "基础", source: "syllabus", prerequisiteIds: [], status: "待制作", file: "", summary: "职业词汇与 I want to be 表达", keywords: ["职业","jobs","职业理想"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+
+      /* ================= 自然科学 · 四年级上册（2026 秋新版教科版：空气/呼吸与消化/声音） ================= */
+
+      // 第一单元 空气
+      { id: "science-4-001", name: "感受空气（空气的特征）", subject: "science", grade: 4, term: "上册", unit: "第1单元·空气", module: "material", difficulty: "基础", source: "syllabus", prerequisiteIds: [], status: "已完成", file: "科学/科学-四上-第1单元-science-4-001-感受空气-空气的特征.html", summary: "空气无色无味、占据空间、能流动", keywords: ["空气","特征","气体","占据空间"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-002", name: "空气占据空间", subject: "science", grade: 4, term: "上册", unit: "第1单元·空气", module: "material", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-001"], status: "已完成", file: "科学/科学-四上-第1单元-science-4-002-空气占据空间.html", summary: "倒扣水杯实验证明空气占空间", keywords: ["空气","占据空间","倒扣水杯"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-003", name: "空气可以被压缩", subject: "science", grade: 4, term: "上册", unit: "第1单元·空气", module: "material", difficulty: "提高", source: "syllabus", prerequisiteIds: ["science-4-002"], status: "已完成", file: "科学/科学-四上-第1单元-science-4-003-空气可以被压缩.html", summary: "注射器实验：空气易被压缩可扩张", keywords: ["空气","压缩","注射器","弹性"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-004", name: "空气有质量", subject: "science", grade: 4, term: "上册", unit: "第1单元·空气", module: "material", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-001"], status: "已完成", file: "科学/科学-四上-第1单元-science-4-004-空气有质量.html", summary: "称重对比实验：空气也有质量", keywords: ["空气","质量","称重","天平"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-005", name: "空气流动有力量·风的成因", subject: "science", grade: 4, term: "上册", unit: "第1单元·空气", module: "material", difficulty: "提高", source: "syllabus", prerequisiteIds: ["science-4-001"], status: "已完成", file: "科学/科学-四上-第1单元-science-4-005-空气流动有力量-风的成因.html", summary: "空气流动形成风，风有力量", keywords: ["风","空气流动","风的成因","力量"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-006", name: "热气球与自制打气筒", subject: "science", grade: 4, term: "上册", unit: "第1单元·空气", module: "tech", difficulty: "挑战", source: "syllabus", prerequisiteIds: ["science-4-003"], status: "已完成", file: "科学/科学-四上-第1单元-science-4-006-热气球与自制打气筒.html", summary: "热空气上升，用空气做工具", keywords: ["热气球","打气筒","设计制作","空气"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+
+      // 第二单元 呼吸与消化
+      { id: "science-4-007", name: "认识呼吸器官", subject: "science", grade: 4, term: "上册", unit: "第2单元·呼吸与消化", module: "life", difficulty: "基础", source: "syllabus", prerequisiteIds: [], status: "已完成", file: "科学/科学-四上-第2单元-science-4-007-认识呼吸器官.html", summary: "鼻咽喉气管支气管肺，膈肌参与呼吸", keywords: ["呼吸","器官","肺","膈肌","鼻"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-008", name: "呼吸的变化与肺活量", subject: "science", grade: 4, term: "上册", unit: "第2单元·呼吸与消化", module: "life", difficulty: "提高", source: "syllabus", prerequisiteIds: ["science-4-007"], status: "已完成", file: "科学/科学-四上-第2单元-science-4-008-呼吸的变化与肺活量.html", summary: "运动后呼吸加快，肺活量会增大", keywords: ["呼吸变化","肺活量","运动","测量"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-009", name: "口腔里的消化", subject: "science", grade: 4, term: "上册", unit: "第2单元·呼吸与消化", module: "life", difficulty: "基础", source: "syllabus", prerequisiteIds: [], status: "已完成", file: "科学/科学-四上-第2单元-science-4-009-口腔里的消化.html", summary: "牙齿咀嚼、舌头搅拌、唾液分解", keywords: ["口腔","牙齿","唾液","咀嚼","消化"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-010", name: "胃和小肠里的消化", subject: "science", grade: 4, term: "上册", unit: "第2单元·呼吸与消化", module: "life", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-009"], status: "已完成", file: "科学/科学-四上-第2单元-science-4-010-胃和小肠里的消化.html", summary: "胃液消化，小肠吸收营养", keywords: ["胃","小肠","消化","吸收","营养"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-011", name: "食物在身体里的旅行·呵护器官", subject: "science", grade: 4, term: "上册", unit: "第2单元·呼吸与消化", module: "life", difficulty: "提高", source: "syllabus", prerequisiteIds: ["science-4-010"], status: "已完成", file: "科学/科学-四上-第2单元-science-4-011-食物在身体里的旅行-呵护器官.html", summary: "食物走完整条消化线，器官要爱护", keywords: ["食物","消化","旅行","呵护","健康"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+
+      // 第三单元 声音
+      { id: "science-4-012", name: "声音是怎样产生的", subject: "science", grade: 4, term: "上册", unit: "第3单元·声音", module: "material", difficulty: "基础", source: "syllabus", prerequisiteIds: [], status: "已完成", file: "科学/科学-四上-第3单元-science-4-012-声音是怎样产生的.html", summary: "声音由物体振动产生", keywords: ["声音","振动","产生","发声"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-013", name: "声音的强弱", subject: "science", grade: 4, term: "上册", unit: "第3单元·声音", module: "material", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-012"], status: "已完成", file: "科学/科学-四上-第3单元-science-4-013-声音的强弱.html", summary: "振动幅度越大，声音越强（音量）", keywords: ["声音","强弱","音量","振幅"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-014", name: "声音的高低", subject: "science", grade: 4, term: "上册", unit: "第3单元·声音", module: "material", difficulty: "提高", source: "syllabus", prerequisiteIds: ["science-4-012"], status: "已完成", file: "科学/科学-四上-第3单元-science-4-014-声音的高低.html", summary: "振动越快声音越高（音高）", keywords: ["声音","高低","音高","频率"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-015", name: "乐器发声与设计制作", subject: "science", grade: 4, term: "上册", unit: "第3单元·声音", module: "tech", difficulty: "挑战", source: "syllabus", prerequisiteIds: ["science-4-014"], status: "已完成", file: "科学/科学-四上-第3单元-science-4-015-乐器发声与设计制作.html", summary: "用振动原理设计制作小乐器", keywords: ["乐器","设计制作","弦","音高","工程技术"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-016", name: "声音的传播", subject: "science", grade: 4, term: "上册", unit: "第3单元·声音", module: "material", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-012"], status: "已完成", file: "科学/科学-四上-第3单元-science-4-016-声音的传播.html", summary: "声音靠空气等物质传播", keywords: ["声音","传播","介质","真空"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-017", name: "保护听力", subject: "science", grade: 4, term: "上册", unit: "第3单元·声音", module: "life", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-013"], status: "已完成", file: "科学/科学-四上-第3单元-science-4-017-保护听力.html", summary: "远离噪音、控制音量，爱护耳朵", keywords: ["听力","保护","噪音","耳朵"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+
+      /* ================= 自然科学 · 四年级下册（2027 春启用，目录按 2026 春版待校对） ================= */
+
+      // 第一单元 植物的生长变化
+      { id: "science-4-018", name: "种子里孕育着新生命", subject: "science", grade: 4, term: "下册", unit: "第1单元·植物的生长变化", module: "life", difficulty: "基础", source: "syllabus", prerequisiteIds: [], status: "待制作", file: "", summary: "种子结构与胚芽胚根胚轴", keywords: ["种子","胚","生命","结构"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-019", name: "种子的萌发与根的生长", subject: "science", grade: 4, term: "下册", unit: "第1单元·植物的生长变化", module: "life", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-018"], status: "待制作", file: "", summary: "播种凤仙花，根向下生长吸水", keywords: ["种子","萌发","根","凤仙花"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-020", name: "茎和叶的作用", subject: "science", grade: 4, term: "下册", unit: "第1单元·植物的生长变化", module: "life", difficulty: "提高", source: "syllabus", prerequisiteIds: ["science-4-019"], status: "待制作", file: "", summary: "茎运输水分养料，叶进行光合作用", keywords: ["茎","叶","运输","光合作用"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-021", name: "凤仙花开花了", subject: "science", grade: 4, term: "下册", unit: "第1单元·植物的生长变化", module: "life", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-020"], status: "待制作", file: "", summary: "花的构造与传粉结果", keywords: ["花","凤仙花","构造","传粉"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-022", name: "果实和种子", subject: "science", grade: 4, term: "下册", unit: "第1单元·植物的生长变化", module: "life", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-021"], status: "待制作", file: "", summary: "果实由果皮和种子组成", keywords: ["果实","种子","果皮","发育"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-023", name: "种子的传播", subject: "science", grade: 4, term: "下册", unit: "第1单元·植物的生长变化", module: "life", difficulty: "提高", source: "syllabus", prerequisiteIds: ["science-4-022"], status: "待制作", file: "", summary: "风力、动物、弹射、水力传播", keywords: ["种子","传播","风力","动物"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-024", name: "凤仙花的一生", subject: "science", grade: 4, term: "下册", unit: "第1单元·植物的生长变化", module: "life", difficulty: "挑战", source: "syllabus", prerequisiteIds: ["science-4-023"], status: "待制作", file: "", summary: "种子到新种子的完整生命周期", keywords: ["凤仙花","一生","生命周期","总结"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+
+      // 第二单元 电路
+      { id: "science-4-025", name: "电和我们的生活", subject: "science", grade: 4, term: "下册", unit: "第2单元·电路", module: "material", difficulty: "基础", source: "syllabus", prerequisiteIds: [], status: "待制作", file: "", summary: "电的来源、用途与安全用电", keywords: ["电","安全用电","电源","生活"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-026", name: "点亮小灯泡与简易电路", subject: "science", grade: 4, term: "下册", unit: "第2单元·电路", module: "material", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-025"], status: "待制作", file: "", summary: "电池导线灯泡连成闭合回路", keywords: ["电路","小灯泡","电池","闭合回路"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-027", name: "电路出故障了", subject: "science", grade: 4, term: "下册", unit: "第2单元·电路", module: "material", difficulty: "提高", source: "syllabus", prerequisiteIds: ["science-4-026"], status: "待制作", file: "", summary: "用检测器排查断路故障", keywords: ["电路","故障","检测","断路"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-028", name: "导体和绝缘体", subject: "science", grade: 4, term: "下册", unit: "第2单元·电路", module: "material", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-026"], status: "待制作", file: "", summary: "易导电的是导体，难导电的是绝缘体", keywords: ["导体","绝缘体","导电","检测"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-029", name: "电路中的开关", subject: "science", grade: 4, term: "下册", unit: "第2单元·电路", module: "material", difficulty: "提高", source: "syllabus", prerequisiteIds: ["science-4-026"], status: "待制作", file: "", summary: "开关控制电路通断，设计制作开关", keywords: ["开关","电路","通断","设计"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-030", name: "模拟安装照明电路", subject: "science", grade: 4, term: "下册", unit: "第2单元·电路", module: "tech", difficulty: "挑战", source: "syllabus", prerequisiteIds: ["science-4-029"], status: "待制作", file: "", summary: "设计并安装房间照明电路", keywords: ["照明电路","设计制作","开关","房间"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+
+      // 第三单元 岩石与土壤
+      { id: "science-4-031", name: "岩石与土壤的故事", subject: "science", grade: 4, term: "下册", unit: "第3单元·岩石与土壤", module: "earth", difficulty: "基础", source: "syllabus", prerequisiteIds: [], status: "待制作", file: "", summary: "岩石土壤记录地球历史", keywords: ["岩石","土壤","历史","故事"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-032", name: "认识常见的岩石", subject: "science", grade: 4, term: "下册", unit: "第3单元·岩石与土壤", module: "earth", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-031"], status: "待制作", file: "", summary: "花岗岩大理岩砂岩等特征", keywords: ["岩石","花岗岩","大理岩","砂岩"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-033", name: "岩石的组成与标本", subject: "science", grade: 4, term: "下册", unit: "第3单元·岩石与土壤", module: "earth", difficulty: "提高", source: "syllabus", prerequisiteIds: ["science-4-032"], status: "待制作", file: "", summary: "岩石由矿物组成，制作标本", keywords: ["矿物","岩石组成","标本","制作"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-034", name: "岩石、沙和黏土", subject: "science", grade: 4, term: "下册", unit: "第3单元·岩石与土壤", module: "earth", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-032"], status: "待制作", file: "", summary: "岩石风化变沙变黏土", keywords: ["岩石","沙","黏土","风化"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-035", name: "观察和比较土壤", subject: "science", grade: 4, term: "下册", unit: "第3单元·岩石与土壤", module: "earth", difficulty: "提高", source: "syllabus", prerequisiteIds: ["science-4-034"], status: "待制作", file: "", summary: "土壤分层与沙质土黏质土壤土", keywords: ["土壤","分层","沙质土","黏质土"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+      { id: "science-4-036", name: "岩石、土壤和我们", subject: "science", grade: 4, term: "下册", unit: "第3单元·岩石与土壤", module: "earth", difficulty: "基础", source: "syllabus", prerequisiteIds: ["science-4-035"], status: "待制作", file: "", summary: "岩石土壤资源与保护", keywords: ["岩石","土壤","资源","保护"], createdAt: "2026-08-30", updatedAt: "2026-08-30" }
     ]
   };
 

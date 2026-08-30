@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>口语交际：我们与环境 / 安慰 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .talk { background: #fff; border: 2px solid #e4e3dd; border-radius: 14px; padding: 14px 16px; margin: 8px 0; max-width: 600px; width: 100%; text-align: left; }
+  .talk .t1 { font-size: 16px; font-weight: 800; color: #2c5a9e; }
+  .talk .t2 { font-size: 14px; color: #555; line-height: 1.7; }
+  .talk .bubble { background: #f0f6ff; border-radius: 12px; padding: 8px 12px; margin-top: 6px; font-size: 14px; color: #2c5a9e; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 语文</a>
+    <span class="brand">口语交际：我们与环境 / 安慰 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>口语交际两本领：①"我们与环境"表达观点要说清理由、认真倾听；②"安慰"要先了解原因、用温暖的话共情、不指责。</p>
+      <p><b>孩子容易走神的地方：</b>只顾自己说/安慰时讲大道理；可多练"你先说，我听着"。</p>
+      <p><b>建议：</b>本课约 8 分钟；家长扮伤心同学，让孩子练习安慰。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 语文 chinese-4-014</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：学“跟人说话”的本领！",
+      voice: "口语交际，就是跟别人好好说话的本领。今天学两个本领：一个是谈论我们和环境，学会表达自己的观点；一个是安慰别人，把温暖送给好朋友。准备好了吗？",
+      body: function () {
+        return '' +
+          '<h2>会说话，本领大 🗣️</h2>' +
+          '<div style="font-size:44px">🗣️ 💬</div>' +
+          '<div class="fc-tip" id="s1-tip">准备开始…</div>' +
+          '<div class="hint">本领一：说观点 · 本领二：会安慰</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：学两个本领！",
+      voice: "看动画。本领一，我们与环境：谈保护环境时，要说清自己的观点和理由，还要认真听别人说。本领二，安慰：看到同学伤心，先轻轻问一问原因，再用温暖的话安慰他，不要说“这有什么好哭的”。",
+      body: function () {
+        return '' +
+          '<h2>两个本领</h2>' +
+          '<div class="talk" data-i="0" style="opacity:.3;transition:all .6s"><div class="t1">🌍 本领一：我们与环境</div><div class="t2">说清观点和理由，认真听别人说</div><div class="bubble">“我觉得少用塑料袋很好，因为塑料很难降解。”</div></div>' +
+          '<div class="talk" data-i="1" style="opacity:.3;transition:all .6s"><div class="t1">❤️ 本领二：安慰</div><div class="t2">先了解原因，再用温暖的话共情</div><div class="bubble">“别难过，你愿意跟我说说吗？”</div></div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：看“安慰”怎么说到心里！",
+      voice: "看例题。同桌考试没考好，很伤心。先了解原因：你怎么了？是不是因为没考好难过？再安慰他：没关系，谁都有考不好的时候，我们一起看看哪里不会，下次一定能进步。你看，这样的安慰让人心里暖暖的。",
+      body: function () {
+        return '' +
+          '<h2>安慰示范</h2>' +
+          '<div class="talk" data-i="0" style="opacity:.3;transition:all .6s"><div class="t1">① 先了解原因</div><div class="bubble">“你怎么啦？是因为没考好才难过吗？”</div></div>' +
+          '<div class="talk" data-i="1" style="opacity:.3;transition:all .6s"><div class="t1">② 温暖共情</div><div class="bubble">“谁都有考不好的时候，我也考砸过。”</div></div>' +
+          '<div class="talk" data-i="2" style="opacity:.3;transition:all .6s"><div class="t1">③ 给希望</div><div class="bubble">“我们一起看看错在哪，下次一定能进步！”</div></div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：闯三关，练口语交际！",
+      voice: "现在考考你！面对不同的场景，你会怎么说话？选一选最合适的做法。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：Boss 关选安慰话，领星星！",
+      voice: "最后总结！我们与环境，说观点要讲理由、认真听。安慰别人，先了解、再共情、给希望。会说话，就是最好的礼貌和温暖！Boss 关来了！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="talk" style="opacity:1"><div class="t1">口语交际两本领</div><div class="t2">🌍 说观点：讲清理由 + 认真倾听<br>❤️ 安慰：先了解 → 再共情 → 给希望</div></div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function lightTalk(sel, tipId, msgs) {
+    var ts = document.querySelectorAll(sel);
+    var tip = document.getElementById(tipId);
+    ts.forEach(function (t, i) {
+      setTimeout(function () {
+        t.style.opacity = "1";
+        if (tip && msgs[i]) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1900);
+    });
+    setTimeout(function () { if (tip && msgs[msgs.length - 1]) { tip.textContent = "✅ " + msgs[msgs.length - 1]; } }, 900 + ts.length * 1900);
+  }
+  function runS1() {
+    var tip = document.getElementById("s1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "会说话，朋友多、心情好"; } }, 1300);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 今天学：说观点 + 会安慰！"; } }, 2800);
+  }
+  function runS2() { lightTalk("#s2 .talk", "s2-tip", ["① 我们与环境：讲清观点和理由", "② 安慰：先了解，再温暖共情", "两个本领都会了！"]); }
+  function runS3() { lightTalk("#s3 .talk", "s3-tip", ["① 先了解原因", "② 温暖共情", "③ 给希望", "这样的安慰，说到心里去！"]); }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "谈“保护环境”时，正确的做法是？", right: "说清观点并讲理由", opts: ["说清观点并讲理由", "声音越大越好", "别人说时不听"] },
+    { q: "同学伤心时，第一句最好说？", right: "“你怎么啦？愿意和我说说吗？”", opts: ["“你怎么啦？愿意和我说说吗？”", "“这有什么好哭的”", "“别哭了，烦死了”"] },
+    { q: "安慰别人时，下面哪种话更暖心？", right: "“没关系，我们一起想办法”", opts: ["“没关系，我们一起想办法”", "“都是你的错”", "“你活该”"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "安慰要温暖、先了解原因，不说伤人话";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 关：弟弟搭的积木倒了，在哭，你最好说？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">“没关系，我们一起重新搭一个更高的！”</div>' +
+      '<div class="opt" data-ok="0">“哭什么哭，笨手笨脚”</div>' +
+      '<div class="opt" data-ok="0">“不理你，我先去玩了”</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 口语交际你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 9 ? "（全部拿下！）" : n >= 6 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "安慰 = 温暖 + 一起想办法，不指责";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "口语交际两本领：说观点（讲理由+倾听）、安慰（先了解→再共情→给希望）。",
+      attention: "孩子易只顾自己说/安慰时讲大道理；多练倾听。",
+      tip: "本课约 8 分钟；家长扮伤心同学让孩子练习安慰。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>历史故事：简要复述 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .story { background: #f4f0e6; border: 2px solid #d8cdb4; border-radius: 14px; padding: 14px 18px; margin: 8px 0; max-width: 620px; width: 100%; text-align: left; font-size: 15px; line-height: 1.8; color: #4a3a10; }
+  .story b { color: #2c5a9e; }
+  .tag3 { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; margin: 4px 6px 4px 0; color: #fff; }
+  .t-y { background: #6b8fd8; }
+  .t-g { background: #52a16b; }
+  .t-o { background: #e08a3c; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 语文</a>
+    <span class="brand">历史故事：简要复述 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>简要复述=用几句话讲清故事主干：抓住起因、经过、结果，删掉细节，用概括的话说。（例：《西门豹治邺》治河神、惩巫婆、引水丰收）</p>
+      <p><b>孩子容易走神的地方：</b>复述时照背原文/漏掉关键；可让他先说"三句话版"（起因/经过/结果各一句）。</p>
+      <p><b>建议：</b>本课约 8 分钟；让孩子把《扁鹊治病》用三句话复述给家长听。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 语文 chinese-4-011</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：当“历史故事讲解员”！",
+      voice: "西门豹治邺、扁鹊治病、纪昌学射……这些历史故事特别精彩！可是故事那么长，怎么用几句话讲给朋友听，还不丢关键？今天学本领——简要复述！",
+      body: function () {
+        return '' +
+          '<h2>历史故事讲解员 🎙️</h2>' +
+          '<div style="font-size:44px">📜 🗣️</div>' +
+          '<div class="fc-tip" id="s1-tip">准备开始…</div>' +
+          '<div class="hint">简要复述 = 用几句话讲清故事主干</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：学简要复述两招！",
+      voice: "看动画。简要复述有两招。第一招，抓主干：只讲起因、经过、结果三件事。第二招，删枝叶：把啰嗦的细节、对话都去掉。抓住主干、删掉枝叶，故事就变得又短又清楚！",
+      body: function () {
+        return '' +
+          '<h2>简要复述两招</h2>' +
+          '<div class="story" data-i="0" style="opacity:.3;transition:all .6s"><span class="tag3 t-y">① 抓主干</span>只讲：起因 → 经过 → 结果</div>' +
+          '<div class="story" data-i="1" style="opacity:.3;transition:all .6s"><span class="tag3 t-g">② 删枝叶</span>删掉：细节描写、多余对话</div>' +
+          '<div class="story" data-i="2" style="opacity:.3;transition:all .6s"><span class="tag3 t-o">③ 说出来</span>用概括的话，几句讲完</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：看《西门豹治邺》怎么复述！",
+      voice: "看例题。西门豹治邺，我们抓三句话。起因：邺县被河神娶媳妇害得田地荒芜。经过：西门豹将计就计，把巫婆和官绅扔进河里。结果：破除迷信，开渠引水，庄稼丰收。三句话，故事就讲完了！",
+      body: function () {
+        return '' +
+          '<h2>《西门豹治邺》三句话复述</h2>' +
+          '<div class="story" data-i="0" style="opacity:.3;transition:all .6s"><span class="tag3 t-y">起因</span>邺县被“河神娶媳妇”害得田地荒芜、人烟稀少。</div>' +
+          '<div class="story" data-i="1" style="opacity:.3;transition:all .6s"><span class="tag3 t-g">经过</span>西门豹将计就计，惩治巫婆和官绅，破除了迷信。</div>' +
+          '<div class="story" data-i="2" style="opacity:.3;transition:all .6s"><span class="tag3 t-o">结果</span>开渠引水，庄稼年年丰收。</div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：闯三关，练复述本领！",
+      voice: "现在考考你！简要复述要注意什么，哪些该留哪些该删，看看你会不会。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：Boss 关辨详略，领星星！",
+      voice: "最后总结！简要复述三招：抓主干、删枝叶、概括说。抓住起因经过结果，故事几句话就能讲完，你就是讲解员啦！Boss 关来了！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="story" style="opacity:1"><b>简要复述：</b>抓主干（起因经过结果）→ 删枝叶（细节对话）→ 概括说</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function lightStory(sel, tipId, msgs) {
+    var st = document.querySelectorAll(sel);
+    var tip = document.getElementById(tipId);
+    st.forEach(function (s, i) {
+      setTimeout(function () {
+        s.style.opacity = "1";
+        if (tip && msgs[i]) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1800);
+    });
+    setTimeout(function () { if (tip && msgs[msgs.length - 1]) { tip.textContent = "✅ " + msgs[msgs.length - 1]; } }, 900 + st.length * 1800);
+  }
+  function runS1() {
+    var tip = document.getElementById("s1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "故事很长，要讲给别人听？"; } }, 1200);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 用简要复述，几句讲完不丢关键！"; } }, 2800);
+  }
+  function runS2() { lightStory("#s2 .story", "s2-tip", ["① 抓主干：起因经过结果", "② 删枝叶：删细节对话", "③ 概括说：几句讲完", "两招一用，又短又清！"]); }
+  function runS3() { lightStory("#s3 .story", "s3-tip", ["① 起因：河神娶媳妇害人", "② 经过：将计就计惩巫婆官绅", "③ 结果：引水丰收", "三句话讲完《西门豹治邺》！"]); }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "简要复述时，首先要？", right: "抓住起因经过结果", opts: ["抓住起因经过结果", "背出原文", "添油加醋"] },
+    { q: "复述时，下面的内容要保留的是？", right: "西门豹惩治巫婆", opts: ["西门豹惩治巫婆", "巫婆穿了件红裙子", "那天刮了三级风"] },
+    { q: "简要复述的特点是？", right: "短而清楚", opts: ["短而清楚", "越长越好", "必须一字不差"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "留主干（关键情节），删枝叶（细节）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 关：复述《扁鹊治病》，哪句可以省略？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">“那天扁鹊穿了一件灰衣服”</div>' +
+      '<div class="opt" data-ok="0">“蔡桓侯不听劝，病越来越重”</div>' +
+      '<div class="opt" data-ok="0">“扁鹊几次劝他治病”</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 简要复述你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 9 ? "（全部拿下！）" : n >= 6 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "穿什么衣服是细节，可以省略；关键情节要留下";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 2000);
+        }
+      });
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "简要复述=抓主干（起因经过结果）+删枝叶（细节对话）+概括说。例：西门豹治邺三句话讲完。",
+      attention: "孩子易照背原文或漏关键；先让他说“三句话版”。",
+      tip: "本课约 8 分钟；让孩子用三句话复述《扁鹊治病》。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

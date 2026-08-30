@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数学广角：鸡兔同笼 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .jt-box { margin: 12px 0; }
+  .jt-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .jt-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .jt-table { display: flex; justify-content: center; }
+  .jt-table table { border-collapse: collapse; font-size: 18px; }
+  .jt-table th, .jt-table td { border: 1px solid var(--border); padding: 6px 16px; text-align: center; font-weight: 700; }
+  .jt-table th { background: #e8f1ff; color: var(--accent-deep); }
+  .jt-table .hit { background: #fff3d6; color: #e8890c; font-weight: 900; }
+  .jt-step { font-size: 22px; font-weight: 800; text-align: center; min-height: 34px; color: #2e7d32; margin: 6px 0; }
+  .jt-expr { font-size: 26px; font-weight: 800; color: #d97706; text-align: center; margin: 6px 0; }
+  .jt-ico { font-size: 36px; }
+  .jt-row { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+  .jt-group { text-align: center; }
+  .jt-group .l { font-size: 14px; font-weight: 700; color: var(--text-2); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">数学广角：鸡兔同笼 <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>鸡兔同笼：笼子里有 8 个头、26 只脚，用"假设法"：假设全是鸡算出脚数，多出的脚 ÷2 就是兔的只数。</p>
+      <p><b>孩子容易走神的地方：</b>不知道"多出的脚除以 2"是为什么；讲清每把一只鸡换成兔，脚就多 2 只。</p>
+      <p><b>建议：</b>本课约 8 分钟；先列表法看懂规律，再用假设法一步算出。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-047</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想 8 头 26 脚怎么猜！",
+      voice: "笼子里鸡和兔子共 8 只，数一数脚有 26 只。鸡有几只？兔子有几只？这是经典难题，叫鸡兔同笼！今天教你妙招。",
+      body: function () {
+        return '' +
+          '<h2>鸡兔同笼</h2>' +
+          '<p class="jt-expr">8 个头，26 只脚</p>' +
+          '<p>🐔 鸡 2 脚　🐰 兔 4 脚</p>' +
+          '<div class="hint">👆 用假设法一步算出来</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "列表法动画",
+      task: "咱们这一步要做的：看动画一行一行找答案！",
+      voice: "看动画。先假设全是兔子：0 只鸡 8 只兔，32 只脚，太多。减少一只兔加一只鸡，脚就少 2 只。一直试到 26 只脚：鸡 3 只、兔 5 只，刚刚好！",
+      body: function () {
+        return '' +
+          '<h2>看动画：列表法</h2>' +
+          '<div class="jt-box" id="d1">' +
+          '<div class="jt-table"><table id="tab1"></table></div>' +
+          "</div>" +
+          '<div class="jt-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="jt-rule">每把 1 只兔换成鸡，脚少 2 只</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "假设法动画",
+      task: "咱们这一步要做的：看动画假设全是鸡！",
+      voice: "看动画。假设 8 只全是鸡，8 乘 2 等于 16 只脚。可实际有 26 只脚，多出 26 减 16 等于 10 只脚。这 10 只脚是兔子的，每只兔子比鸡多 2 只脚，10 除以 2 等于 5，所以兔子 5 只，鸡 8 减 5 等于 3 只！",
+      body: function () {
+        return '' +
+          '<h2>看动画：假设法</h2>' +
+          '<div class="jt-box" id="d2">' +
+          '<div class="jt-row">' +
+          '<div class="jt-group"><div class="jt-ico" id="g1">🐔🐔🐔🐔🐔🐔🐔🐔</div><div class="l">假设全是鸡：8×2 = 16 脚</div></div>' +
+          "</div>" +
+          '<div class="jt-expr" id="ex2"></div>' +
+          '<div class="jt-step" id="st2">？</div>' +
+          "</div>" +
+          '<div class="jt-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="jt-rule">兔数 = (实际脚 − 全鸡脚) ÷ 2</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道鸡兔同笼题！",
+      voice: "现在考考你！鸡兔同笼。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算出兔子几只，领奖！",
+      voice: "Boss 来啦！10 个头，28 只脚。假设全是鸡：10 乘 2 等于 20 脚，多出 8 只脚。8 除以 2 等于 4，兔子 4 只，鸡 6 只！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：10 头 28 脚，兔子几只？</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    var tab = document.getElementById("tab1");
+    tab.innerHTML = "<tr><th>鸡</th><th>兔</th><th>脚数</th></tr>";
+    var rows = [];
+    for (var j = 0; j <= 8; j++) {
+      var r = 8 - j;
+      var feet = j * 2 + r * 4;
+      rows.push({ j: j, r: r, feet: feet, hit: feet === 26 });
+    }
+    rows.forEach(function (row, i) {
+      setTimeout(function () {
+        var tr = document.createElement("tr");
+        tr.innerHTML = "<td>" + row.j + "</td><td>" + row.r + "</td><td>" + row.feet + "</td>";
+        if (row.hit) { tr.className = "hit"; }
+        tab.appendChild(tr);
+        if (tip) {
+          if (row.hit) { tip.textContent = "③ 找到啦：鸡 3 只、兔 5 只，26 脚 ✅"; }
+          else if (row.feet > 26) { tip.textContent = "② 脚太多，继续把兔换成鸡…"; }
+          else { tip.textContent = "① 试：鸡 " + row.j + " 兔 " + row.r + " 共 " + row.feet + " 脚"; }
+        }
+      }, 900 * (i + 1));
+    });
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    var ex = document.getElementById("ex2");
+    var st = document.getElementById("st2");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 假设全是鸡：8 × 2 = 16 脚"; }
+      ex.innerHTML = "8 × 2 = 16（脚）";
+      st.textContent = "全鸡：16 脚";
+    }, 900);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 实际 26 脚，多出 26 − 16 = 10 脚"; }
+      ex.innerHTML = "26 − 16 = <b>10</b>（多出的脚）";
+      st.textContent = "多出 10 脚";
+    }, 2900);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 多出的脚 ÷ 2 = 兔子数：10 ÷ 2 = 5 只兔"; }
+      ex.innerHTML = "10 ÷ 2 = <b>5</b>（兔子）";
+      st.textContent = "兔子 5 只";
+      document.getElementById("g1").innerHTML = "🐔🐔🐔 + 🐰🐰🐰🐰🐰";
+    }, 4900);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "④ 鸡 = 8 − 5 = 3 只 ✅ 假设法搞定！"; }
+      ex.innerHTML = "鸡 = 8 − 5 = <b>3</b>（只）";
+      st.textContent = "兔子 5 只，鸡 3 只";
+    }, 6900);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "鸡 2 脚、兔 4 脚，1 只鸡 1 只兔共？脚", right: "6", opts: ["6", "8", "4"] },
+    { q: "6 个头 20 脚，假设全鸡：6×2=12，多出 8 脚，兔=？", right: "4 只", opts: ["4 只", "2 只", "6 只"] },
+    { q: "鸡兔共 5 头，脚 14 只，兔有几只？", right: "2 只", opts: ["2 只", "3 只", "1 只"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "兔数 = (总脚 − 全鸡脚) ÷ 2；鸡 = 头数 − 兔数";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1900);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">10 个头、28 只脚，兔子有几只？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">4 只</div>' +
+      '<div class="opt" data-ok="0">6 只</div>' +
+      '<div class="opt" data-ok="0">2 只</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 鸡兔同笼你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "(28 − 20) ÷ 2 = 4 只兔，鸡 6 只";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "鸡兔同笼：用「假设法」——假设全是鸡算出脚数，多出的脚 ÷2 就是兔的只数，鸡 = 头数 − 兔数。",
+      attention: "孩子不明白「多出的脚除以 2」；讲清每把一只鸡换成兔，脚就多 2 只。",
+      tip: "本课约 8 分钟；先列表法看懂规律，再用假设法一步算出。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

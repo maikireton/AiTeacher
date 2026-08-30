@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平均数 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .av-box { margin: 12px 0; }
+  .av-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .av-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .bars { display: flex; justify-content: center; gap: 26px; align-items: flex-end; height: 180px; margin: 10px 0; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+  .bar { width: 56px; background: linear-gradient(180deg,#7eb6ff,#4a7fe0); border-radius: 6px 6px 0 0; transition: height .6s; }
+  .bar.mv { background: linear-gradient(180deg,#ffd591,#ffa940); }
+  .bar.hl { background: linear-gradient(180deg,#6fd88f,#2e7d32); }
+  .bar-val { font-size: 20px; font-weight: 800; color: var(--accent-deep); margin-bottom: 4px; }
+  .bar-name { font-size: 15px; font-weight: 800; color: var(--text-2); margin-top: 4px; }
+  .av-expr { font-size: 28px; font-weight: 800; color: #d97706; text-align: center; margin: 10px 0; }
+  .av-step { font-size: 22px; font-weight: 800; text-align: center; min-height: 34px; color: #2e7d32; }
+  .av-line { display: flex; justify-content: center; gap: 6px; align-items: center; font-size: 22px; font-weight: 800; color: #2e3b52; margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">平均数 <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>平均数 = 总数 ÷ 个数；可以用"移多补少"直观理解——把多的补给少的，让每份一样多。</p>
+      <p><b>孩子容易走神的地方：</b>平均数不是"中间那个数"；强调先求总数再平均分。</p>
+      <p><b>建议：</b>本课约 8 分钟；用积木摆一摆"移多补少"，再列式总数÷人数。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-046</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想三人的苹果怎么平均！",
+      voice: "小红 4 个苹果，小明 2 个，小刚 6 个。一共 12 个，3 个人平均分，每人 4 个。这个「每人 4 个」就是平均数。",
+      body: function () {
+        return '' +
+          '<h2>分苹果求平均</h2>' +
+          '<p class="av-expr">(4 + 2 + 6) ÷ 3 = ?</p>' +
+          '<div class="hint">👆 平均数 = 总数 ÷ 个数</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "移多补少动画",
+      task: "咱们这一步要做的：看动画多移给少！",
+      voice: "看动画。三根柱子：4、2、6。小刚 6 个最多，借 2 个给小明。现在大家都变成 4 个了！多移给少，这叫移多补少。",
+      body: function () {
+        return '' +
+          '<h2>看动画：移多补少 → 平均每人 4 个</h2>' +
+          '<div class="av-box" id="d1">' +
+          '<div class="bars" id="bars1"></div>' +
+          "</div>" +
+          '<div class="av-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="av-rule">移多补少：把多的补给少的，每份一样多</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "总数÷个数动画",
+      task: "咱们这一步要做的：看动画算出平均数！",
+      voice: "看动画。把三个人的苹果全合起来：4 加 2 加 6 等于 12，这是总数。再平均分给 3 个人：12 除以 3 等于 4。平均数就是 4！",
+      body: function () {
+        return '' +
+          '<h2>看动画：12 ÷ 3 = 4</h2>' +
+          '<div class="av-box" id="d2">' +
+          '<div class="av-line" id="ln1">4 + 2 + 6 = ?</div>' +
+          '<div class="av-line" id="ln2"></div>' +
+          '<div class="av-expr" id="ex2"></div>' +
+          "</div>" +
+          '<div class="av-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="av-rule">平均数 = 总数 ÷ 个数</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道平均数题！",
+      voice: "现在考考你！平均数。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算 5 个数平均，领奖！",
+      voice: "Boss 来啦！五次跳绳分别是 60、70、50、80、90 下。先加总：350，再除以 5 次，平均是 70 下！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：60+70+50+80+90 平均 = ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  var PX = 20; // 每个单位的高度px
+  function drawBars(cont, vals, mvIdx, hlIdx) {
+    var h = "";
+    vals.forEach(function (v, i) {
+      h += '<div class="bar-col"><div class="bar-val">' + v + "</div>" +
+        '<div class="bar' + (i === mvIdx ? " mv" : "") + (i === hlIdx ? " hl" : "") + '" style="height:' + (v * PX) + 'px"></div>' +
+        '<div class="bar-name">' + ["小红", "小明", "小刚"][i] + "</div></div>";
+    });
+    cont.innerHTML = h;
+  }
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    var bars = document.getElementById("bars1");
+    drawBars(bars, [4, 2, 6], 0, -1);
+    setTimeout(function () { if (tip) { tip.textContent = "① 三根柱：4、2、6（小刚最多）"; } }, 800);
+    setTimeout(function () {
+      drawBars(bars, [4, 2, 6], -1, 2);
+      if (tip) { tip.textContent = "② 小刚借 1 个给小明（橙色变矮，蓝色补高）"; }
+    }, 2400);
+    setTimeout(function () {
+      drawBars(bars, [4, 2, 6], -1, 1);
+      if (tip) { tip.textContent = "③ 再移 1 个 → 小明变成 4 个"; }
+    }, 4200);
+    setTimeout(function () {
+      drawBars(bars, [4, 4, 4], -1, -1);
+      if (tip) { tip.textContent = "④ 三人都 4 个 → 平均数是 4 ✅ 移多补少"; }
+    }, 6000);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    var ln1 = document.getElementById("ln1"), ln2 = document.getElementById("ln2");
+    var ex = document.getElementById("ex2");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 先求总数：4 + 2 + 6"; }
+      ln2.innerHTML = "<b>总数 = 12</b>";
+    }, 900);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 12 ÷ 3 = 4（平均分给 3 人）"; }
+      ln1.innerHTML = "4 + 2 + 6 = <b>12</b>";
+      ln2.innerHTML = "12 ÷ 3 = <b>4</b>";
+      ex.innerHTML = "平均数 = 12 ÷ 3 = <b>4</b>";
+    }, 2900);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 平均数 = 总数 ÷ 个数"; } }, 4800);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "(2 + 6) ÷ 2 = ?", right: "4", opts: ["4", "8", "2"] },
+    { q: "三次 5、7、6，平均是？", right: "6", opts: ["6", "7", "18"] },
+    { q: "四个数总数是 20，平均是？", right: "5", opts: ["5", "4", "80"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "平均数 = 总数 ÷ 个数";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">60、70、50、80、90 的平均数是？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">70</div>' +
+      '<div class="opt" data-ok="0">80</div>' +
+      '<div class="opt" data-ok="0">50</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 平均数你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "总数 350 ÷ 5 = 70";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "平均数 = 总数 ÷ 个数；可以用「移多补少」直观理解——把多的补给少的，让每份一样多。",
+      attention: "孩子以为平均数是「中间那个数」；强调先求总数再平均分。",
+      tip: "本课约 8 分钟；用积木摆一摆「移多补少」，再列式总数÷人数。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

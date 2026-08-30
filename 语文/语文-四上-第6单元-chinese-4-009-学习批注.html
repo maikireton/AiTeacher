@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习批注 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .book { background: #fffdf6; border: 2px solid #e8ddc4; border-radius: 14px; padding: 18px 20px; max-width: 620px; width: 100%; position: relative; text-align: left; line-height: 2; font-size: 16px; color: #4a3a10; }
+  .marg { position: absolute; right: -8px; transform: translateX(100%); background: #fdf2e3; border: 1px solid #eecb94; border-radius: 10px; padding: 8px 10px; font-size: 13px; color: #a0671a; max-width: 190px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+  @media (max-width: 700px) { .marg { position: static; transform: none; max-width: 100%; margin-top: 6px; } }
+  .bt { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; margin-right: 4px; }
+  .bt1 { background: rgba(155,187,244,.25); color: #2c5a9e; }
+  .bt2 { background: rgba(82,196,26,.16); color: #3a9411; }
+  .bt3 { background: rgba(250,173,20,.22); color: #a0671a; }
+  .bt4 { background: rgba(148,216,195,.28); color: #2f8a6b; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 语文</a>
+    <span class="brand">学习批注 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>批注=在书上写下自己的想法。四个位置：疑问处、感受处、写法处、启示处。边读边批注，读书更深入。</p>
+      <p><b>孩子容易走神的地方：</b>舍不得在书上写字/不知写什么；可准备铅笔，从"写下想问的"开始。</p>
+      <p><b>建议：</b>本课约 8 分钟；找一篇短文，让孩子在 4 个位置各写一句批注。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 语文 chinese-4-009</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：当“读书笔记小达人”！",
+      voice: "你读书的时候，有没有过“这里好奇怪”“这里真好玩”的想法？把想法写在书旁边，这就是批注！会批注的孩子，读书读得更深、记得更牢。",
+      body: function () {
+        return '' +
+          '<h2>读书笔记小达人 ✏️</h2>' +
+          '<div style="font-size:44px">📖 ✏️ 💡</div>' +
+          '<div class="fc-tip" id="s1-tip">准备开始…</div>' +
+          '<div class="hint">批注 = 在书旁写下自己的想法</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：认识批注的四个“落脚点”！",
+      voice: "看动画。批注写在哪里？四个地方。第一，疑问处：看不懂的地方，写下问号。第二，感受处：有感觉的地方，写下心情。第三，写法处：写得好的地方，夸一夸怎么写。第四，启示处：给你启发的地方，写心得。",
+      body: function () {
+        return '' +
+          '<h2>批注四落脚点</h2>' +
+          '<div class="book" id="s2-book">' +
+          '<span class="marg" data-i="0"><span class="bt bt1">疑问</span>“为什么爸爸不说话了？”</span>' +
+          '那天放学回家，我看见爸爸坐在椅子上，一句话也不说……' +
+          '<span class="marg" data-i="1" style="top:96px"><span class="bt bt2">感受</span>“我也曾这样难过过”</span>' +
+          '他的眼睛红红的，像哭过一样。' +
+          '<span class="marg" data-i="2" style="top:176px"><span class="bt bt3">写法</span>“用动作写心情，真妙！”</span>' +
+          '我小声问：“爸，你怎么了？”他只是摆摆手。' +
+          '<span class="marg" data-i="3" style="top:256px"><span class="bt bt4">启示</span>“家人不开心，要去关心他”</span>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：看看课文《牛和鹅》怎么批注！",
+      voice: "看例题。读《牛和鹅》的时候，可以在好几个地方批注。看到鹅追人的情节，可以批“它为什么追我？”这是疑问。看到作者的害怕，可以批“我也有过害怕的时候”，这是感受。看到作者把鹅写得很生动，可以批“比喻用得真好”，这是写法。",
+      body: function () {
+        return '' +
+          '<h2>《牛和鹅》批注示范</h2>' +
+          '<div class="book" id="s3-book">' +
+          '<span class="marg" data-i="0"><span class="bt bt1">疑问</span>“它为什么追我？”</span>' +
+          '鹅伸长脖子，嘎嘎地叫着，像一堵墙朝我压过来……' +
+          '<span class="marg" data-i="1" style="top:104px"><span class="bt bt2">感受</span>“我也害怕过”</span>' +
+          '我吓得腿都软了。' +
+          '<span class="marg" data-i="2" style="top:184px"><span class="bt bt3">写法</span>“比喻真生动”</span>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：闯三关，给批注分类！",
+      voice: "现在考考你！看到一句批注，你要判断它属于哪个类型：疑问、感受、写法还是启示。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：Boss 关辨批注，领星星！",
+      voice: "最后总结！批注四落脚点：疑问、感受、写法、启示。以后读书，带上铅笔，边读边写想法，你就是读书小达人！Boss 关来了！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0">' +
+          '<span class="bt bt1">疑问</span><span class="bt bt2">感受</span><span class="bt bt3">写法</span><span class="bt bt4">启示</span>' +
+          '</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function lightMarg(bookId, tipId, msgs) {
+    var margs = document.querySelectorAll(bookId + " .marg");
+    var tip = document.getElementById(tipId);
+    margs.forEach(function (m, i) {
+      setTimeout(function () {
+        m.style.opacity = "1";
+        if (tip && msgs[i]) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1800);
+    });
+    setTimeout(function () { if (tip && msgs[msgs.length - 1]) { tip.textContent = "✅ " + msgs[msgs.length - 1]; } }, 900 + margs.length * 1800);
+  }
+  function runS1() {
+    var tip = document.getElementById("s1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "读书时把想法写下来 = 批注"; } }, 1300);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 会批注，读得深记得牢！"; } }, 2800);
+  }
+  function runS2() {
+    var margs = document.querySelectorAll("#s2-book .marg");
+    margs.forEach(function (m) { m.style.opacity = "0"; m.style.transition = "opacity .5s"; });
+    lightMarg("#s2-book", "s2-tip", ["① 疑问处：写下问号", "② 感受处：写下心情", "③ 写法处：夸夸怎么写的", "④ 启示处：写心得", "四个落脚点齐啦！"]);
+  }
+  function runS3() {
+    var margs = document.querySelectorAll("#s3-book .marg");
+    margs.forEach(function (m) { m.style.opacity = "0"; m.style.transition = "opacity .5s"; });
+    lightMarg("#s3-book", "s3-tip", ["① 疑问批注：它为什么追我？", "② 感受批注：我也害怕过", "③ 写法批注：比喻真生动", "像这样边读边批注！"]);
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "批注“为什么雨停得这么快？”属于？", right: "疑问", opts: ["疑问", "感受", "写法"] },
+    { q: "批注“这句话写得真美”属于？", right: "写法", opts: ["写法", "疑问", "启示"] },
+    { q: "批注“我也要学习他勇敢”属于？", right: "启示", opts: ["启示", "感受", "写法"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "不懂=疑问；有感觉=感受；写得好=写法；有启发=启示";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 2000);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 关：读到“爸爸笑了，眼角的皱纹像开了一朵花”，你最想批？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">写法：“比喻真妙”</div>' +
+      '<div class="opt" data-ok="0">疑问：“几点了”</div>' +
+      '<div class="opt" data-ok="0">启示：“要吃饭”</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 批注你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 9 ? "（全部拿下！）" : n >= 6 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "把皱纹比作花，是写法精彩处，可批“写法”";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "批注四落脚点：疑问处、感受处、写法处、启示处。边读边写下想法，读书更深入。",
+      attention: "孩子易舍不得写字/不知写什么；从写下问题开始。",
+      tip: "本课约 8 分钟；找短文让他在四处各写一句批注。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

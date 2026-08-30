@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>习作：推荐一个好地方 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .rec { background: #fff; border: 2px solid #e4e3dd; border-radius: 14px; padding: 14px 16px; margin: 8px 0; max-width: 600px; width: 100%; text-align: left; }
+  .rec .r-step { font-size: 15px; font-weight: 800; color: #2c5a9e; }
+  .rec .r-txt { font-size: 15px; color: #555; line-height: 1.7; }
+  .star-b { display: inline-block; padding: 4px 12px; border-radius: 999px; background: rgba(250,173,20,.2); color: #a0671a; font-weight: 800; font-size: 13px; margin: 3px 4px 3px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 语文</a>
+    <span class="brand">习作：推荐一个好地方 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>推荐一个好地方三步：①说清是哪里 ②写出它的特点（好看/好玩/好吃）③讲清推荐理由。用上顺序词写具体。</p>
+      <p><b>孩子容易走神的地方：</b>只写"很好玩"不写"为什么好玩"；可先列 3 个特点再动笔。</p>
+      <p><b>建议：</b>本课约 8 分钟；先让孩子口头推荐一个地方给你，再写下来。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 语文 chinese-4-012</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：当“地方推荐官”！",
+      voice: "如果你有一个特别好玩的地方，想让好朋友也去玩，你会怎么介绍？不能只说“很好玩”，得让人听了就想去！今天学三步，把好地方推荐得让人心动！",
+      body: function () {
+        return '' +
+          '<h2>地方推荐官 🗺️</h2>' +
+          '<div style="font-size:44px">📍 ⭐</div>' +
+          '<div class="fc-tip" id="s1-tip">准备开始…</div>' +
+          '<div class="hint">推荐 = 说清楚 + 说特点 + 说理由</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：学推荐三步！",
+      voice: "看动画。推荐一个好地方有三步。第一步，说清楚：这个地方在哪里，叫什么。第二步，说特点：它好看在哪里，好玩在哪里。第三步，说理由：为什么值得去，去了会怎样。三步说齐，朋友就心动啦！",
+      body: function () {
+        return '' +
+          '<h2>推荐三步</h2>' +
+          '<div class="rec" data-i="0" style="opacity:.3;transition:all .6s"><div class="r-step">① 说清楚</div><div class="r-txt">在哪里？叫什么？</div></div>' +
+          '<div class="rec" data-i="1" style="opacity:.3;transition:all .6s"><div class="r-step">② 说特点</div><div class="r-txt">好看 / 好玩 / 好吃在哪里</div></div>' +
+          '<div class="rec" data-i="2" style="opacity:.3;transition:all .6s"><div class="r-step">③ 说理由</div><div class="r-txt">为什么值得去？去了收获什么</div></div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：看“滨江公园”怎么推荐！",
+      voice: "看例题。推荐滨江公园。先说清楚：它在江边，风景很美。再说特点：有大片的草地可以野餐，有滑梯秋千，傍晚看晚霞最漂亮。最后说理由：空气好、好玩、还能看落日，去了都不想回家。你看，三步推荐，听着就想去！",
+      body: function () {
+        return '' +
+          '<h2>推荐示范：滨江公园</h2>' +
+          '<div class="rec" data-i="0" style="opacity:.3;transition:all .6s"><div class="r-step">① 说清楚</div><div class="r-txt">滨江公园在江边，是我们城市最美的地方。</div></div>' +
+          '<div class="rec" data-i="1" style="opacity:.3;transition:all .6s"><div class="r-step">② 说特点</div><div class="r-txt"><span class="star-b">大草地</span><span class="star-b">滑梯秋千</span><span class="star-b">美丽晚霞</span></div></div>' +
+          '<div class="rec" data-i="2" style="opacity:.3;transition:all .6s"><div class="r-step">③ 说理由</div><div class="r-txt">空气好、玩得开心，傍晚看落日，去了不想回家。</div></div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：闯三关，练推荐！",
+      voice: "现在考考你！推荐一个地方要注意什么，哪些是特点，哪些是理由。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：Boss 关选特点，领星星！",
+      voice: "最后总结！推荐一个好地方三步：说清楚、说特点、说理由。特点写具体，理由讲清楚，读者就心动啦！Boss 关来了！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="rec" style="opacity:1"><div class="r-step">推荐三步</div><div class="r-txt">① 说清楚 → ② 说特点 → ③ 说理由<br>特点具体 + 理由动人 = 好推荐</div></div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function lightRec(sel, tipId, msgs) {
+    var recs = document.querySelectorAll(sel);
+    var tip = document.getElementById(tipId);
+    recs.forEach(function (r, i) {
+      setTimeout(function () {
+        r.style.opacity = "1";
+        if (tip && msgs[i]) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1800);
+    });
+    setTimeout(function () { if (tip && msgs[msgs.length - 1]) { tip.textContent = "✅ " + msgs[msgs.length - 1]; } }, 900 + recs.length * 1800);
+  }
+  function runS1() {
+    var tip = document.getElementById("s1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "只说“很好玩”→ 朋友没感觉"; } }, 1200);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 三步推荐，朋友立刻心动！"; } }, 2800);
+  }
+  function runS2() { lightRec("#s2 .rec", "s2-tip", ["① 说清楚：在哪里叫什么", "② 说特点：好看好玩好吃", "③ 说理由：为什么值得去", "三步齐，推荐成功！"]); }
+  function runS3() { lightRec("#s3 .rec", "s3-tip", ["① 说清楚：江边的公园", "② 说特点：草地滑梯晚霞", "③ 说理由：好玩还想再去", "滨江公园推荐完成！"]); }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "推荐一个地方，第一步先要？", right: "说清楚在哪里", opts: ["说清楚在哪里", "直接说很好玩", "只说名字"] },
+    { q: "下面哪句是“特点”？", right: "有大片的草地可以野餐", opts: ["有大片的草地可以野餐", "大家快去", "它很有名"] },
+    { q: "下面哪句是“理由”？", right: "空气清新，去了不想回家", opts: ["空气清新，去了不想回家", "它叫公园", "它很大"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "特点=它有什么；理由=为什么值得去";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 关：推荐科技馆，哪个是“特点”最合适的写法？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">能亲手做实验，火箭模型会喷气</div>' +
+      '<div class="opt" data-ok="0">科技馆很好</div>' +
+      '<div class="opt" data-ok="0">快去快去</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 推荐你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 9 ? "（全部拿下！）" : n >= 6 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "特点要写具体：能做什么、长什么样";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "推荐一个好地方三步：说清楚、说特点、说理由；特点具体、理由动人。",
+      attention: "孩子易只写“很好玩”；先列 3 个特点再动笔。",
+      tip: "本课约 8 分钟；先口头推荐再写。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

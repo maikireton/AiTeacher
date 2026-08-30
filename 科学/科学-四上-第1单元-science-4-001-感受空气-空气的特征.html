@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>感受空气（空气的特征）· AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .air-box { margin: 12px 0; width: 100%; max-width: 600px; }
+  .air-tag { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 12px; background: #eef1f6; color: #6b7280; font-weight: 700; font-size: 14px; transition: all .3s; margin: 4px; }
+  .air-tag.on { background: #6b8fd8; color: #fff; transform: translateY(-2px); }
+  .feel { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .feel-item { background: #fffaf0; border: 2px solid #f2d9a8; border-radius: 16px; padding: 14px 16px; min-width: 120px; font-size: 15px; font-weight: 700; color: #7c5c10; }
+  .feel-item small { display: block; font-weight: 400; color: #a08030; font-size: 12px; margin-top: 4px; }
+  .bal { font-size: 60px; display: inline-block; }
+  .vcmp { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .vcmp-card { background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 14px 18px; min-width: 160px; }
+  .vcmp-card b { font-size: 18px; }
+  .vcmp-card .li { font-size: 13px; color: var(--text-2); text-align: left; margin-top: 6px; line-height: 1.7; }
+  .fc-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 自然科学</a>
+    <span class="brand">感受空气（空气的特征） <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>空气看不见摸不着，但它是真实存在的：无色、无味、透明、能流动、占据空间、没有固定形状。核心是"用证据证明空气存在"。</p>
+      <p><b>孩子容易走神的地方：</b>空气"看不见"容易让孩子觉得"不存在"，讲不清特征。可让孩子亲手做倒扣水杯、捏气球等小实验，用眼睛看到空气。</p>
+      <p><b>建议：</b>本课约 8 分钟；陪学时多问"你用什么办法证明了空气存在？"引导孩子说实验。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 自然科学 science-4-001</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：用生活小动作，找到空气躲在哪里！",
+      voice: "先玩个小游戏！你用嘴吹一口气，把手放在嘴前，感觉到什么？是凉凉的风！这阵风，就是空气在流动。空气就躲在我们周围，你猜它还有哪些本领？",
+      body: function () {
+        return '' +
+          '<h2>空气躲在哪里？</h2>' +
+          '<div class="feel" id="f1">' +
+            '<div class="feel-item">🎈 吹气球<small>气球鼓起来，空气在里面</small></div>' +
+            '<div class="feel-item">🪭 扇扇子<small>脸上一阵风，空气在流动</small></div>' +
+            '<div class="feel-item">🛍️ 兜一袋空气<small>塑料袋鼓鼓的，装满了空气</small></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="f1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：认识空气的 5 个特征，一条条点亮！",
+      voice: "空气虽然看不见，但我们能发现它的特征。第一，空气没有颜色，是透明的；第二，空气没有味道，也没有气味；第三，空气能流动，风就是它在跑；第四，空气占据空间，把瓶子倒扣进水里，水进不去，因为里面被空气占满了；第五，空气没有固定的形状，装在什么容器里就是什么形状。",
+      body: function () {
+        return '' +
+          '<h2>空气的 5 个特征</h2>' +
+          '<div id="tags">' +
+            '<span class="air-tag">① 无色透明</span>' +
+            '<span class="air-tag">② 无味无臭</span>' +
+            '<span class="air-tag">③ 能流动</span>' +
+            '<span class="air-tag">④ 占据空间</span>' +
+            '<span class="air-tag">⑤ 无固定形状</span>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：把空气和水比一比，找出相同和不同！",
+      voice: "空气和水都无色无味透明，都能流动，都占据空间，都没有固定形状——这是它们的相同点。那不同点呢？水是液体，有固定的体积，很难被压缩；空气是气体，没有固定体积，很容易被压缩。你看，用注射器吸满水堵住出口再压，压不动；吸满空气压，一压就缩进去了！",
+      body: function () {
+        return '' +
+          '<h2>空气 vs 水</h2>' +
+          '<div class="vcmp">' +
+            '<div class="vcmp-card"><b>💨 空气（气体）</b><div class="li">· 无固定体积<br>· 容易被压缩<br>· 一压就缩进去</div></div>' +
+            '<div class="vcmp-card"><b>💧 水（液体）</b><div class="li">· 有固定体积<br>· 很难被压缩<br>· 压也压不动</div></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">相同点：无色无味、透明、能流动、占据空间、无固定形状</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 关，看谁最了解空气！",
+      voice: "现在考考你！关于空气的特征，你能选对吗？答对就有星星，错了再试一次！",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：当空气小侦探，破最后的谜案！",
+      voice: "最后来个侦探题！一个空瓶子里到底有没有东西？很多人以为空瓶子是空的，其实里面装满了空气！空瓶子倒扣进水里，水进不去，就是空气占着地方。记住：看起来空的地方，可能住着看不见的空气朋友。",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="air-tag on">空气特征：无色无味 · 透明 · 能流动 · 占据空间 · 无固定形状</div>' +
+          '<div class="hint">用实验找证据，看不见不等于不存在 🔍</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S1 情境 ---------- */
+  function runS1() {
+    var tip = document.getElementById("f1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "① 吹气球：气鼓鼓，是空气！"; } }, 800);
+    setTimeout(function () { if (tip) { tip.textContent = "② 扇扇子：脸上有风，空气在流动！"; } }, 2000);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 空气看不见，却处处在帮忙！"; } }, 3400);
+  }
+
+  /* ---------- S2 特征动画 ---------- */
+  function runS2() {
+    var tags = document.querySelectorAll("#tags .air-tag");
+    var tip = document.getElementById("s2-tip");
+    tags.forEach(function (t, i) {
+      setTimeout(function () {
+        t.classList.add("on");
+        var msgs = ["无色、透明，像隐形人", "没有味道，也没有气味", "流动起来就是风", "倒扣水杯，水进不去", "装进圆瓶变圆，装进方盒变方"];
+        if (tip) { tip.textContent = msgs[i]; }
+      }, 900 + i * 1500);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 记住这 5 个特征！"; } }, 900 + 5 * 1500);
+  }
+
+  /* ---------- S3 空气与水对比 ---------- */
+  function runS3() {
+    var tip = document.getElementById("s3-tip");
+    if (tip) { tip.textContent = "相同：无色无味、透明、能流动、占据空间、无固定形状"; }
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "空气是什么颜色的？", right: "没有颜色，是透明的", opts: ["白色的", "没有颜色，是透明的", "蓝色的"] },
+    { q: "把空瓶子倒扣进水里，为什么水不会全部进到瓶子里？", right: "瓶子里有空气占着地方", opts: ["瓶子太重了", "瓶子里有空气占着地方", "水害怕瓶子"] },
+    { q: "空气的形状是什么样子的？", right: "没有固定的形状", opts: ["永远是圆的", "永远是方的", "没有固定的形状"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "再想想：空气无色无味、占据空间、无固定形状哦";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 题：空气和水相比，下面哪个是空气的特点？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">没有固定体积，容易被压缩</div>' +
+      '<div class="opt" data-ok="0">有固定的体积，压不动</div>' +
+      '<div class="opt" data-ok="0">是白色的，能看见</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 你是空气小侦探！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "空气是气体，没有固定体积、能压缩哦";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "空气无色无味、透明、能流动、占据空间、无固定形状；用倒扣水杯等实验找证据。",
+      attention: "孩子容易觉得空气「不存在」、讲不出特征；多让他亲手做小实验、用眼看证据。",
+      tip: "本课约 8 分钟；陪学时问"你用什么办法证明空气存在"，引导说实验过程。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

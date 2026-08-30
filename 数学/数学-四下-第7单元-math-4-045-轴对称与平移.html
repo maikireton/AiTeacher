@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>轴对称与平移 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .az-box { margin: 12px 0; }
+  .az-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .az-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .fold-scene { position: relative; width: 280px; height: 150px; margin: 10px auto; perspective: 700px; }
+  .fold-scene .left, .fold-scene .right { position: absolute; top: 0; width: 140px; height: 150px; }
+  .fold-scene .left { left: 0; }
+  .fold-scene .right { left: 140px; transform-origin: left center; transition: transform 1s; }
+  .fold-scene .right.fold { transform: rotateY(180deg); }
+  .fold-scene .axis { position: absolute; left: 140px; top: 4px; width: 4px; height: 142px; background: #e8890c; border-radius: 2px; z-index: 5; }
+  .fold-scene .axis::after { content: "对称轴"; position: absolute; top: -2px; left: 6px; font-size: 12px; font-weight: 800; color: #e8890c; white-space: nowrap; }
+  .mv-scene { position: relative; height: 96px; margin: 10px auto; max-width: 380px; border: 2px dashed var(--border); border-radius: 12px; }
+  .mv-box { position: absolute; left: 12px; top: 14px; font-size: 52px; transition: left 1s; }
+  .mv-box.move { left: 300px; }
+  .mv-arrow { position: absolute; right: 12px; top: 30px; font-size: 26px; color: var(--accent-deep); font-weight: 800; }
+  .az-expr { font-size: 24px; font-weight: 800; color: #d97706; text-align: center; margin: 8px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">轴对称与平移 <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>轴对称：沿对称轴对折，两边完全重合；平移：图形沿直线移动，只变位置，不变形状大小方向。</p>
+      <p><b>孩子容易走神的地方：</b>把"对称"和"旋转"搞混；强调对折重合才是轴对称。</p>
+      <p><b>建议：</b>本课约 8 分钟；用纸对折剪图案，再让玩具"平移"不转身。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-045</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想蝴蝶为什么两边一样！",
+      voice: "蝴蝶的翅膀左右一模一样，沿中间对折能重合！这叫轴对称。今天学轴对称和平移。",
+      body: function () {
+        return '' +
+          '<h2>图形运动会</h2>' +
+          '<p class="az-expr">轴对称：对折重合　|　平移：位置移动</p>' +
+          '<div class="hint">👆 对折重合 = 轴对称</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "轴对称对折动画",
+      task: "咱们这一步要做的：看动画小房子沿轴对折！",
+      voice: "看动画。一栋小房子，中间有条对称轴。把右边沿对称轴翻过去，正好和左边完全重合！这就是轴对称图形。",
+      body: function () {
+        return '' +
+          '<h2>看动画：沿对称轴对折重合</h2>' +
+          '<div class="az-box" id="d1">' +
+          '<div class="fold-scene">' +
+          '<div class="left"><svg width="140" height="150" viewBox="90 0 60 150"><polygon points="150,20 90,70 150,70" fill="rgba(122,182,255,.5)" stroke="#3d5afe" stroke-width="3" stroke-linejoin="round"/><rect x="90" y="70" width="60" height="50" fill="rgba(122,182,255,.3)" stroke="#3d5afe" stroke-width="3"/><rect x="138" y="95" width="12" height="25" fill="#e8890c"/></svg></div>' +
+          '<div class="axis"></div>' +
+          '<div class="right" id="rightHalf"><svg width="140" height="150" viewBox="150 0 60 150"><polygon points="150,20 210,70 150,70" fill="rgba(232,137,12,.5)" stroke="#e8890c" stroke-width="3" stroke-linejoin="round"/><rect x="150" y="70" width="60" height="50" fill="rgba(232,137,12,.3)" stroke="#e8890c" stroke-width="3"/><rect x="150" y="95" width="12" height="25" fill="#2e7d32"/></svg></div>' +
+          "</div>" +
+          "</div>" +
+          '<div class="az-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="az-rule">沿对称轴对折，两边完全重合 → 轴对称图形</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "平移动画",
+      task: "咱们这一步要做的：看动画小鱼平移搬家！",
+      voice: "看动画。一条小鱼，从左边平移到右边。它只是换了位置，没有变大变小，也没有转身，方向没变！这就是平移。",
+      body: function () {
+        return '' +
+          '<h2>看动画：小鱼平移</h2>' +
+          '<div class="az-box" id="d2">' +
+          '<div class="mv-scene">' +
+          '<div class="mv-box" id="fish">🐟</div>' +
+          '<div class="mv-arrow">→</div>' +
+          "</div>" +
+          '<div class="az-expr" id="mv-lab">平移：只变位置，不变形状/大小/方向</div>' +
+          "</div>" +
+          '<div class="az-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="az-rule">平移 = 沿直线移动，方向不变</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道图形运动题！",
+      voice: "现在考考你！轴对称和平移。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：找出平移，领奖！",
+      voice: "Boss 来啦！下面哪个是平移现象？电梯上升是平移，因为只是上下移动，不改变方向。钟表指针是旋转，不是平移！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：哪个是平移现象？</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "① 小房子沿对称轴（橙线）左右对称"; } }, 800);
+    setTimeout(function () {
+      document.getElementById("rightHalf").classList.add("fold");
+      if (tip) { tip.textContent = "② 右半沿对称轴翻过去 → 与左半完全重合 ✅"; }
+    }, 2600);
+    setTimeout(function () { if (tip) { tip.textContent = "③ 对折重合 = 轴对称图形"; } }, 4800);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "① 小鱼在左边（起点）"; } }, 800);
+    setTimeout(function () {
+      document.getElementById("fish").classList.add("move");
+      if (tip) { tip.textContent = "② 小鱼水平移动到右边：只变位置 ✅"; }
+    }, 2400);
+    setTimeout(function () { if (tip) { tip.textContent = "③ 形状、大小、方向都没变 → 平移"; } }, 4600);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "沿对称轴对折能重合的图形叫？", right: "轴对称图形", opts: ["轴对称图形", "平移图形", "旋转图形"] },
+    { q: "轴对称图形沿（ ）对折重合？", right: "对称轴", opts: ["对称轴", "边", "对角线任意"] },
+    { q: "平移只改变图形的（ ）？", right: "位置", opts: ["位置", "大小", "方向"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "对折重合是轴对称；平移只变位置不变方向";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1800);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">下面哪个是「平移」现象？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">电梯上升</div>' +
+      '<div class="opt" data-ok="0">钟表指针转动</div>' +
+      '<div class="opt" data-ok="0">风扇叶片旋转</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 图形运动你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "电梯上升只变位置 → 平移；指针/扇叶绕点转是旋转";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1900);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "轴对称：沿对称轴对折，两边完全重合；平移：图形沿直线移动，只变位置，不变形状大小方向。",
+      attention: "孩子容易把「对称」和「旋转」搞混；强调对折重合才是轴对称。",
+      tip: "本课约 8 分钟；用纸对折剪图案，再让玩具「平移」不转身。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
