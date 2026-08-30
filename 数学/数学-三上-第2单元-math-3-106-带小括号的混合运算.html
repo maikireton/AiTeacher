@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>带小括号的混合运算 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .calc-box { margin: 12px 0; }
+  .calc-line { display: flex; justify-content: center; gap: 8px; font-size: 30px; font-weight: 800; align-items: center; flex-wrap: wrap; background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 16px; }
+  .calc-part { padding: 2px 8px; border-radius: 10px; transition: all .35s; }
+  .calc-part.first { background: #ffedd5; outline: 2px solid #ffa940; }
+  .calc-part.second { background: #e0f2e9; outline: 2px solid #8bc34a; }
+  .calc-part.done { color: #2e7d32; }
+  .calc-paren { color: #d97706; font-size: 34px; }
+  .calc-step { font-size: 16px; font-weight: 700; min-height: 26px; margin-top: 10px; color: var(--accent-deep); }
+  .calc-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">带小括号的混合运算 <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>有小括号的算式，先算括号里的，再算括号外的。</p>
+      <p><b>孩子容易走神的地方：</b>看到括号却先算外面的乘除；可教他"括号是VIP，最优先"。</p>
+      <p><b>建议：</b>本课约 8 分钟；把括号想象成"保护罩"，罩子里的先算完。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-106</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  function part(idx, html) { return '<span class="calc-part" data-i="' + idx + '">' + html + "</span>"; }
+
+  function runCalc(boxId, tipId, lineHTML, stepsArr) {
+    var box = document.getElementById(boxId);
+    if (!box) { return; }
+    var tip = document.getElementById(tipId);
+    box.innerHTML = '<div class="calc-line">' + lineHTML + "</div>";
+    stepsArr.forEach(function (st, i) {
+      setTimeout(function () {
+        st.parts.forEach(function (p) {
+          var el = box.querySelector('[data-i="' + p + '"]');
+          if (el) { el.classList.add(st.cls); }
+        });
+        if (tip) { tip.textContent = st.msg; }
+      }, 800 + i * 2600);
+      setTimeout(function () {
+        st.parts.forEach(function (p) {
+          var el = box.querySelector('[data-i="' + p + '"]');
+          if (el) { el.classList.remove(st.cls); el.classList.add("done"); }
+        });
+      }, 2300 + i * 2600);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 括号里的先算！"; } }, 1000 + stepsArr.length * 2600);
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看小括号有多厉害！",
+      voice: "二十减八，再除以四。要是想先算二十减八，怎么办？小括号来帮忙！把小括号一加，顺序就变了。今天学小括号。",
+      body: function () {
+        return '' +
+          '<h2>小括号来啦</h2>' +
+          '<p class="big">20 - 8 ÷ 4　vs　(20 - 8) ÷ 4</p>' +
+          '<p>加上小括号，先算谁？</p>' +
+          '<div class="hint">👆 括号是"保护罩"，罩里的先算！</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "括号先算动画",
+      task: "咱们这一步要做的：看动画学会「先算括号里」！",
+      voice: "看动画。括号二十减八，再除以四。小括号优先：先算括号里的二十减八等于十二。再除以四，等于三。括号里的先算，这是最优先的。",
+      body: function () {
+        return '' +
+          '<h2>看动画：(20 - 8) ÷ 4</h2>' +
+          '<div class="calc-box" id="c1"></div>' +
+          '<div class="calc-step" id="c1-tip">准备开始…</div>' +
+          '<div class="calc-rule">有括号 → 先算括号里的</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "括号优先于乘除",
+      task: "咱们这一步要做的：看动画发现括号比乘除还优先！",
+      voice: "看动画。三乘括号十二减五。虽然乘法很厉害，但小括号更厉害：先算括号里的十二减五等于七。再乘三，等于二十一。括号最大，什么都先让它。",
+      body: function () {
+        return '' +
+          '<h2>看动画：3 × (12 - 5)</h2>' +
+          '<div class="calc-box" id="c2"></div>' +
+          '<div class="calc-step" id="c2-tip">准备开始…</div>' +
+          '<div class="calc-rule">括号 > 乘除 > 加减</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道括号题！",
+      voice: "现在考考你！有小括号的算式，先算什么？",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算一道带括号的，领奖！",
+      voice: "Boss 来啦！括号十八加二，再除以五。先算括号里的十八加二等于二十，再除以五等于四。",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：(18 + 2) ÷ 5 = ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runC1() {
+    runCalc("c1", "c1-tip",
+      '<span class="calc-paren">(</span>' + part(0, "20") + '<span>−</span>' + part(1, "8") + '<span class="calc-paren">)</span>' + '<span>÷</span>' + part(2, "4") + '<span>=</span>' + part(3, "?"),
+      [
+        { parts: [0, 1], cls: "first", msg: "① 先算括号里：20 − 8 = 12" },
+        { parts: [2, 3], cls: "second", msg: "② 再算括号外：12 ÷ 4 = 3 ✅" }
+      ]);
+  }
+  function runC2() {
+    runCalc("c2", "c2-tip",
+      part(0, "3") + '<span>×</span>' + '<span class="calc-paren">(</span>' + part(1, "12") + '<span>−</span>' + part(2, "5") + '<span class="calc-paren">)</span>' + '<span>=</span>' + part(3, "?"),
+      [
+        { parts: [1, 2], cls: "first", msg: "① 括号比乘还优先：12 − 5 = 7" },
+        { parts: [0, 3], cls: "second", msg: "② 再算乘：3 × 7 = 21 ✅" }
+      ]);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "(18 + 2) ÷ 5，第一步先算什么？", right: "18 + 2", opts: ["18 + 2", "2 ÷ 5", "18 ÷ 5"] },
+    { q: "3 × (12 - 5)，先算什么？", right: "12 - 5", opts: ["12 - 5", "3 × 12", "3 × 5"] },
+    { q: "括号在算式里表示？", right: "先算括号里的", opts: ["先算括号里的", "最后算", "不用管它"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "有括号先算括号里的";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">(18 + 2) ÷ 5 = ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">4</div>' +
+      '<div class="opt" data-ok="0">5</div>' +
+      '<div class="opt" data-ok="0">20</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 括号运算你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "先算括号：18+2=20，再 20÷5=4";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runC1(); }
+    if (step.id === "s3") { runC2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "有小括号的算式，先算括号里的，再算括号外的。",
+      attention: "孩子看到括号却先算外面的乘除；可教他「括号是 VIP，最优先」。",
+      tip: "本课约 8 分钟；把括号想象成「保护罩」，罩子里的先算完。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
