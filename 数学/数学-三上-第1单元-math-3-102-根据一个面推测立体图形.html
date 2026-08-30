@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>根据一个面推测立体图形 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .guess-box { margin: 12px 0; }
+  .given-face { display: flex; align-items: center; gap: 14px; justify-content: center; background: rgba(155,187,244,.1); border: 2px solid var(--accent-deep); border-radius: 14px; padding: 12px; margin-bottom: 12px; }
+  .given-face .gf-name { font-weight: 800; }
+  .gf-shape { width: 44px; height: 44px; }
+  .gf-circle { border-radius: 50%; background: linear-gradient(135deg,#ffd591,#ffa940); }
+  .gf-square { border-radius: 5px; background: linear-gradient(135deg,#7eb6ff,#4a7fe0); }
+  .gf-rect { width: 56px; height: 36px; border-radius: 5px; background: linear-gradient(135deg,#b5e3c0,#8bc34a); }
+  .cands { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .cand { display: flex; flex-direction: column; align-items: center; gap: 4px; border: 2px solid var(--border); border-radius: 12px; padding: 10px; opacity: 0; transition: all .4s; }
+  .cand.show { opacity: 1; }
+  .cand.ok { border-color: #8bc34a; }
+  .cand.no { border-color: #e26d6d; opacity: .5; }
+  .cand .cand-name { font-size: 13px; font-weight: 700; }
+  .cand .cand-mark { font-size: 16px; min-height: 20px; }
+  .guess-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 10px 0; color: var(--accent-deep); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">根据一个面推测立体图形 <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>只看一个面往往不能确定立体是什么，要多个方向综合判断。</p>
+      <p><b>孩子容易走神的地方：</b>看到一个面就急着下结论；可引导他说"还有可能是别的吗？"</p>
+      <p><b>建议：</b>本课约 8 分钟；玩"猜一猜"游戏，家长只露出盒子的一面让孩子猜。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-102</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  function cand(name, mark) {
+    return '<div class="cand"><span class="cand-name">' + name + '</span><span class="cand-mark">' + mark + "</span></div>";
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：挑战只看到一个面猜出物体！",
+      voice: "小侦探拿到了一个神秘物体，可是只看到它的一面。光靠一个面，能不能猜出它是什么？有点难，但我们可以把可能的情况都列出来！",
+      body: function () {
+        return '' +
+          '<h2>小侦探猜一猜</h2>' +
+          '<p>只看到物体的一个面，能确定它是什么立体图形吗？</p>' +
+          '<div class="hint">👆 一个面 → 可能有好几个答案！</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "从上面看到圆形",
+      task: "咱们这一步要做的：看动画猜可能是哪些立体！",
+      voice: "看动画。小侦探从上面看到一个圆形。可能是圆柱，因为圆柱上面是圆。也可能是球，球从上面看也是圆。正方体就不行，它上面是正方形。所以一个圆形，可能是圆柱，也可能是球。",
+      body: function () {
+        return '' +
+          '<h2>看动画：上面看到 ●</h2>' +
+          '<div class="guess-box" id="gs1">' +
+          '<div class="given-face"><span class="gf-shape gf-circle"></span><span class="gf-name">从上面看：圆形</span></div>' +
+          '<div class="cands">' + cand("圆柱", "") + cand("球", "") + cand("正方体", "") + "</div>" +
+          "</div>" +
+          '<div class="guess-tip" id="gs1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "从正面看到正方形",
+      task: "咱们这一步要做的：看动画发现一个面猜不准！",
+      voice: "再看动画。这次从正面看到一个正方形。是不是一定是正方体？不一定！如果长方体的高和宽一样长，正面也是一个正方形。所以一个正方形面，可能是正方体，也可能是长方体。",
+      body: function () {
+        return '' +
+          '<h2>看动画：正面看到 ■</h2>' +
+          '<div class="guess-box" id="gs2">' +
+          '<div class="given-face"><span class="gf-shape gf-square"></span><span class="gf-name">从正面看：正方形</span></div>' +
+          '<div class="cands">' + cand("正方体", "") + cand("长方体", "") + cand("圆柱", "") + "</div>" +
+          "</div>" +
+          '<div class="guess-tip" id="gs2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道推理题！",
+      voice: "现在考考你！一个面，可能对应好几个立体，你会判断吗？",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：两面一起看确定答案，领奖！",
+      voice: "Boss 来啦！从上面看是圆形，从正面看也是圆形，这是什么？两个方向都是圆，只能是球！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：双面推理</h2>' +
+          '<p class="big">从上面看 ●，从正面看 ● → 这是？</p>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 圆形 → 圆柱/球 ========== */
+  function runGs1() {
+    var box = document.getElementById("gs1");
+    if (!box) { return; }
+    var tip = document.getElementById("gs1-tip");
+    var cs = box.querySelectorAll(".cand");
+    setTimeout(function () { cs[0].classList.add("show", "ok"); if (tip) { tip.textContent = "① 圆柱：上面是圆形 ✓"; } }, 800);
+    setTimeout(function () { cs[1].classList.add("show", "ok"); if (tip) { tip.textContent = "② 球：上面也是圆形 ✓"; } }, 2600);
+    setTimeout(function () { cs[2].classList.add("show", "no"); if (tip) { tip.textContent = "③ 正方体：上面是正方形 ✗"; } }, 4400);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 一个圆形面 → 可能是圆柱，也可能是球"; } }, 6000);
+  }
+
+  /* ========== S3 正方形 → 正方体/长方体 ========== */
+  function runGs2() {
+    var box = document.getElementById("gs2");
+    if (!box) { return; }
+    var tip = document.getElementById("gs2-tip");
+    var cs = box.querySelectorAll(".cand");
+    setTimeout(function () { cs[0].classList.add("show", "ok"); if (tip) { tip.textContent = "① 正方体：正面是正方形 ✓"; } }, 800);
+    setTimeout(function () { cs[1].classList.add("show", "ok"); if (tip) { tip.textContent = "② 长方体：高和宽相等时正面也是正方形 ✓"; } }, 2600);
+    setTimeout(function () { cs[2].classList.add("show", "no"); if (tip) { tip.textContent = "③ 圆柱：正面是长方形 ✗"; } }, 4600);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 一个面往往猜不准，要多看几个方向"; } }, 6200);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "从上面看到圆形，下面哪个不可能是它？", right: "正方体", opts: ["正方体", "圆柱", "球"] },
+    { q: "从正面看到长方形，可能是？", right: "长方体", opts: ["长方体", "球", "正方体"] },
+    { q: "一个面是正方形，一定是正方体吗？", right: "不一定", opts: ["不一定", "一定是", "肯定不是"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "一个面可能对应好几个立体，要多个方向综合判断";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">上面、正面都是圆形，这是？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">球</div>' +
+      '<div class="opt" data-ok="0">圆柱</div>' +
+      '<div class="opt" data-ok="0">正方体</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 推理小侦探就是你！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "两个方向都是圆 → 只有球所有方向都是圆";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runGs1(); }
+    if (step.id === "s3") { runGs2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "只看一个面往往不能确定立体是什么，要多个方向综合判断。",
+      attention: "孩子看到一个面就急着下结论；可引导他说「还有可能是别的吗？」",
+      tip: "本课约 8 分钟；玩「猜一猜」游戏，家长只露出盒子的一面让孩子猜。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

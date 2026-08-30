@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>长方体的展开图 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .exp-box { margin: 12px 0; }
+  .exp-3d { display: flex; justify-content: center; }
+  .exp-3d svg { max-width: 200px; width: 100%; }
+  .face-chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .fchip { background: var(--card); border: 2px solid var(--border); border-radius: 10px; padding: 4px 10px; font-size: 14px; font-weight: 700; opacity: 0; transition: all .4s; }
+  .fchip.show { opacity: 1; }
+  .unfold-grid { display: grid; grid-template-areas: ". up ." "left front right back" ". down ."; gap: 6px; justify-content: center; margin: 10px auto; max-width: 400px; }
+  .face { width: 74px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; font-size: 15px; opacity: 0; transition: all .5s; }
+  .face.show { opacity: 1; }
+  .face.hl { outline: 3px solid var(--accent-deep); outline-offset: 2px; }
+  .face-up    { grid-area: up;    background: #8bc34a; }
+  .face-down  { grid-area: down;  background: #5f9e2d; }
+  .face-front { grid-area: front; background: #4a7fe0; }
+  .face-back  { grid-area: back;  background: #2f5bb0; }
+  .face-left  { grid-area: left;  background: #ffa940; }
+  .face-right { grid-area: right; background: #d97f17; }
+  .exp-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 10px 0; color: var(--accent-deep); }
+  .exp-arrow { font-size: 26px; text-align: center; margin: 4px 0; color: var(--accent-deep); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">长方体的展开图 <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>长方体有 6 个面（前、后、上、下、左、右），沿棱剪开可展开成平面图。</p>
+      <p><b>孩子容易走神的地方：</b>分不清"相对的面"（前对后、上对下、左对右）；可拿纸盒亲自拆开看。</p>
+      <p><b>建议：</b>本课约 8 分钟；让孩子拆一个快递盒，把 6 个面摆成展开图。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-103</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+  function boxSVG() {
+    var svg = svgEl("svg", { viewBox: "0 0 180 130", width: "180", height: "130" });
+    [["25,30 155,30 155,115 25,115", "#e6f0fc", "#4a7fe0", "前"],
+     ["25,115 155,115 170,125 40,125", "#cfe0f7", "#4a7fe0", "下"],
+     ["155,30 170,40 170,125 155,115", "#a9c8f0", "#4a7fe0", "右"]].forEach(function (p) {
+      var poly = svgEl("polygon", { points: p[0], fill: p[1], stroke: p[2], "stroke-width": 2 });
+      svg.appendChild(poly);
+      var t = svgEl("text", { x: p[3] === "前" ? "90" : p[3] === "下" ? "98" : "163", y: p[3] === "前" ? "80" : p[3] === "下" ? "124" : "80", "font-size": "14", "font-weight": "bold", fill: "#334155", "text-anchor": "middle" });
+      t.textContent = p[3];
+      svg.appendChild(t);
+    });
+    return svg;
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看快递盒有几个面！",
+      voice: "一个快递盒子，有几个面？如果沿着棱把它剪开摊平，会变成什么样子？今天我们把盒子拆开看个明白。",
+      body: function () {
+        return '' +
+          '<h2>拆开盒子</h2>' +
+          '<p>一个长方体盒子，前后左右上下，一共有几个面？</p>' +
+          '<div class="hint">👆 猜猜：剪开摊平后，6 个面怎么摆？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "认识 6 个面",
+      task: "咱们这一步要做的：认全长方体前后上下左右 6 个面！",
+      voice: "看动画。长方体有六个面：前面、后面、上面、下面、左面、右面。相对的面大小一样。前面和后面相对，上面和下面相对，左面和右面相对。",
+      body: function () {
+        return '' +
+          '<h2>看动画：长方体有 6 个面</h2>' +
+          '<div class="exp-box" id="exp1">' +
+          '<div class="exp-3d" id="box3d"></div>' +
+          '<div class="face-chips">' +
+          '<span class="fchip">前面</span><span class="fchip">后面</span><span class="fchip">上面</span>' +
+          '<span class="fchip">下面</span><span class="fchip">左面</span><span class="fchip">右面</span>' +
+          "</div>" +
+          "</div>" +
+          '<div class="exp-tip" id="exp1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "展开动画",
+      task: "咱们这一步要做的：看动画看 6 个面展开成平面！",
+      voice: "看动画。沿棱剪开，把六个面摊平：上面、下面、前面、后面、左面、右面，一个接一个躺到平面上。这就是长方体的展开图。",
+      body: function () {
+        return '' +
+          '<h2>看动画：展开成平面图</h2>' +
+          '<div class="exp-arrow">✂️ 沿棱剪开 → 摊平</div>' +
+          '<div class="unfold-grid">' +
+          '<div class="face face-up">上</div>' +
+          '<div class="face face-left">左</div>' +
+          '<div class="face face-front">前</div>' +
+          '<div class="face face-right">右</div>' +
+          '<div class="face face-back">后</div>' +
+          '<div class="face face-down">下</div>' +
+          "</div>" +
+          '<div class="exp-tip" id="exp2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道展开图题！",
+      voice: "现在考考你！长方体的面和展开图。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：找出相对的面，领奖！",
+      voice: "Boss 来啦！正方体是特殊的长方体，剪开摊平后，一共能看到几个面？六个面全都在同一张纸上，所以是六个。",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：正方体展开</h2>' +
+          '<p class="big">把正方体盒子剪开摊平，能看到几个面？</p>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 认识 6 个面 ========== */
+  function runExp1() {
+    document.getElementById("box3d").appendChild(boxSVG());
+    var tip = document.getElementById("exp1-tip");
+    var chips = document.querySelectorAll("#exp1 .fchip");
+    chips.forEach(function (c, i) {
+      setTimeout(function () { c.classList.add("show"); }, 600 + i * 500);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "① 前后相对、上下相对、左右相对（大小一样）"; } }, 3600);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 长方体有 6 个面，3 对相对的面"; } }, 5000);
+  }
+
+  /* ========== S3 展开图 ========== */
+  function runExp2() {
+    var tip = document.getElementById("exp2-tip");
+    var order = [["up", "上面"], ["left", "左面"], ["front", "前面"], ["right", "右面"], ["back", "后面"], ["down", "下面"]];
+    order.forEach(function (o, i) {
+      setTimeout(function () {
+        var f = document.querySelector('.face-' + o[0]);
+        if (f) { f.classList.add("show"); }
+        if (tip) { tip.textContent = "「" + o[1] + "」躺平了…"; }
+      }, 700 + i * 650);
+    });
+    setTimeout(function () {
+      var f = document.querySelector(".face-front");
+      if (f) { f.classList.add("hl"); }
+      var b = document.querySelector(".face-back");
+      if (b) { b.classList.add("hl"); }
+      if (tip) { tip.textContent = "✅ 6 个面都摊平 → 这就是展开图（前后相对）"; }
+    }, 4800);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "长方体一共有几个面？", right: "6 个", opts: ["6 个", "4 个", "8 个"] },
+    { q: "和「前面」相对的面是？", right: "后面", opts: ["后面", "上面", "左面"] },
+    { q: "展开图中，下面和谁相对？", right: "上面", opts: ["上面", "前面", "右面"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "前对后、上对下、左对右";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">正方体展开摊平能看到几个面？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">6 个</div>' +
+      '<div class="opt" data-ok="0">3 个</div>' +
+      '<div class="opt" data-ok="0">12 个</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 展开图你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "正方体也是长方体，6 个面全在展开图上";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runExp1(); }
+    if (step.id === "s3") { runExp2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "长方体有 6 个面（前、后、上、下、左、右），沿棱剪开可展开成平面图。",
+      attention: "孩子容易分不清「相对的面」（前对后、上对下、左对右）；可拿纸盒亲自拆开看。",
+      tip: "本课约 8 分钟；让孩子拆一个快递盒，把 6 个面摆成展开图。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
