@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>年、月、日与 24 时计时法 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .dt-box { margin: 12px 0; }
+  .dt-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .dt-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .months { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+  .months .mo { width: 42px; height: 52px; border-radius: 8px; background: #eef2f7; text-align: center; padding-top: 6px; opacity: 0; transition: all .3s; }
+  .months .mo.show { opacity: 1; }
+  .months .mo b { font-size: 18px; display: block; }
+  .months .mo i { font-style: normal; font-size: 11px; }
+  .months .mo.big { background: #ffd591; border: 1px solid #e8890c; }
+  .months .mo.small { background: #b9d7ff; border: 1px solid #4a7fe0; }
+  .months .mo.feb { background: #c6f0c6; border: 1px solid #2e7d32; }
+  .months .mo.hot { transform: scale(1.2); box-shadow: 0 0 0 3px rgba(232,137,12,.35); }
+  .months .mo.hot2 { transform: scale(1.2); box-shadow: 0 0 0 3px rgba(74,127,224,.4); }
+  .tl-wrap { position: relative; margin: 10px auto; max-width: 560px; }
+  .tl { display: flex; }
+  .tl .tk { flex: 1; height: 34px; line-height: 34px; text-align: center; font-size: 12px; font-weight: 800; color: #b8c2d4; border-left: 2px solid #dfe6f0; transition: all .3s; }
+  .tl .tk.on { color: var(--accent-deep); background: #eef4ff; }
+  .tl .tk.hot { color: #fff; background: #ffa940; border-radius: 6px 6px 0 0; }
+  .tl-zone { display: flex; font-size: 13px; font-weight: 700; color: var(--text-2); gap: 20px; justify-content: center; margin-top: 6px; }
+  .dt-conv { font-size: 26px; font-weight: 800; color: #d97706; text-align: center; margin: 8px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">年、月、日与 24 时计时法 <small>3年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>一年 12 个月：大月 31 天（1、3、5、7、8、10、12 月），小月 30 天（4、6、9、11 月），2 月平年 28 天；24 时计时法：下午时间 = 钟面时间 + 12。</p>
+      <p><b>孩子容易走神的地方：</b>8 月是大月却记成小月、下午时间换算；用歌诀"一三五七八十腊"帮助记忆。</p>
+      <p><b>建议：</b>本课约 8 分钟；看日历找大小月，再玩"现在几点→24 时计时"的小游戏。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-005</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想一年有多少个月！",
+      voice: "一年有 12 个月，有的月 31 天，有的月 30 天，2 月最少。今天认识年月日，还有 24 时计时法。",
+      body: function () {
+        return '' +
+          '<h2>一年有多少天</h2>' +
+          '<p>📅 一年 12 个月：大月 31 天、小月 30 天、2 月很特别。</p>' +
+          '<div class="hint">👆 先记住哪几个月是 31 天大月</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "大小月动画",
+      task: "咱们这一步要做的：看动画点亮 12 个月！",
+      voice: "看动画。一年 12 个月逐个点亮。红色的是大月 31 天：一、三、五、七、八、十、十二月。蓝色的是小月 30 天：四、六、九、十一月。绿色的二月最特别，平年 28 天。",
+      body: function () {
+        return '' +
+          '<h2>看动画：大小月</h2>' +
+          '<div class="dt-box" id="d1">' +
+          '<div class="months" id="months"></div>' +
+          "</div>" +
+          '<div class="dt-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="dt-rule">一三五七八十腊，三十一天永不差</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "24 时计时法动画",
+      task: "咱们这一步要做的：看动画学会下午 3 时 = 15 时！",
+      voice: "看动画。一天有 24 个小时。从 0 时到中午 12 时是第一圈，下午继续数。下午 3 时，就是 12 加 3 等于 15 时。所以下午 3 时用 24 时计时法写 15 时！",
+      body: function () {
+        return '' +
+          '<h2>看动画：下午 3 时 = 15 时</h2>' +
+          '<div class="dt-box" id="d2">' +
+          '<div class="tl-wrap">' +
+          '<div class="tl" id="tl"></div>' +
+          '<div class="tl-zone"><span>🌞 上午/白天：0~12 时</span><span>🌙 下午/晚上：12~24 时</span></div>' +
+          "</div>" +
+          '<div class="dt-conv" id="dt-conv">下午 3 时 = ?</div>' +
+          "</div>" +
+          '<div class="dt-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="dt-rule">下午时间 + 12 = 24 时计时法（3+12=15 时）</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道年月日题！",
+      voice: "现在考考你！大小月和 24 时计时法。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算晚上 9 时，领奖！",
+      voice: "Boss 来啦！晚上 9 时用 24 时计时法怎么写？晚上是下午以后，9 加 12 等于 21 时！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：晚上 9 时 = ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  var BIG = { 1: 1, 3: 1, 5: 1, 7: 1, 8: 1, 10: 1, 12: 1 };
+  var SMALL = { 4: 1, 6: 1, 9: 1, 11: 1 };
+  function runD1() {
+    var months = document.getElementById("months");
+    var tip = document.getElementById("d1-tip");
+    var h = "";
+    for (var m = 1; m <= 12; m++) {
+      var cls = BIG[m] ? "big" : (SMALL[m] ? "small" : "feb");
+      var days = BIG[m] ? "31" : (SMALL[m] ? "30" : "28/29");
+      h += '<div class="mo ' + cls + '" data-m="' + m + '"><b>' + m + "月</b><i>" + days + "天</i></div>";
+    }
+    months.innerHTML = h;
+    var cells = months.querySelectorAll(".mo");
+    cells.forEach(function (c, i) {
+      setTimeout(function () {
+        c.classList.add("show");
+        if (tip) {
+          if (c.getAttribute("data-m") === "7") { tip.textContent = "数到 7 月，前面 7 个月：大、小、大、小、大、小、大"; }
+          else if (c.getAttribute("data-m") === "12") { tip.textContent = "✅ 大月：1、3、5、7、8、10、12；小月：4、6、9、11；2 月最特别"; }
+          else if (c.getAttribute("data-m") === "2") { tip.textContent = "2 月：平年 28 天，闰年 29 天"; }
+          else if (c.getAttribute("data-m") === "8") { tip.textContent = "8 月也是大月（31 天）哦！"; }
+        }
+      }, 320 * (i + 1));
+    });
+  }
+
+  function runD2() {
+    var tl = document.getElementById("tl");
+    var tip = document.getElementById("d2-tip");
+    var conv = document.getElementById("dt-conv");
+    var h = "";
+    for (var hh = 0; hh <= 24; hh += 2) {
+      h += '<div class="tk" data-h="' + hh + '">' + hh + "</div>";
+    }
+    tl.innerHTML = h;
+    var tks = tl.querySelectorAll(".tk");
+    setTimeout(function () {
+      tks.forEach(function (t) { if (parseInt(t.getAttribute("data-h"), 10) <= 12) { t.classList.add("on"); } });
+      if (tip) { tip.textContent = "① 从 0 时到 12 时（上午/白天，第一圈）"; }
+    }, 700);
+    setTimeout(function () {
+      tks.forEach(function (t) { if (parseInt(t.getAttribute("data-h"), 10) > 12 && parseInt(t.getAttribute("data-h"), 10) <= 15) { t.classList.add("on"); } });
+      var hot = tl.querySelector('[data-h="14"]');
+      if (hot) { hot.classList.add("hot"); }
+      if (tip) { tip.textContent = "② 下午继续数：下午 1 时=13 时、下午 2 时=14 时…"; }
+    }, 2600);
+    setTimeout(function () {
+      var hot2 = tl.querySelector('[data-h="16"]');
+      if (hot2) { hot2.classList.add("hot"); }
+      conv.innerHTML = "下午 3 时 = <b>15 时</b>（12 + 3）";
+      if (tip) { tip.textContent = "③ 下午 3 时 = 12+3 = 15 时 ✅"; }
+    }, 4800);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "7 月有多少天？", right: "31 天", opts: ["31 天", "30 天", "28 天"] },
+    { q: "平年的 2 月有几天？", right: "28 天", opts: ["28 天", "29 天", "30 天"] },
+    { q: "下午 3 时用 24 时计时法写作？", right: "15 时", opts: ["15 时", "3 时", "13 时"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "大月 31 天、小月 30 天、2 月 28/29；下午+12 换 24 时";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">晚上 9 时用 24 时计时法写作？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">21 时</div>' +
+      '<div class="opt" data-ok="0">9 时</div>' +
+      '<div class="opt" data-ok="0">20 时</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 年月日你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "晚上 = 下午以后：9 + 12 = 21 时";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "一年 12 个月：大月 31 天（1、3、5、7、8、10、12 月），小月 30 天（4、6、9、11 月），2 月平年 28 天；24 时计时法：下午时间 = 钟面时间 + 12。",
+      attention: "孩子容易把 8 月记成小月、下午时间换算出错；用歌诀「一三五七八十腊」帮助记忆。",
+      tip: "本课约 8 分钟；看日历找大小月，再玩「现在几点→24 时计时」的小游戏。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

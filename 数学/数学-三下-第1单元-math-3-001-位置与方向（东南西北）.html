@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>位置与方向（东南西北） · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .dc-box { margin: 12px 0; }
+  .compass { position: relative; width: 220px; height: 220px; margin: 10px auto; }
+  .compass .ring { position: absolute; inset: 26px; border: 3px dashed #9db8ea; border-radius: 50%; }
+  .compass .dir { position: absolute; width: 60px; height: 60px; line-height: 60px; border-radius: 12px; text-align: center; font-size: 28px; font-weight: 800; background: #eef2f7; color: var(--text-2); transition: all .3s; }
+  .compass .dir.on { background: var(--accent-deep); color: #fff; transform: scale(1.15); }
+  .compass .up { top: 0; left: 50%; margin-left: -30px; }
+  .compass .down { bottom: 0; left: 50%; margin-left: -30px; }
+  .compass .left { left: 0; top: 50%; margin-top: -30px; }
+  .compass .right { right: 0; top: 50%; margin-top: -30px; }
+  .compass .sun { position: absolute; right: -8px; top: 50%; margin-top: -16px; font-size: 34px; opacity: 0; transition: opacity .5s; }
+  .compass .sun.show { opacity: 1; }
+  .compass .center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 48px; height: 48px; line-height: 48px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 800; text-align: center; }
+  .dc-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .dc-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .facer { position: relative; width: 300px; height: 170px; margin: 10px auto; }
+  .facer .guy { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 64px; }
+  .facer .arrow { position: absolute; left: 50%; top: 50%; font-size: 30px; opacity: .35; }
+  .facer .arrow.af { transform: translate(58px, -50%); }
+  .facer .arrow.ab { transform: translate(-58px, -50%); }
+  .facer .arrow.al { transform: translate(-50%, -58px); }
+  .facer .arrow.ar { transform: translate(-50%, 58px); }
+  .facer .lab { position: absolute; font-size: 17px; font-weight: 800; padding: 4px 12px; border-radius: 10px; background: #e8f6ff; color: #0b5e91; opacity: 0; transition: all .3s; }
+  .facer .lab.on { opacity: 1; }
+  .facer .front { right: 0; top: 50%; margin-top: -16px; }
+  .facer .back { left: 0; top: 50%; margin-top: -16px; }
+  .facer .lhand { top: 0; left: 50%; margin-left: -34px; }
+  .facer .rhand { bottom: 0; left: 50%; margin-left: -34px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">位置与方向（东南西北） <small>3年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>东、南、西、北四个方向；地图上"上北下南，左西右东"；面向东时背后是西、左手北、右手南。</p>
+      <p><b>孩子容易走神的地方：</b>地图方向和"面向某方"的左右混淆；多带孩子原地转圈辨方向。</p>
+      <p><b>建议：</b>本课约 8 分钟；在家以客厅为中心，说一说东南西北各有什么。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-001</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想早上太阳从哪边升起！",
+      voice: "每天早上太阳从东边升起。要记住东南西北，先记住东方！今天来认识位置和方向。",
+      body: function () {
+        return '' +
+          '<h2>太阳升起的方向</h2>' +
+          '<p>🌅 太阳从 <b>东</b> 边升起，从 <b>西</b> 边落下。</p>' +
+          '<div class="hint">👆 东边最先见到太阳</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "认识东南西北",
+      task: "咱们这一步要做的：看动画记住方向标！",
+      voice: "看动画。太阳从东边升起，所以这边是东。我们面朝东，背后是西，左手边是北，右手边是南。记住了吗？上北下南，左西右东。",
+      body: function () {
+        return '' +
+          '<h2>看动画：东南西北方向标</h2>' +
+          '<div class="dc-box" id="d1">' +
+          '<div class="compass">' +
+          '<div class="ring"></div>' +
+          '<div class="sun" id="sun">☀️</div>' +
+          '<div class="dir up" id="dN">北</div>' +
+          '<div class="dir down" id="dS">南</div>' +
+          '<div class="dir left" id="dW">西</div>' +
+          '<div class="dir right" id="dE">东</div>' +
+          '<div class="center">我</div>' +
+          "</div>" +
+          "</div>" +
+          '<div class="dc-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="dc-rule">上北 下南 左西 右东</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "面向东辨方向",
+      task: "咱们这一步要做的：看动画学会面东背西左北右南！",
+      voice: "看动画。小明面向东方，他的背后是西方，左手边是北方，右手边是南方。记住：面朝东，背朝西，左手指北，右手指南。",
+      body: function () {
+        return '' +
+          '<h2>看动画：面向东时四周方向</h2>' +
+          '<div class="dc-box" id="d2">' +
+          '<div class="facer">' +
+          '<div class="arrow af">➡️</div>' +
+          '<div class="arrow ab">⬅️</div>' +
+          '<div class="arrow al">⬆️</div>' +
+          '<div class="arrow ar">⬇️</div>' +
+          '<div class="guy">🧒</div>' +
+          '<div class="lab front" id="fFront">前·东</div>' +
+          '<div class="lab back" id="fBack">后·西</div>' +
+          '<div class="lab lhand" id="fLeft">左手·北</div>' +
+          '<div class="lab rhand" id="fRight">右手·南</div>' +
+          "</div>" +
+          "</div>" +
+          '<div class="dc-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="dc-rule">面朝东 → 背朝西 → 左手指北 → 右手指南</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道方向题！",
+      voice: "现在考考你！方向问题。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：面向南找左手边，领奖！",
+      voice: "Boss 来啦！面向南方，左手边是哪个方向？面向南，左边是东，右边是西。左手边是东！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：面向南，左手边是？</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    setTimeout(function () { document.getElementById("sun").classList.add("show"); if (tip) { tip.textContent = "① 太阳从东边升起 → 这边是东"; } }, 900);
+    setTimeout(function () { document.getElementById("dE").classList.add("on"); if (tip) { tip.textContent = "② 面朝东，背后就是西"; } }, 2400);
+    setTimeout(function () { document.getElementById("dW").classList.add("on"); if (tip) { tip.textContent = "③ 左手边是北"; } }, 3600);
+    setTimeout(function () { document.getElementById("dN").classList.add("on"); if (tip) { tip.textContent = "④ 右手边是南"; } }, 4800);
+    setTimeout(function () { document.getElementById("dS").classList.add("on"); if (tip) { tip.textContent = "✅ 上北 下南 左西 右东"; } }, 6000);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    setTimeout(function () { document.getElementById("fFront").classList.add("on"); if (tip) { tip.textContent = "① 面向东（前=东）"; } }, 800);
+    setTimeout(function () { document.getElementById("fBack").classList.add("on"); if (tip) { tip.textContent = "② 背后是西"; } }, 2200);
+    setTimeout(function () { document.getElementById("fLeft").classList.add("on"); if (tip) { tip.textContent = "③ 左手边是北"; } }, 3600);
+    setTimeout(function () { document.getElementById("fRight").classList.add("on"); if (tip) { tip.textContent = "✅ 右手边是南：面东背西左北右南"; } }, 5000);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "早上太阳从哪边升起？", right: "东", opts: ["东", "西", "南"] },
+    { q: "地图上通常「上」是哪个方向？", right: "北", opts: ["北", "南", "东"] },
+    { q: "面向东，背后是？", right: "西", opts: ["西", "东", "北"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "上北下南，左西右东；面向某方再想左右";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">面向南，左手边是哪个方向？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">东</div>' +
+      '<div class="opt" data-ok="0">西</div>' +
+      '<div class="opt" data-ok="0">北</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 方向你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "面向南：左东右西、背北";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "东、南、西、北四个方向；地图上「上北下南，左西右东」；面向东时背后是西、左手北、右手南。",
+      attention: "孩子容易把地图方向和「面向某方」的左右混淆；多带孩子原地转圈辨方向。",
+      tip: "本课约 8 分钟；在家以客厅为中心，说一说东南西北各有什么。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

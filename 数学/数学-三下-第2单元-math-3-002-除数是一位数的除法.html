@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>除数是一位数的除法 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .dv-box { margin: 12px 0; }
+  .dv-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .dv-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .tens-wrap { display: flex; justify-content: center; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .tens-group { display: flex; gap: 4px; transition: all .4s; }
+  .tens-group .ten { width: 38px; height: 26px; line-height: 26px; text-align: center; background: #7eb6ff; color: #fff; border-radius: 4px; font-weight: 800; font-size: 15px; }
+  .tens-group .ten.hl { background: #ffa940; }
+  .tens-note { font-size: 17px; font-weight: 800; color: var(--accent-deep); text-align: center; margin-top: 8px; min-height: 24px; }
+  .ldiv-wrap { display: flex; justify-content: center; }
+  .ldiv { font-family: "SFMono-Regular", Consolas, monospace; font-size: 22px; line-height: 1.75; background: #fff; border: 2px solid var(--border); border-radius: 12px; padding: 16px 26px; margin: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">除数是一位数的除法 <small>3年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>除法：从高位除起，除到哪一位商就写在那一位上，余数必须比除数小；整十整百可以想成几个十/几个百来口算。</p>
+      <p><b>孩子容易走神的地方：</b>竖式里"0 的位置"和余数落位搞错；每步写完都检查"这一步除完了吗"。</p>
+      <p><b>建议：</b>本课约 8 分钟；先口算整十整百，再用竖式笔算两位数除以一位数。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-002</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想 60 个苹果分 2 人！",
+      voice: "60 个苹果，平均分给 2 个人，每人多少个？60 就是 6 个十，6 个十除以 2 等于 3 个十，就是 30！今天学除法。",
+      body: function () {
+        return '' +
+          '<h2>分苹果</h2>' +
+          '<p>🍎 60 个苹果平均分给 2 人 → 60 ÷ 2 = ?</p>' +
+          '<div class="hint">👆 60 就是 6 个十</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "口算除法动画",
+      task: "咱们这一步要做的：看动画 6 个十分成 2 组！",
+      voice: "看动画。60 是 6 个十。6 个十平均分成 2 组，每组 3 个十，就是 30。所以 60 除以 2 等于 30！",
+      body: function () {
+        return '' +
+          '<h2>看动画：60 ÷ 2 = 30</h2>' +
+          '<div class="dv-box" id="d1">' +
+          '<div class="tens-wrap" id="tens"></div>' +
+          '<div class="tens-note" id="tens-note">60 = 6 个十</div>' +
+          "</div>" +
+          '<div class="dv-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="dv-rule">6 个十 ÷ 2 = 3 个十 = 30</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "除法竖式动画",
+      task: "咱们这一步要做的：看动画学会竖式 96÷3！",
+      voice: "看动画竖式。96 除以 3。先看十位，9 除以 3 等于 3，商写 3；3 乘 3 等于 9，写在 9 下面，相减得 0；把个位 6 落下来；6 除以 3 等于 2，商写 2；3 乘 2 等于 6，相减得 0。结果是 32！",
+      body: function () {
+        return '' +
+          '<h2>看动画：96 ÷ 3 竖式</h2>' +
+          '<div class="dv-box" id="d2">' +
+          '<div class="ldiv-wrap"><pre class="ldiv" id="ldiv"></pre></div>' +
+          "</div>" +
+          '<div class="dv-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="dv-rule">从高位除起，除到哪位商写在哪位上面</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道除法题！",
+      voice: "现在考考你！除法口算和竖式。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算 84÷4，领奖！",
+      voice: "Boss 来啦！84 除以 4。十位 8 除以 4 等于 2，个位 4 除以 4 等于 1，结果是 21！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：84 ÷ 4 = ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var tens = document.getElementById("tens");
+    var tip = document.getElementById("d1-tip");
+    var note = document.getElementById("tens-note");
+    var h = '<div class="tens-group" id="g1">';
+    for (var i = 0; i < 6; i++) { h += '<span class="ten">十</span>'; }
+    h += "</div>";
+    tens.innerHTML = h;
+    setTimeout(function () { if (tip) { tip.textContent = "① 60 有 6 个十（6 块）"; } }, 800);
+    setTimeout(function () {
+      var g1 = document.getElementById("g1");
+      var spans = g1.querySelectorAll(".ten");
+      var left = '<div class="tens-group" id="gA">' + spans[0].outerHTML + spans[1].outerHTML + spans[2].outerHTML + "</div>";
+      var right = '<div class="tens-group" id="gB">' + spans[3].outerHTML + spans[4].outerHTML + spans[5].outerHTML + "</div>";
+      tens.innerHTML = left + right;
+      note.textContent = "分成 2 组，每组 3 个十";
+      if (tip) { tip.textContent = "② 平均分成 2 组，每组 3 个十"; }
+    }, 2400);
+    setTimeout(function () {
+      var a = document.getElementById("gA"), b = document.getElementById("gB");
+      if (a) { a.querySelectorAll(".ten").forEach(function (x) { x.classList.add("hl"); }); }
+      if (b) { b.querySelectorAll(".ten").forEach(function (x) { x.classList.add("hl"); }); }
+      note.textContent = "每组 3 个十 = 30";
+      if (tip) { tip.textContent = "③ 3 个十 = 30 → 60 ÷ 2 = 30 ✅"; }
+    }, 4200);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 整十数 ÷ 一位数：想成几个十来算"; } }, 5600);
+  }
+
+  var LDIV_LINES = [
+    "        3  2",
+    "    ------------",
+    "3 )   9  6",
+    "        9",
+    "        ---",
+    "        0  6",
+    "           6",
+    "           ---",
+    "           0"
+  ];
+  var LDIV_TIPS = [
+    "① 十位 9÷3=3，商写 3",
+    "② 3×3=9，写在 9 下面",
+    "③ 9−9=0，个位 6 落下来",
+    "④ 6÷3=2，商写 2",
+    "⑤ 3×2=6，6−6=0",
+    "✅ 96 ÷ 3 = 32"
+  ];
+  function runD2() {
+    var ldiv = document.getElementById("ldiv");
+    var tip = document.getElementById("d2-tip");
+    ldiv.textContent = "";
+    LDIV_LINES.forEach(function (line, i) {
+      setTimeout(function () {
+        ldiv.textContent = (ldiv.textContent ? ldiv.textContent + "\n" : "") + line;
+        if (tip) { tip.textContent = LDIV_TIPS[Math.min(i, LDIV_TIPS.length - 1)]; }
+      }, 950 * (i + 1));
+    });
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "60 ÷ 2 = ?", right: "30", opts: ["30", "3", "20"] },
+    { q: "40 ÷ 4 = ?", right: "10", opts: ["10", "40", "1"] },
+    { q: "93 ÷ 3 = ?", right: "31", opts: ["31", "13", "33"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "从高位除起，一位一位除，余数比除数小";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">84 ÷ 4 = ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">21</div>' +
+      '<div class="opt" data-ok="0">22</div>' +
+      '<div class="opt" data-ok="0">14</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 除法你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "十位 8÷4=2，个位 4÷4=1 → 21";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "除法：从高位除起，除到哪一位商就写在那一位上，余数必须比除数小；整十整百想成几个十/几个百来口算。",
+      attention: "孩子竖式里「0 的位置」和余数落位容易搞错；每步写完都检查「这一步除完了吗」。",
+      tip: "本课约 8 分钟；先口算整十整百，再用竖式笔算两位数除以一位数。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

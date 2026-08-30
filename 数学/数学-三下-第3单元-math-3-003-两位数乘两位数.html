@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>两位数乘两位数 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .ml-box { margin: 12px 0; }
+  .ml-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .ml-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .ml-calc { font-size: 30px; font-weight: 800; color: #d97706; margin: 6px 0; }
+  .ml-z { display: inline-block; background: #fff3d6; color: #e8890c; border-radius: 6px; padding: 0 6px; font-weight: 800; }
+  .ldiv-wrap { display: flex; justify-content: center; }
+  .ldiv { font-family: "SFMono-Regular", Consolas, monospace; font-size: 22px; line-height: 1.75; background: #fff; border: 2px solid var(--border); border-radius: 12px; padding: 16px 26px; margin: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">两位数乘两位数 <small>3年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>整十数乘整十数：先算非零部分再补 0；笔算两位数乘两位数：先用个位乘，再用十位乘（结果错位），最后相加。</p>
+      <p><b>孩子容易走神的地方：</b>十位相乘的结果忘了错位（个位要空 0）；强调"乘的是 10，所以要错一位"。</p>
+      <p><b>建议：</b>本课约 8 分钟；先口算整十，再列竖式：一乘二错位三相加。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-003</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想 20 箱每箱 30 个！",
+      voice: "书店有 20 箱书，每箱 30 本，一共有多少本？20 乘 30。先算 2 乘 3 等于 6，再补两个 0，是 600！今天学两位数乘两位数。",
+      body: function () {
+        return '' +
+          '<h2>书有多少本</h2>' +
+          '<p>📚 20 箱 × 每箱 30 本 → 20 × 30 = ?</p>' +
+          '<div class="hint">👆 先算 2×3=6，再补两个 0</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "整十数口算动画",
+      task: "咱们这一步要做的：看动画数一数几个 0！",
+      voice: "看动画。20 乘 30，先不管两个 0，2 乘 3 等于 6。然后把两个 0 都补上，600！",
+      body: function () {
+        return '' +
+          '<h2>看动画：20 × 30 = 600</h2>' +
+          '<div class="ml-box" id="d1">' +
+          '<div class="ml-calc" id="ml1">2<span class="ml-z">0</span> × 3<span class="ml-z">0</span> = ?</div>' +
+          "</div>" +
+          '<div class="ml-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="ml-rule">先算 2×3=6，补上两个 0 → 600</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "竖式笔算动画",
+      task: "咱们这一步要做的：看动画学会 23×12 竖式！",
+      voice: "看动画竖式。23 乘 12。先用个位 2 乘：23 乘 2 等于 46。再用十位 1 乘：23 乘 10 等于 230，要错开一位写。最后把 46 和 230 加起来，等于 276！",
+      body: function () {
+        return '' +
+          '<h2>看动画：23 × 12 竖式</h2>' +
+          '<div class="ml-box" id="d2">' +
+          '<div class="ldiv-wrap"><pre class="ldiv" id="ldiv"></pre></div>' +
+          "</div>" +
+          '<div class="ml-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="ml-rule">一乘（个位）→ 二乘（十位错位）→ 三相加</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道乘法题！",
+      voice: "现在考考你！两位数乘两位数。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算 12×14，领奖！",
+      voice: "Boss 来啦！12 乘 14。12 乘 4 等于 48，12 乘 10 等于 120，48 加 120 等于 168！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：12 × 14 = ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    var calc = document.getElementById("ml1");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 先不管两个 0：2 × 3 = 6"; }
+      calc.innerHTML = '<span style="color:#2e7d32">2 × 3 = 6</span> （还剩 <span class="ml-z">2</span> 个 0）';
+    }, 900);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 把两个 0 都补上 → 600"; }
+      calc.innerHTML = '<span style="color:#2e7d32">6</span> + <span class="ml-z">0</span><span class="ml-z">0</span> = <b>600</b>';
+    }, 3000);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 20 × 30 = 600（先算再补 0）"; } }, 4800);
+  }
+
+  var LDIV_LINES = [
+    "      2  3",
+    "  x    1  2",
+    "  ----------",
+    "        4  6",
+    "      2  3  0",
+    "  ----------",
+    "      2  7  6"
+  ];
+  var LDIV_TIPS = [
+    "① 个位 2：23 × 2 = 46",
+    "② 十位 1：23 × 10 = 230（错位写，个位空 0）",
+    "③ 46 + 230 = 276",
+    "✅ 23 × 12 = 276"
+  ];
+  function runD2() {
+    var ldiv = document.getElementById("ldiv");
+    var tip = document.getElementById("d2-tip");
+    ldiv.textContent = "";
+    LDIV_LINES.forEach(function (line, i) {
+      setTimeout(function () {
+        ldiv.textContent = (ldiv.textContent ? ldiv.textContent + "\n" : "") + line;
+        if (tip) { tip.textContent = LDIV_TIPS[Math.min(i, LDIV_TIPS.length - 1)]; }
+      }, 1100 * (i + 1));
+    });
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "20 × 30 = ?", right: "600", opts: ["600", "60", "6000"] },
+    { q: "30 × 40 = ?", right: "1200", opts: ["1200", "120", "700"] },
+    { q: "23 × 10 = ?", right: "230", opts: ["230", "23", "2300"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "整十相乘先算再补 0；竖式一乘二错位三相加";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">12 × 14 = ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">168</div>' +
+      '<div class="opt" data-ok="0">148</div>' +
+      '<div class="opt" data-ok="0">186</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 两位数乘两位数你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "12×4=48，12×10=120，48+120=168";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "整十数乘整十数：先算非零部分再补 0；笔算两位数乘两位数：先用个位乘，再用十位乘（结果错位），最后相加。",
+      attention: "孩子十位相乘的结果容易忘错位（个位要空 0）；强调「乘的是 10，所以要错一位」。",
+      tip: "本课约 8 分钟；先口算整十，再列竖式：一乘二错位三相加。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
