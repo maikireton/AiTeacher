@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用估算解决问题 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .est-box { margin: 12px 0; }
+  .est-line { display: flex; justify-content: center; gap: 12px; align-items: center; font-size: 28px; font-weight: 800; flex-wrap: wrap; background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 16px; }
+  .est-num { background: #fff; border: 2px solid var(--border); border-radius: 10px; padding: 2px 12px; transition: all .4s; }
+  .est-num.round { border-color: #ffa940; background: #fff7e6; }
+  .est-arrow { color: var(--accent-deep); font-size: 22px; opacity: 0; transition: opacity .3s; }
+  .est-arrow.show { opacity: 1; }
+  .est-ans { color: #2e7d32; opacity: 0; transition: opacity .4s; }
+  .est-ans.show { opacity: 1; }
+  .est-step { font-size: 16px; font-weight: 700; min-height: 26px; margin-top: 10px; color: var(--accent-deep); }
+  .est-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">用估算解决问题 <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>估算：把数看成最接近的整十、整百数，再口算，结果用"约"字表示（≈）。</p>
+      <p><b>孩子容易走神的地方：</b>四舍五入方向弄反；买票、带钱这类"估大"更安全，可顺势教判断。</p>
+      <p><b>建议：</b>本课约 8 分钟；逛超市时让孩子估一估购物车大约要多少钱。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-113</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想大约要花多少钱！",
+      voice: "一个文具盒九十八元，买七个大约要带多少钱？不用算得很准，估一估就知道！今天学估算。",
+      body: function () {
+        return '' +
+          '<h2>大约多少钱？</h2>' +
+          '<p class="big">98 × 7 ≈ ?</p>' +
+          '<p>把 98 看成最接近的整百数 100。</p>' +
+          '<div class="hint">👆 用 ≈ 表示"大约等于"</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "四舍五入估算动画",
+      task: "咱们这一步要做的：看动画学会把 387 看成 390！",
+      voice: "看动画。三百八十七乘五。看个位是七，比五大，向前一位进一：三百八十七变成三百九十。再算三百九十乘五，等于一千九百五十。所以约等于一千九百五十。",
+      body: function () {
+        return '' +
+          '<h2>看动画：387 × 5 ≈</h2>' +
+          '<div class="est-box" id="e1">' +
+          '<div class="est-line">' +
+          '<span class="est-num" id="n387">387</span><span class="est-arrow" id="ar1">→</span>' +
+          '<span class="est-num" id="n390">390</span><span>× 5</span><span>=</span><span class="est-ans" id="a1">1950</span>' +
+          "</div>" +
+          "</div>" +
+          '<div class="est-step" id="e1-tip">准备开始…</div>' +
+          '<div class="est-rule">个位≥5 → 向前一位进 1（四舍五入）</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "生活估算动画",
+      task: "咱们这一步要做的：看动画估算买票钱！",
+      voice: "看动画。门票九十八元一张，买七张大约多少钱？九十八接近一百，看成一百。一百乘七等于七百。所以大约要七百元！带钱就要多带一点，估大更安全。",
+      body: function () {
+        return '' +
+          '<h2>看动画：98 × 7 ≈</h2>' +
+          '<div class="est-box" id="e2">' +
+          '<div class="est-line">' +
+          '<span class="est-num" id="n98">98</span><span class="est-arrow" id="ar2">→</span>' +
+          '<span class="est-num" id="n100">100</span><span>× 7</span><span>=</span><span class="est-ans" id="a2">700</span>' +
+          "</div>" +
+          "</div>" +
+          '<div class="est-step" id="e2-tip">准备开始…</div>' +
+          '<div class="est-rule">带钱要估大一点，才够用</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道估算题！",
+      voice: "现在考考你！把数看成整十整百，再算。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：估算座位数，领奖！",
+      voice: "Boss 来啦！电影院每排三十二个座位，六排大约能坐多少人？三十二接近三十，三十乘六等于一百八十，大约一百八十人！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：32 × 6 ≈ ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runEst1() {
+    var tip = document.getElementById("e1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "① 看 387 的个位是 7（≥5）→ 向前进 1"; } }, 800);
+    setTimeout(function () {
+      document.getElementById("n387").classList.add("round");
+      document.getElementById("ar1").classList.add("show");
+      if (tip) { tip.textContent = "② 387 → 390"; }
+    }, 2600);
+    setTimeout(function () {
+      document.getElementById("n390").classList.add("round");
+      document.getElementById("a1").classList.add("show");
+      if (tip) { tip.textContent = "③ 390 × 5 = 1950 ✅"; }
+    }, 4400);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 387 × 5 ≈ 1950"; } }, 6000);
+  }
+  function runEst2() {
+    var tip = document.getElementById("e2-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "① 98 接近 100，看成 100（估大一点）"; } }, 800);
+    setTimeout(function () {
+      document.getElementById("n98").classList.add("round");
+      document.getElementById("ar2").classList.add("show");
+      if (tip) { tip.textContent = "② 98 → 100"; }
+    }, 2600);
+    setTimeout(function () {
+      document.getElementById("n100").classList.add("round");
+      document.getElementById("a2").classList.add("show");
+      if (tip) { tip.textContent = "③ 100 × 7 = 700 ✅"; }
+    }, 4400);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 98 × 7 ≈ 700（带钱够用）"; } }, 6000);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "估算 49 × 5 ≈ ?（49→50）", right: "250", opts: ["250", "245", "500"] },
+    { q: "估算 203 × 4 ≈ ?（203→200）", right: "800", opts: ["800", "812", "80"] },
+    { q: "估算时把数看成？", right: "接近的整十/整百数", opts: ["接近的整十/整百数", "任意数", "越准确越好"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "先四舍五入成整十整百，再口算，结果用 ≈";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">32 × 6 ≈ ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">180</div>' +
+      '<div class="opt" data-ok="0">192</div>' +
+      '<div class="opt" data-ok="0">160</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 估算你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "32→30，30×6=180（大约）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runEst1(); }
+    if (step.id === "s3") { runEst2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "估算：把数看成最接近的整十、整百数，再口算，结果用「约」字表示（≈）。",
+      attention: "孩子四舍五入方向易弄反；买票、带钱这类「估大」更安全，可顺势教判断。",
+      tip: "本课约 8 分钟；逛超市时让孩子估一估购物车大约要多少钱。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

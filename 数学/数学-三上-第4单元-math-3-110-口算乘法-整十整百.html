@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>口算乘法（整十整百） · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .oral-box { margin: 12px 0; }
+  .oral-line { display: flex; justify-content: center; gap: 12px; align-items: center; font-size: 30px; font-weight: 800; flex-wrap: wrap; background: var(--card); border: 2px solid var(--border); border-radius: 14px; padding: 16px; }
+  .oral-num { background: #fff; border: 2px solid var(--border); border-radius: 10px; padding: 2px 12px; }
+  .oral-num .zero { color: #d97706; transition: all .3s; }
+  .oral-num .zero.strike { text-decoration: line-through; text-decoration-color: #e26d6d; text-decoration-thickness: 3px; color: #b91c1c; }
+  .oral-ans { color: #2e7d32; opacity: 0; transition: opacity .4s; }
+  .oral-ans.show { opacity: 1; }
+  .oral-step { font-size: 16px; font-weight: 700; min-height: 26px; margin-top: 10px; color: var(--accent-deep); }
+  .oral-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">口算乘法（整十整百） <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>整十、整百数乘一位数：先算 0 前面的数相乘，再在末尾添上相同个数的 0。</p>
+      <p><b>孩子容易走神的地方：</b>忘了添 0 或添错个数；可让他先数清因数末尾有几个 0。</p>
+      <p><b>建议：</b>本课约 8 分钟；口算时让孩子喊出「先算几乘几，再添几个 0」。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-110</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想 20×3 怎么口算快！",
+      voice: "二十乘三等于多少？如果你一格一格数，太慢了。今天学一个妙招：先把零放到一边，算完再搬回来。",
+      body: function () {
+        return '' +
+          '<h2>口算有妙招</h2>' +
+          '<p class="big">20 × 3 = ?</p>' +
+          '<p>先算 2×3，再在后面补 0。</p>' +
+          '<div class="hint">👆 零先让开，算完再回来！</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "整十数动画",
+      task: "咱们这一步要做的：看动画学会「先算再补 0」！",
+      voice: "看动画。二十乘三。先把这个零请到旁边，算二乘三等于六，再把零请回来，变成六十！二十乘三等于六十。",
+      body: function () {
+        return '' +
+          '<h2>看动画：20 × 3</h2>' +
+          '<div class="oral-box" id="o1">' +
+          '<div class="oral-line">' +
+          '<span class="oral-num"><span class="z1 z">2</span><span class="z1 zero">0</span></span>' +
+          '<span>×</span><span class="oral-num">3</span><span>=</span><span class="oral-ans" id="a1">60</span>' +
+          "</div>" +
+          "</div>" +
+          '<div class="oral-step" id="o1-tip">准备开始…</div>' +
+          '<div class="oral-rule">先算 2×3，末尾添 1 个 0</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "整百数动画",
+      task: "咱们这一步要做的：看动画学会两个 0 一起补！",
+      voice: "看动画。三百乘五。把两个零请到旁边，算三乘五等于十五，再把两个零请回来，变成一千五百！有几个零就补几个零。",
+      body: function () {
+        return '' +
+          '<h2>看动画：300 × 5</h2>' +
+          '<div class="oral-box" id="o2">' +
+          '<div class="oral-line">' +
+          '<span class="oral-num"><span class="z2 z">3</span><span class="z2 zero">0</span><span class="z2 zero">0</span></span>' +
+          '<span>×</span><span class="oral-num">5</span><span>=</span><span class="oral-ans" id="a2">1500</span>' +
+          "</div>" +
+          "</div>" +
+          '<div class="oral-step" id="o2-tip">准备开始…</div>' +
+          '<div class="oral-rule">先算 3×5，末尾添 2 个 0</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道口算题！",
+      voice: "现在考考你！先算前面的数，再补零。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算一道带两个 0 的，领奖！",
+      voice: "Boss 来啦！四十乘六。先算四乘六等于二十四，末尾补一个零，等于二百四十！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：40 × 6 = ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runOral1() {
+    var tip = document.getElementById("o1-tip");
+    var z = document.querySelectorAll("#o1 .z1");
+    setTimeout(function () { if (tip) { tip.textContent = "① 把 0 请到旁边：先算 2 × 3"; } }, 800);
+    setTimeout(function () { z.forEach(function (e) { e.classList.add("strike"); }); if (tip) { tip.textContent = "② 2 × 3 = 6"; } }, 2600);
+    setTimeout(function () { document.getElementById("a1").classList.add("show"); if (tip) { tip.textContent = "③ 把 0 请回来 → 60 ✅"; } }, 4400);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 20 × 3 = 60"; } }, 6000);
+  }
+  function runOral2() {
+    var tip = document.getElementById("o2-tip");
+    var z = document.querySelectorAll("#o2 .z2");
+    setTimeout(function () { if (tip) { tip.textContent = "① 把两个 0 请到旁边：先算 3 × 5"; } }, 800);
+    setTimeout(function () { z.forEach(function (e) { e.classList.add("strike"); }); if (tip) { tip.textContent = "② 3 × 5 = 15"; } }, 2600);
+    setTimeout(function () { document.getElementById("a2").classList.add("show"); if (tip) { tip.textContent = "③ 把两个 0 请回来 → 1500 ✅"; } }, 4400);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 300 × 5 = 1500"; } }, 6000);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "30 × 3 = ?", right: "90", opts: ["90", "9", "900"] },
+    { q: "200 × 4 = ?", right: "800", opts: ["800", "80", "8000"] },
+    { q: "500 × 6 = ?", right: "3000", opts: ["3000", "300", "30"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "先算 0 前面的数，再补同样多的 0";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">40 × 6 = ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">240</div>' +
+      '<div class="opt" data-ok="0">24</div>' +
+      '<div class="opt" data-ok="0">2400</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 口算乘法你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "4×6=24，补 1 个 0 → 240";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runOral1(); }
+    if (step.id === "s3") { runOral2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "整十、整百数乘一位数：先算 0 前面的数相乘，再在末尾添上相同个数的 0。",
+      attention: "孩子容易忘了添 0 或添错个数；可让他先数清因数末尾有几个 0。",
+      tip: "本课约 8 分钟；口算时让孩子喊出「先算几乘几，再添几个 0」。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
