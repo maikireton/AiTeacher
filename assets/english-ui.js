@@ -28,6 +28,8 @@ window.EngUI = (function () {
 
   function el(id) { return document.getElementById(id); }
 
+  var animToken = 0;   // 步骤动画令牌：每次进入新步骤自增，作废旧步骤的定时动画/自动朗读
+
   /* HTML 转义（body 里的中文/英文文本用） */
   function esc(s) {
     return String(s == null ? "" : s)
@@ -51,7 +53,7 @@ window.EngUI = (function () {
   }
 
   /* 单词卡逐个弹出 + 朗读；点击卡片可重听 */
-  function playWords(boxId, words, speakFn, interval) {
+  function playWords(boxId, words, speakFn, interval, tok) {
     var box = el(boxId);
     if (!box) { return; }
     renderWords(boxId, words);
@@ -63,6 +65,7 @@ window.EngUI = (function () {
     });
     var k = 0;
     function next() {
+      if (tok !== animToken) { return; }   // 已切到其他步骤，停止自动朗读
       if (k >= words.length) { return; }
       var card = el("wc-" + boxId + "-" + k);
       if (card) {
@@ -89,12 +92,13 @@ window.EngUI = (function () {
     if (zh) { h += '<div class="sent-zh">' + esc(zh) + "</div>"; }
     box.innerHTML = h;
   }
-  function playSentence(boxId, interval) {
+  function playSentence(boxId, interval, tok) {
     var box = el(boxId);
     if (!box) { return; }
     var spans = box.querySelectorAll(".sword");
     var k = 0;
     function next() {
+      if (tok !== animToken) { return; }   // 已切到其他步骤，停止动画
       if (k >= spans.length) { return; }
       spans[k].classList.add("on");
       k++;
@@ -330,14 +334,15 @@ window.EngUI = (function () {
 
   /* 进入步骤钩子：启动对应动画/练习 */
   function enter(C, stepId, api) {
+    var tok = ++animToken;   // 进入新步骤：作废旧步骤的定时动画/自动朗读
     if (stepId === "s2") {
       playWords("words-box", C.words, function (w) {
         api.speak(w.e + "，" + w.z);
-      }, 2200);
+      }, 2200, tok);
     }
     if (stepId === "s3") {
       renderSentence("sent-box", C.pattern.sentence, C.pattern.zh);
-      playSentence("sent-box", 600);
+      playSentence("sent-box", 600, tok);
       orderGame("order-box", "order-msg", {
         words: C.order.words,
         right: C.order.right,

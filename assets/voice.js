@@ -16,6 +16,7 @@
   var voiceReady = false;          // 语音列表是否已就绪
   var pendingQueue = [];           // 等待语音就绪后执行的朗读队列
   var MEM_VOICE_TIMEOUT = 1500;    // 等待上限（ms）
+  var speechToken = 0;             // 语音令牌：每次新朗读自增，旧朗读链据此停止
 
   /* 读取设置（localStorage 受限时降级为内存中的最新值） */
   var memSettings = null;
@@ -97,6 +98,7 @@
   /* 真正朗读（语音列表已就绪后调用） */
   function speakNow(text, opts) {
     if (!("speechSynthesis" in window)) { return; }
+    var tok = ++speechToken;
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(String(text || ""));
@@ -105,10 +107,11 @@
       else { u.lang = "zh-CN"; }
       u.rate = (opts && opts.rate) || 0.92;
       u.pitch = (opts && opts.pitch) || 1.05;
-      /* onEnd：音频播放结束/中断时回调（供自动播放等读完再前进） */
+      /* onEnd：仅当本次朗读仍是最新语音时触发（供自动播放等读完再前进） */
       if (opts && typeof opts.onEnd === "function") {
-        u.onend = function () { try { opts.onEnd(); } catch (e) {} };
-        u.onerror = function () { try { opts.onEnd(); } catch (e) {} };
+        var onDone = function () { if (tok === speechToken) { try { opts.onEnd(); } catch (e) {} } };
+        u.onend = onDone;
+        u.onerror = onDone;
       }
       window.speechSynthesis.speak(u);
     } catch (e) { /* 语音失败不阻塞学习 */ }
@@ -170,14 +173,17 @@
     }
     var parts = splitMixed(text);
     var i = 0;
+    var tok = ++speechToken;
     /* 开始前中断上一段语音；段与段之间用 onend 衔接、不再反复 cancel，
      * 避免 Chrome 下 cancel()→speak() 紧连导致丢字/无声 */
     try { window.speechSynthesis.cancel(); } catch (e) {}
+    function done() {
+      if (opts && typeof opts.onEnd === "function") { try { opts.onEnd(); } catch (e) {} }
+    }
     function next() {
-      if (i >= parts.length) {
-        if (opts && typeof opts.onEnd === "function") { try { opts.onEnd(); } catch (e) {} }
-        return;
-      }
+      /* 已有更新的朗读开始（如切步后新语音启动），旧朗读链立即停止，不再抢读 */
+      if (tok !== speechToken) { return; }
+      if (i >= parts.length) { done(); return; }
       var p = parts[i++];
       try {
         var u = new SpeechSynthesisUtterance(p.text);
