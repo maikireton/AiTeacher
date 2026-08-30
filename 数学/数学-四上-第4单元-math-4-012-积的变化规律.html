@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>积的变化规律 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .pt-box { margin: 12px 0; }
+  .pt-row { display: flex; align-items: center; gap: 12px; justify-content: center; margin: 8px 0; flex-wrap: wrap; }
+  .pt-eq { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 26px; background: var(--card); border: 2px solid var(--border); border-radius: 12px; padding: 10px 18px; opacity: 0; transition: all .35s; }
+  .pt-eq.show { opacity: 1; }
+  .pt-eq.hl { border-color: var(--accent-deep); background: rgba(155,187,244,.15); }
+  .pt-eq.fac { color: #2e7d32; border-color: #8bc34a; background: rgba(139,195,74,.12); }
+  .pt-eq.pro { color: #c23a3d; border-color: var(--red); background: rgba(234,102,104,.1); }
+  .pt-ch { font-size: 22px; font-weight: 800; color: var(--accent-deep); opacity: 0; transition: opacity .3s; }
+  .pt-ch.show { opacity: 1; }
+  .pt-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .pt-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 12px; font-size: 14px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">积的变化规律 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>一个因数不变，另一个因数乘几（或除以几），积也乘几（或除以几）。</p>
+      <p><b>孩子容易走神的地方：</b>分不清是哪个因数变了、或搞混乘和除的方向；可让他观察"积跟着哪个数一起变"。</p>
+      <p><b>建议：</b>本课约 8 分钟；重点让孩子自己报「另一个因数 ×10，积也 ×10」。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-012</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  function eq(html) { return '<span class="pt-eq">' + html + "</span>"; }
+  function ch(html) { return '<span class="pt-ch">' + html + "</span>"; }
+  function show(box, sel) { var r = box.querySelector(sel); if (r) { r.classList.add("show"); } }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：观察三组算式，找找秘密！",
+      voice: "这里有三组乘法算式，积一个比一个大。里面藏着一条规律，找到它，算乘法就能又快又准。我们一起观察。",
+      body: function () {
+        return '' +
+          '<h2>找规律</h2>' +
+          '<p class="big">6×2=12　6×20=120　6×200=1200</p>' +
+          '<p>因数变了，积也跟着变。它们是怎么变的？</p>' +
+          '<div class="hint">👆 观察：哪个因数不变？哪个因数变大了几倍？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "规律动画：乘几",
+      task: "咱们这一步要做的：看动画，发现「另一个因数×几，积也×几」！",
+      voice: "看动画。六乘二等于十二。把二变成二十，也就是乘了十，看，十二也乘了十，变成一百二十。再把二十变成二百，又乘十，积也跟着乘十，变成一千二百。一个因数不变，另一个因数乘几，积也乘几。",
+      body: function () {
+        return '' +
+          '<h2>看动画：因数 ×10，积 ×10</h2>' +
+          '<div class="pt-box" id="pt1"></div>' +
+          '<div class="pt-tip" id="pt1-tip">准备开始…</div>' +
+          '<div class="pt-rule">规律：一个因数不变，另一个因数乘几，积也乘几</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "规律动画：除以几",
+      task: "咱们这一步要做的：看动画，发现「除以几」也成立！",
+      voice: "反过来看。二百乘五等于一千。把二百缩小十倍变成二十，积一千也缩小十倍变成一百。再把二十缩小十倍变成二，积一百变成十。一个因数不变，另一个因数除以几，积也除以几。",
+      body: function () {
+        return '' +
+          '<h2>看动画：因数 ÷10，积 ÷10</h2>' +
+          '<div class="pt-box" id="pt2"></div>' +
+          '<div class="pt-tip" id="pt2-tip">准备开始…</div>' +
+          '<div class="pt-rule">规律：一个因数不变，另一个因数除以几，积也除以几</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道，用规律快算！",
+      voice: "现在轮到你啦！用积的变化规律，不用列竖式也能算。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：用规律算一个放大 100 倍的，领奖！",
+      voice: "Boss 来啦！十五乘六等于九十。那如果前面这个数乘一百，变成一千五百，积要跟着乘一百哦！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：1500 × 6 = ?</h2>' +
+          '<p class="big">15 × 6 = 90，1500 × 6 = ?</p>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 动画 ========== */
+  function runPt1() {
+    var box = document.getElementById("pt1");
+    if (!box) { return; }
+    var tip = document.getElementById("pt1-tip");
+    box.innerHTML = '' +
+      '<div class="pt-row">' + eq("6 × 2 = 12") + "</div>" +
+      '<div class="pt-row" data-k="r2">' + eq("6 × 20 = 120") + ch(" 因数 ×10 ") + ch(" 积 ×10 ") + "</div>" +
+      '<div class="pt-row" data-k="r3">' + eq("6 × 200 = 1200") + ch(" 因数 ×10 ") + ch(" 积 ×10 ") + "</div>";
+    show(box, '[data-k="r1"]');
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 6 不变，2 → 20（×10），积 12 → 120（也 ×10）"; }
+      show(box, '[data-k="r2"]');
+      var es = box.querySelectorAll('[data-k="r2"] .pt-eq');
+      if (es[0]) { es[0].classList.add("hl"); }
+      var cs = box.querySelectorAll('[data-k="r2"] .pt-ch');
+      setTimeout(function () { cs.forEach(function (c) { c.classList.add("show"); }); }, 400);
+    }, 1200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 20 → 200（×10），积 120 → 1200（也 ×10）"; }
+      show(box, '[data-k="r3"]');
+      var es = box.querySelectorAll('[data-k="r3"] .pt-eq');
+      if (es[0]) { es[0].classList.add("hl"); }
+      var cs = box.querySelectorAll('[data-k="r3"] .pt-ch');
+      setTimeout(function () { cs.forEach(function (c) { c.classList.add("show"); }); }, 400);
+    }, 3800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 规律：一个因数不变，另一个因数×几，积也×几"; }
+    }, 6400);
+  }
+
+  /* ========== S3 动画 ========== */
+  function runPt2() {
+    var box = document.getElementById("pt2");
+    if (!box) { return; }
+    var tip = document.getElementById("pt2-tip");
+    box.innerHTML = '' +
+      '<div class="pt-row">' + eq("200 × 5 = 1000") + "</div>" +
+      '<div class="pt-row" data-k="r2">' + eq("20 × 5 = 100") + ch(" 因数 ÷10 ") + ch(" 积 ÷10 ") + "</div>" +
+      '<div class="pt-row" data-k="r3">' + eq("2 × 5 = 10") + ch(" 因数 ÷10 ") + ch(" 积 ÷10 ") + "</div>";
+    show(box, '[data-k="r1"]');
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 5 不变，200 → 20（÷10），积 1000 → 100（也 ÷10）"; }
+      show(box, '[data-k="r2"]');
+      var es = box.querySelectorAll('[data-k="r2"] .pt-eq');
+      if (es[0]) { es[0].classList.add("hl"); }
+      var cs = box.querySelectorAll('[data-k="r2"] .pt-ch');
+      setTimeout(function () { cs.forEach(function (c) { c.classList.add("show"); }); }, 400);
+    }, 1200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 20 → 2（÷10），积 100 → 10（也 ÷10）"; }
+      show(box, '[data-k="r3"]');
+      var es = box.querySelectorAll('[data-k="r3"] .pt-eq');
+      if (es[0]) { es[0].classList.add("hl"); }
+      var cs = box.querySelectorAll('[data-k="r3"] .pt-ch');
+      setTimeout(function () { cs.forEach(function (c) { c.classList.add("show"); }); }, 400);
+    }, 3800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 规律：一个因数不变，另一个因数÷几，积也÷几"; }
+    }, 6400);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "8×4=32，那么 8×40 = ?", right: "320", opts: ["320", "3200", "36"] },
+    { q: "20×5=100，那么 200×5 = ?", right: "1000", opts: ["1000", "100", "2000"] },
+    { q: "一个因数不变，另一个因数除以 5，积会？", right: "也除以 5", opts: ["也除以 5", "也乘 5", "不变"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "一个因数不变，另一个因数乘几，积也乘几（÷几也一样）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">1500 × 6 = ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">9000</div>' +
+      '<div class="opt" data-ok="0">900</div>' +
+      '<div class="opt" data-ok="0">90000</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 积的变化规律你会用啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "15×6=90，1500 是 15×100 → 积也 ×100 → 9000";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runPt1(); }
+    if (step.id === "s3") { runPt2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "一个因数不变，另一个因数乘几（或除以几），积也乘几（或除以几）。",
+      attention: "孩子容易分不清哪个因数变了、或搞混乘和除的方向；Boss 题考放大 100 倍。",
+      tip: "本课约 8 分钟；让孩子自己报「另一个因数 ×10，积也 ×10」来加深。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

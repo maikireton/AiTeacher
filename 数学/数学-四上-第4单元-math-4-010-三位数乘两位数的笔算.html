@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三位数乘两位数的笔算 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .mul-wrap { display: flex; gap: 26px; justify-content: center; align-items: flex-start; flex-wrap: wrap; margin: 10px 0; }
+  .mul { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 26px; line-height: 1.45; text-align: right; }
+  .mul .mrow { min-height: 42px; opacity: 0; transition: all .35s; }
+  .mul .mrow.show { opacity: 1; }
+  .mul .mrow.hl { color: var(--accent-deep); font-weight: 800; }
+  .mul .mrow.red { color: #c23a3d; font-weight: 800; }
+  .mul .mrow.green { color: #2e7d32; font-weight: 800; }
+  .mul .mrow.p2 { margin-right: 1.1ch; }
+  .mul .mrow.res { margin-right: 1.1ch; }
+  .mul .rule { border-top: 3px solid var(--text); height: 0; }
+  .mul-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .split { display: inline-block; font-family: "SF Mono", Menlo, monospace; font-size: 24px; padding: 10px 14px; border: 2px solid var(--border); border-radius: 12px; margin: 6px; background: var(--card); transition: all .4s; }
+  .split.show { opacity: 1; }
+  .split.hl { border-color: var(--accent-deep); background: rgba(155,187,244,.14); }
+  .split .grow0 { display: inline-block; color: #2e7d32; animation: g0 .5s ease; }
+  @keyframes g0 { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); } }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">三位数乘两位数的笔算 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>笔算三位数×两位数：先用个位乘、再用十位乘（积向左移一位），最后把两个部分积相加。</p>
+      <p><b>孩子容易走神的地方：</b>十位相乘的积忘记左移一位/或末尾忘补 0；加法进位漏加。</p>
+      <p><b>建议：</b>本课约 8 分钟；重点讲清"十位上的数表示几个十，积的末尾要和十位对齐"。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-010</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 竖式工具 ========== */
+  function showRow(box, sel, cls) {
+    var r = box.querySelector(sel);
+    if (r) {
+      r.classList.add("show");
+      if (cls) { r.classList.add(cls); }
+    }
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：算一算 145 × 12！",
+      voice: "一本书一百四十五元，买十二本要多少钱？一百四十五乘十二，数字有点大，怎么算？今天我们学三位数乘两位数的笔算。",
+      body: function () {
+        return '' +
+          '<h2>145 × 12 = ？</h2>' +
+          '<p>一本书 145 元，买 12 本 → <span class="big">145 × 12</span></p>' +
+          '<p>口算有点难？没关系，我们用<b>竖式笔算</b>，一步步来。</p>' +
+          '<div class="hint">👆 在草稿纸上先列个竖式试试！</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "笔算竖式动画",
+      task: "咱们这一步要做的：看动画，学会三步笔算！",
+      voice: "看竖式。先用个位上的二去乘：二乘一百四十五等于二百九十。再用十位上的一去乘：一乘一百四十五等于一百四十五，但一在十位，表示一个十，所以结果是一千四百五十，要往左写一位。最后把两个积加起来，二百九十加一千四百五十，等于一千七百四十。",
+      body: function () {
+        return '' +
+          '<h2>看动画：145 × 12 笔算</h2>' +
+          '<div class="mul-wrap"><div class="mul" id="mul1">' +
+            '<div class="mrow" data-s="145">145</div>' +
+            '<div class="mrow" data-s="op">×&nbsp;&nbsp;12</div>' +
+            '<div class="mrow rule" data-s="line"></div>' +
+            '<div class="mrow" data-s="p1">290</div>' +
+            '<div class="mrow p2" data-s="p2">1450</div>' +
+            '<div class="mrow rule" data-s="line2"></div>' +
+            '<div class="mrow res" data-s="res">1740</div>' +
+          '</div></div>' +
+          '<div class="mul-tip" id="mul1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "部分积对齐原理",
+      task: "咱们这一步要做的：搞懂为什么第二个积要往左移！",
+      voice: "为什么第二个积要往左挪一位？因为十位上的一表示一个十，一乘一百四十五，其实是乘十，结果是一千四百五十。看动画：一百四十五乘十，就是后面长出一个零。所以它要写在十位下面。",
+      body: function () {
+        return '' +
+          '<h2>看动画：145 × 10 = 1450</h2>' +
+          '<div class="mul-wrap" id="split1"></div>' +
+          '<div class="mul-tip" id="mul1-tip2">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道笔算理解题！",
+      voice: "现在轮到你啦！笔算的要点：用哪一位去乘，积就写在那一位下面。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：完整算一道笔算，领奖！",
+      voice: "Boss 来啦！算一算三百二十一乘二十四。先用个位四乘，再用十位二乘，别忘了十位乘的积往左写，最后加起来。",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：321 × 24 = ?</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 动画：竖式 ========== */
+  function runMul1() {
+    var box = document.getElementById("mul1");
+    if (!box) { return; }
+    var tip = document.getElementById("mul1-tip");
+    showRow(box, '[data-s="145"]', "show");
+    showRow(box, '[data-s="op"]', "show");
+    showRow(box, '[data-s="line"]', "show");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 先用个位 2 × 145 = 290（积的个位对齐个位）"; }
+      showRow(box, '[data-s="p1"]', "red show");
+    }, 1200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 再用十位 1 × 145 = 1450（1 在十位，表示 ×10，往左移一位）"; }
+      showRow(box, '[data-s="p2"]', "green show");
+    }, 3200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 两个部分积相加：290 + 1450 = 1740"; }
+      showRow(box, '[data-s="line2"]', "show");
+      showRow(box, '[data-s="res"]', "hl show");
+    }, 5200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 145 × 12 = 1740（个位乘 → 十位乘 → 相加）"; }
+    }, 6800);
+  }
+
+  /* ========== S3 动画：145×10 = 1450 ========== */
+  function runSplit() {
+    var box = document.getElementById("split1");
+    if (!box) { return; }
+    var tip = document.getElementById("mul1-tip2");
+    box.innerHTML = '' +
+      '<span class="split" id="sp-a">145 × 2 = 290</span>' +
+      '<span class="split" id="sp-b">145 × 10 = 145<span class="grow0" id="sp-zero">0</span></span>' +
+      '<span class="split" id="sp-c">290 + 1450 = 1740</span>';
+    setTimeout(function () {
+      var a = document.getElementById("sp-a");
+      if (a) { a.classList.add("show", "hl"); }
+      if (tip) { tip.textContent = "① 把 12 拆成 2 和 10：145×2 = 290"; }
+    }, 400);
+    setTimeout(function () {
+      var b = document.getElementById("sp-b");
+      if (b) { b.classList.add("show", "hl"); }
+      if (tip) { tip.textContent = "② 十位 1 表示 1 个十 → 145×10，末尾长出 0 → 1450"; }
+      setTimeout(function () {
+        var z = document.getElementById("sp-zero");
+        if (z) { z.textContent = "0"; }
+      }, 600);
+    }, 2000);
+    setTimeout(function () {
+      var a = document.getElementById("sp-a"), b = document.getElementById("sp-b"), c = document.getElementById("sp-c");
+      if (a) { a.classList.remove("hl"); }
+      if (b) { b.classList.remove("hl"); }
+      if (c) { c.classList.add("show", "hl"); }
+      if (tip) { tip.textContent = "③ 两个积相加：290 + 1450 = 1740 ✅"; }
+    }, 4200);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "124×23 中，十位 2×124=248，这个 248 其实表示？", right: "2480", opts: ["2480", "248", "24.8"] },
+    { q: "213×12，先算个位 2×213 = ?", right: "426", opts: ["426", "4260", "4206"] },
+    { q: "145×11 = ?", right: "1595", opts: ["1595", "1450", "1505"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "十位上的数表示几个十，积要往左移一位（末尾补 0）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">321 × 24 = ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">7704</div>' +
+      '<div class="opt" data-ok="0">7440</div>' +
+      '<div class="opt" data-ok="0">7074</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 笔算小能手！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "321×4=1284，321×20=6420，相加 = 7704";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runMul1(); }
+    if (step.id === "s3") { runSplit(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "笔算三位数×两位数：先用个位乘、再用十位乘（积向左移一位），最后把两个部分积相加。",
+      attention: "孩子容易把十位相乘的积漏掉左移/末尾补 0，或加法进位漏加；S3 拆解动画专讲为什么左移。",
+      tip: "本课约 8 分钟；重点讲清「十位上的数表示几个十，积的末尾要和十位对齐」。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
