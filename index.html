@@ -50,23 +50,27 @@
       try {
         var rec = window.Record;
         var st = rec.stats();
-        var kp = rec.recommend();
+        var kps = rec.recommendList(2);
         var weakSet = {};
         rec.weakIds().forEach(function (k) { weakSet[k] = true; });
 
         var h = '<div class="today-head">今日任务</div>';
         h += '<div class="today-stat">今日已学 <b>' + st.today + '</b> 个 · 连续学习 <b>' + st.streak + '</b> 天 · 共得 <b>' + st.totalStars + '</b> 星</div>';
 
-        if (kp) {
-          var isWeak = !!weakSet[kp.id];
-          h += '<div class="today-reco">';
-          h += '<div class="today-reco-label">' + (isWeak ? "薄弱点复习：" : "今天推荐学：") + "</div>";
-          h += '<a class="today-reco-name" href="' + kp.file + '">' + kp.name + "</a>";
-          h += '<div class="today-reco-meta"><span class="tag">' + util.subjectName(kp.subject) + '</span><span class="tag grade">' + kp.grade + "年级·" + (kp.term || "") + "</span>";
-          if (isWeak) { h += '<span class="tag diff-挑战">薄弱点</span>'; }
-          h += "</div>";
-          h += '<div class="today-reco-sum">' + kp.summary + "</div>";
-          h += '<a class="today-btn" href="' + kp.file + '">开始学习 →</a>';
+        if (kps.length) {
+          h += '<div class="today-list">';
+          kps.forEach(function (kp) {
+            var isWeak = !!weakSet[kp.id];
+            h += '<div class="today-reco">';
+            h += '<div class="today-reco-label">' + (isWeak ? "薄弱点复习：" : "今天学这个：") + "</div>";
+            h += '<a class="today-reco-name" href="' + kp.file + '">' + kp.name + "</a>";
+            h += '<div class="today-reco-meta"><span class="tag">' + util.subjectName(kp.subject) + '</span><span class="tag grade">' + kp.grade + "年级·" + (kp.term || "") + "</span>";
+            if (isWeak) { h += '<span class="tag diff-挑战">薄弱点</span>'; }
+            h += "</div>";
+            h += '<div class="today-reco-sum">' + kp.summary + "</div>";
+            h += '<a class="today-btn" href="' + kp.file + '">开始学习 →</a>';
+            h += "</div>";
+          });
           h += "</div>";
         } else {
           h += '<div class="today-done">今天的任务都完成啦，明天继续！</div>';

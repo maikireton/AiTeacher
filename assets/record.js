@@ -156,26 +156,46 @@ window.Record = (function () {
   }
 
   /* ---------- 今日任务推荐（供主页） ----------
-   * 优先级：薄弱点 → 最久未复习的已完成课件 → 第一个已完成课件 */
-  function recommend(knowledgeBase) {
-    var KB = knowledgeBase || window.KNOWLEDGE_BASE;
-    if (!KB || !Array.isArray(KB.knowledgePoints)) { return null; }
+   * 优先级：薄弱点优先 → 其次最久未复习的已完成课件；
+   * 返回最多 n 个，并尽量覆盖不同学科（学科多样性） */
+  function recommendList(n) {
+    n = (typeof n === "number" && n > 0) ? n : 2;
+    var KB = window.KNOWLEDGE_BASE;
+    if (!KB || !Array.isArray(KB.knowledgePoints)) { return []; }
     var doneSet = {};
     todayDone().forEach(function (k) { doneSet[k] = true; });
     // 候选：已制作完成、可点击、今日还没学过
     var cands = KB.knowledgePoints.filter(function (k) {
       return k.status === "已完成" && k.file && !doneSet[k.id];
-    });
-    if (!cands.length) { return null; }
-    // 优先薄弱点
+    }).sort(byLastStudy);
+    if (!cands.length) { return []; }
+
     var weakSet = {};
     weakIds().forEach(function (k) { weakSet[k] = true; });
     var weakCands = cands.filter(function (k) { return weakSet[k.id]; });
-    if (weakCands.length) {
-      return weakCands.sort(byLastStudy).slice(0, 1)[0];
+    var rest = cands.filter(function (k) { return !weakSet[k.id]; });
+
+    var out = [];
+    // 1) 先取薄弱点（最久未学优先）
+    for (var i = 0; i < weakCands.length && out.length < n; i++) { out.push(weakCands[i]); }
+    // 2) 补足到 n：优先未覆盖学科，保证学科多样性
+    while (out.length < n && rest.length) {
+      var usedSubj = {};
+      out.forEach(function (k) { usedSubj[k.subject] = true; });
+      var best = null, bi = -1;
+      for (var j = 0; j < rest.length; j++) {
+        if (!usedSubj[rest[j].subject]) { best = rest[j]; bi = j; break; }
+      }
+      if (!best) { best = rest[0]; bi = 0; }
+      out.push(best);
+      rest.splice(bi, 1);
     }
-    // 其次：最久没复习的（按最近一次学习日期升序排，无记录的最前）
-    return cands.sort(byLastStudy).slice(0, 1)[0];
+    return out;
+  }
+
+  /* 兼容：返回单个推荐（取推荐列表第一个） */
+  function recommend(knowledgeBase) {
+    return recommendList(1)[0] || null;
   }
 
   /* 按「最近学习日期」排序：没学过的排最前（优先新学），学得越久远的越靠前（优先复习） */
@@ -200,6 +220,7 @@ window.Record = (function () {
     streak: streak,
     stats: stats,
     recommend: recommend,
+    recommendList: recommendList,
     today: today
   };
 })();
