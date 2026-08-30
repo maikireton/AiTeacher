@@ -40,12 +40,14 @@
       <select id="voice-zh" aria-label="选择简体中文音色">
         <option value="">加载中…</option>
       </select>
+      <button class="btn" id="btn-preview-zh" type="button">播放</button>
     </div>
     <div class="field">
       <label for="voice-en">英文音色</label>
       <select id="voice-en" aria-label="选择英文音色">
         <option value="">加载中…</option>
       </select>
+      <button class="btn" id="btn-preview-en" type="button">播放</button>
     </div>
     <div class="status" id="voice-status"></div>
     <div class="note" id="voice-note"></div>
@@ -146,6 +148,25 @@
     }
     return null;
   }
+
+  /* 试听：用当前选中的音色朗读测试句 */
+  function preview(sel, list, text, fallbackLang) {
+    var v = pick(sel, list);
+    if (!v || !("speechSynthesis" in window)) { return; }
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = v.lang || fallbackLang;
+      u.voice = v;
+      u.rate = 0.92;
+      u.pitch = 1.05;
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* 忽略 */ }
+  }
+  var btnZh = document.getElementById("btn-preview-zh");
+  var btnEn = document.getElementById("btn-preview-en");
+  if (btnZh) { btnZh.addEventListener("click", function () { preview(selZh, zhVoices, "你好，我是你的小老师。这个声音好不好听？", "zh-CN"); }); }
+  if (btnEn) { btnEn.addEventListener("click", function () { preview(selEn, enVoices, "Hello! I am your little teacher. Do you like this voice?", "en-US"); }); }
 
   /* 选择变化：保存 */
   function onChange(sel, list, key) {
