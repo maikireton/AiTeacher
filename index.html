@@ -10,6 +10,7 @@
 <div class="container">
   <header class="topbar">
     <span class="brand">AI 教师 <small>家庭知识课件库</small></span>
+    <a class="btn-home" href="settings.html" style="margin-left:auto">⚙ 设置</a>
   </header>
 
   <div class="hero">
@@ -46,7 +47,7 @@
       KB.subjects.forEach(function (s) {
         var list = util.bySubject(s.id);
         var done = list.filter(function (k) { return k.status === "已完成"; }).length;
-        html += '<a class="subj" href="' + s.id + '/index.html">';
+        html += '<a class="subj" href="' + (s.dir || s.id) + '/index.html">';
         html += '<div class="sname">' + s.name + "</div>";
         html += '<div class="smeta">' + list.length + " 个知识点 · 已完成 " + done + " 个</div>";
         html += "</a>";

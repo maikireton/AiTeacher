@@ -13,9 +13,9 @@
 
     /* 学科字典 */
     subjects: [
-      { id: "chinese", name: "语文", order: 1 },
-      { id: "math",    name: "数学", order: 2 },
-      { id: "english", name: "英语", order: 3 }
+      { id: "chinese", name: "语文", dir: "语文", order: 1 },
+      { id: "math",    name: "数学", dir: "数学", order: 2 },
+      { id: "english", name: "英语", dir: "英语", order: 3 }
     ],
 
     /* 知识模块字典（对应文档 §3.1） */
