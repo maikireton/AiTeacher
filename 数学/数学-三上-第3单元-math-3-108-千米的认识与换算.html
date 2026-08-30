@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>千米的认识与换算 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .km-box { margin: 12px 0; }
+  .km-track { display: flex; gap: 2px; justify-content: center; align-items: flex-end; margin: 10px 0; }
+  .km-track .seg { width: 22px; background: linear-gradient(180deg,#ffd591,#ffa940); border-radius: 3px 3px 0 0; opacity: 0; transition: opacity .3s; }
+  .km-track .seg.show { opacity: 1; }
+  .km-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 10px 0; color: var(--accent-deep); }
+  .km-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .km-conv { display: flex; gap: 12px; justify-content: center; align-items: center; font-size: 28px; font-weight: 800; margin: 10px 0; flex-wrap: wrap; }
+  .km-num { background: var(--card); border: 2px solid var(--border); border-radius: 10px; padding: 6px 14px; transition: all .4s; }
+  .km-num.hl { border-color: #8bc34a; background: rgba(139,195,74,.12); }
+  .km-arrow { color: var(--accent-deep); font-size: 22px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">千米的认识与换算 <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>计量长路程用千米（公里），1千米=1000米；换算看添 3 个 0 或去 3 个 0。</p>
+      <p><b>孩子容易走神的地方：</b>把 1千米=100米（进率记成 100）；可用 400 米跑道 2 圈半来记。</p>
+      <p><b>建议：</b>本课约 8 分钟；带孩子走一段 1 千米的路，感受有多远。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-108</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看两地的路程用什么单位！",
+      voice: "从家到学校有八百米，从宁波到杭州有二百多千米。量很长的路程，用米就太大了，要用更大的单位——千米。",
+      body: function () {
+        return '' +
+          '<h2>千米来啦</h2>' +
+          '<p>跑 400 米的操场，要跑多少圈才是 1000 米？</p>' +
+          '<p>1000 米就是 <b>1 千米</b>，也叫 1 公里。</p>' +
+          '<div class="hint">👆 1 千米 = 1000 米</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "感受 1 千米",
+      task: "咱们这一步要做的：看动画数 10 个 100 米拼成 1 千米！",
+      voice: "看动画。一条路，每走一百米记一段。走一段一百，走两段二百……一直走到十个一百米，正好一千米！所以一千米等于一千米。",
+      body: function () {
+        return '' +
+          '<h2>看动画：1000 米 = 1 千米</h2>' +
+          '<div class="km-box" id="km1">' +
+          '<div class="km-track">' + Array.apply(null, Array(10)).map(function () { return '<span class="seg" style="height:40px"></span>'; }).join("") + "</div>" +
+          "</div>" +
+          '<div class="km-tip" id="km1-tip">准备开始…</div>' +
+          '<div class="km-rule">1 千米 = 1000 米（跑道 2 圈半）</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "千米与米换算",
+      task: "咱们这一步要做的：看动画学会添 3 个 0 和去 3 个 0！",
+      voice: "看动画。三千米等于多少米？千米变米，在后面添三个零，三千。反过来，五千米等于多少千米？去掉三个零，五。添三个零变大，去三个零变小。",
+      body: function () {
+        return '' +
+          '<h2>看动画：换算添/去 3 个 0</h2>' +
+          '<div class="km-box" id="km2">' +
+          '<div class="km-conv">' +
+          '<span class="km-num" id="n1">3 千米</span><span class="km-arrow">→</span><span class="km-num" id="n2">? 米</span>' +
+          "</div>" +
+          '<div class="km-conv">' +
+          '<span class="km-num" id="n3">5000 米</span><span class="km-arrow">→</span><span class="km-num" id="n4">? 千米</span>' +
+          "</div>" +
+          "</div>" +
+          '<div class="km-tip" id="km2-tip">准备开始…</div>' +
+          '<div class="km-rule">大单位→小单位添 3 个 0；小单位→大单位去 3 个 0</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道千米换算题！",
+      voice: "现在考考你！千米和米的换算。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算跑道 2 圈半，领奖！",
+      voice: "Boss 来啦！操场跑道一圈四百米，跑两圈半是多少米？两圈是八百米，半圈二百米，合起来一千米！也就是一千米。",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：400×2.5 = ? 米</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runKm1() {
+    var tip = document.getElementById("km1-tip");
+    var segs = document.querySelectorAll("#km1 .seg");
+    segs.forEach(function (s, i) {
+      setTimeout(function () {
+        s.classList.add("show");
+        if (tip && (i === 4 || i === 9)) { tip.textContent = "已经走了 " + (i + 1) * 100 + " 米…"; }
+      }, 500 + i * 350);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 10 个 100 米 = 1000 米 = 1 千米"; } }, 4300);
+  }
+  function runKm2() {
+    var tip = document.getElementById("km2-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "① 3 千米 → 添 3 个 0 → 3000 米"; } document.getElementById("n2").textContent = "3000 米"; }, 900);
+    setTimeout(function () {
+      var a = document.getElementById("n1"), b = document.getElementById("n2");
+      if (a) { a.classList.add("hl"); } if (b) { b.classList.add("hl"); }
+    }, 2600);
+    setTimeout(function () { if (tip) { tip.textContent = "② 5000 米 → 去 3 个 0 → 5 千米"; } document.getElementById("n4").textContent = "5 千米"; }, 4200);
+    setTimeout(function () {
+      var a = document.getElementById("n3"), b = document.getElementById("n4");
+      if (a) { a.classList.add("hl"); } if (b) { b.classList.add("hl"); }
+    }, 5900);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 千米↔米：添 3 个 0 / 去 3 个 0"; } }, 7000);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "1 千米 = ? 米", right: "1000", opts: ["1000", "100", "10000"] },
+    { q: "4 千米 = ? 米", right: "4000", opts: ["4000", "400", "40"] },
+    { q: "8000 米 = ? 千米", right: "8", opts: ["8", "80", "800"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "1千米=1000米：添 3 个 0 或去 3 个 0";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">跑道 2 圈半 = ? 米</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">1000</div>' +
+      '<div class="opt" data-ok="0">800</div>' +
+      '<div class="opt" data-ok="0">1200</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 千米你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "400×2 = 800，400÷2 = 200，800+200 = 1000";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runKm1(); }
+    if (step.id === "s3") { runKm2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "计量长路程用千米（公里），1千米=1000米；换算看添 3 个 0 或去 3 个 0。",
+      attention: "孩子容易把 1千米=100米（进率记成 100）；可用 400 米跑道 2 圈半来记。",
+      tip: "本课约 8 分钟；带孩子走一段 1 千米的路，感受有多远。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

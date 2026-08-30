@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>吨的认识（曹冲称象） · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .t-box { margin: 12px 0; }
+  .t-story { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; }
+  .t-card { display: flex; flex-direction: column; align-items: center; gap: 4px; border: 2px solid var(--border); border-radius: 14px; padding: 12px 16px; background: var(--card); opacity: 0; transition: all .5s; }
+  .t-card.show { opacity: 1; }
+  .t-card.hl { border-color: var(--accent-deep); }
+  .t-ico { font-size: 42px; }
+  .t-name { font-size: 13px; color: var(--text-2); }
+  .t-arrow { font-size: 26px; color: var(--accent-deep); font-weight: 800; }
+  .t-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 10px 0; color: var(--accent-deep); }
+  .t-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .t-kids { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; margin: 8px 0; max-width: 460px; margin-left: auto; margin-right: auto; }
+  .t-kids .kid { font-size: 20px; opacity: 0; transition: opacity .2s; }
+  .t-kids .kid.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">吨的认识（曹冲称象） <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>称很重的大宗物品用吨；1吨=1000千克。大象、卡车载重用吨。</p>
+      <p><b>孩子容易走神的地方：</b>吨和千克进率记成 100；可用"40 个 25 千克的小朋友 = 1 吨"来记。</p>
+      <p><b>建议：</b>本课约 8 分钟；和孩子一起看家里大米（25kg/袋），算几袋是 1 吨。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-109</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  function card(ico, name) {
+    return '<div class="t-card"><span class="t-ico">' + ico + '</span><span class="t-name">' + name + "</span></div>";
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想大象有多重！",
+      voice: "大象有多重？几吨重！家里的电子秤只能称一百多千克，大象用千克来称太大啦。今天认识更大的质量单位——吨。",
+      body: function () {
+        return '' +
+          '<h2>大象有多重？</h2>' +
+          '<p style="font-size:56px;margin:4px 0">🐘</p>' +
+          '<p>大象、货车、轮船都很重，要用 <b>吨</b> 来称。</p>' +
+          '<div class="hint">👆 1 吨 = 1000 千克</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "曹冲称象",
+      task: "咱们这一步要做的：看动画学聪明办法称大象！",
+      voice: "看动画。古时候曹冲称大象：把大象赶到大船上，在船舷上做个记号。再把大象赶走，往船里装石头，装到记号处。石头的重量，就是大象的重量！",
+      body: function () {
+        return '' +
+          '<h2>看动画：曹冲称象</h2>' +
+          '<div class="t-box" id="t1">' +
+          '<div class="t-story">' +
+          card("🐘", "① 大象上船") +
+          '<span class="t-arrow">→</span>' +
+          card("🚤", "② 做记号") +
+          '<span class="t-arrow">→</span>' +
+          card("🪨", "③ 装石头到记号") +
+          '<span class="t-arrow">→</span>' +
+          card("⚖️", "④ 石头重=象重") +
+          "</div>" +
+          "</div>" +
+          '<div class="t-tip" id="t1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "1 吨 = 1000 千克",
+      task: "咱们这一步要做的：数 40 个小朋友凑出 1 吨！",
+      voice: "看动画。一个小朋友大约二十五千克。一个、两个……四十个小朋友的体重加起来，正好大约一千千克，就是一吨！所以一吨等于一千千克。",
+      body: function () {
+        return '' +
+          '<h2>看动画：40 个小朋友 = 1 吨</h2>' +
+          '<div class="t-box" id="t2">' +
+          '<div class="t-kids" id="kids"></div>' +
+          "</div>" +
+          '<div class="t-tip" id="t2-tip">准备开始…</div>' +
+          '<div class="t-rule">1 吨 = 1000 千克（40 个 25kg 的小朋友）</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道吨的题！",
+      voice: "现在考考你！吨和千克的换算。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算一吨有几个小朋友，领奖！",
+      voice: "Boss 来啦！一个小朋友二十五千克，几个小朋友才有一吨？一吨等于一千千克，一千除以二十五，正好四十个。",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：几个小朋友 = 1 吨？</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runT1() {
+    var cards = document.querySelectorAll("#t1 .t-card");
+    cards.forEach(function (c, i) {
+      setTimeout(function () { c.classList.add("show"); }, 600 + i * 900);
+    });
+    var tip = document.getElementById("t1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "① 大象上船，记号在船舷"; } }, 1500);
+    setTimeout(function () { if (tip) { tip.textContent = "② 换成石头，称石头 = 称大象"; } }, 4200);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 石头有多重，大象就有多重"; } }, 6000);
+  }
+  function runT2() {
+    var kids = document.getElementById("kids");
+    var tip = document.getElementById("t2-tip");
+    if (!kids) { return; }
+    var h = "";
+    for (var i = 0; i < 40; i++) { h += '<span class="kid">🧒</span>'; }
+    kids.innerHTML = h;
+    var els = kids.querySelectorAll(".kid");
+    els.forEach(function (k, i) {
+      setTimeout(function () {
+        k.classList.add("show");
+        if (i === 9) { if (tip) { tip.textContent = "10 个小朋友 ≈ 250 千克…"; } }
+        if (i === 19) { if (tip) { tip.textContent = "20 个小朋友 ≈ 500 千克…"; } }
+        if (i === 29) { if (tip) { tip.textContent = "30 个小朋友 ≈ 750 千克…"; } }
+        if (i === 39) { if (tip) { tip.textContent = "40 个小朋友 = 1000 千克 = 1 吨 ✅"; } }
+      }, 100 + i * 90);
+    });
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "1 吨 = ? 千克", right: "1000", opts: ["1000", "100", "10000"] },
+    { q: "3 吨 = ? 千克", right: "3000", opts: ["3000", "300", "30"] },
+    { q: "称大象这么重的动物，用什么单位？", right: "吨", opts: ["吨", "克", "毫米"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "1吨=1000千克，1千克=1000克";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">几个 25kg 的小朋友 = 1 吨？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">40 个</div>' +
+      '<div class="opt" data-ok="0">4 个</div>' +
+      '<div class="opt" data-ok="0">400 个</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 吨你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "1000 ÷ 25 = 40（个）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runT1(); }
+    if (step.id === "s3") { runT2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "称很重的大宗物品用吨；1吨=1000千克。大象、卡车载重用吨。",
+      attention: "孩子容易把吨和千克进率记成 100；可用「40 个 25 千克的小朋友 = 1 吨」来记。",
+      tip: "本课约 8 分钟；和孩子一起看家里大米（25kg/袋），算几袋是 1 吨。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>毫米与分米的认识 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .mm-box { margin: 12px 0; }
+  .ruler { display: flex; height: 46px; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; margin: 10px auto; width: 240px; background: #fff; }
+  .ruler .cm { flex: 1; border-right: 2px solid #94a3b8; display: flex; position: relative; }
+  .ruler .cm .mm { flex: 1; border-right: 1px solid #e2e8f0; }
+  .ruler .cm .cm-lab { position: absolute; bottom: 2px; width: 100%; text-align: center; font-size: 11px; color: var(--text-2); }
+  .mm-zoom { border: 3px solid #ffa940; border-radius: 12px; padding: 8px 14px; margin: 10px auto; width: 200px; background: #fffdf5; }
+  .mm-zoom .zbar { display: flex; height: 30px; }
+  .mm-zoom .zbar .mm { flex: 1; border-right: 1px solid #ffd591; display: flex; align-items: flex-end; justify-content: center; }
+  .mm-zoom .zbar .mm:last-child { border-right: none; }
+  .mm-zoom .z-lab { display: flex; }
+  .mm-zoom .z-lab span { flex: 1; text-align: center; font-size: 12px; color: var(--text-2); }
+  .mm-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 10px 0; color: var(--accent-deep); }
+  .mm-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .dm-blocks { display: flex; gap: 2px; justify-content: center; margin: 10px 0; }
+  .dm-blocks .blk { width: 20px; height: 40px; background: linear-gradient(180deg,#7eb6ff,#4a7fe0); border-radius: 3px; opacity: 0; transition: opacity .3s; }
+  .dm-blocks .blk.show { opacity: 1; }
+  .mm-ex { font-size: 15px; min-height: 24px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">毫米与分米的认识 <small>3年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>毫米、厘米、分米都是长度单位：1厘米=10毫米，1分米=10厘米；量很短的物体用毫米。</p>
+      <p><b>孩子容易走神的地方：</b>进率记混（以为是 100）；可用"尺子上数格子"来感受 10 格的关系。</p>
+      <p><b>建议：</b>本课约 8 分钟；拿尺子让孩子数 1 厘米里的小格，量硬币、指甲盖的厚度。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-3-107</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  function rulerHTML(cm) {
+    var h = "";
+    for (var i = 0; i < cm; i++) {
+      h += '<div class="cm"><span class="cm-lab">' + i + "cm</span>";
+      for (var j = 0; j < 10; j++) { h += '<span class="mm"></span>'; }
+      h += "</div>";
+    }
+    return '<div class="ruler">' + h + "</div>";
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看硬币有多厚、铅笔盒有多长！",
+      voice: "一枚硬币有多厚？不到一厘米！那怎么量？要用更小的单位毫米。我们的手掌一拃大约一分米。今天认识毫米和分米。",
+      body: function () {
+        return '' +
+          '<h2>更小、更大的长度单位</h2>' +
+          '<p>硬币厚度 ≈ 1 毫米，一拃长 ≈ 1 分米。</p>' +
+          '<div class="hint">👆 毫米很小，分米比厘米大一点。</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "毫米：1厘米=10毫米",
+      task: "咱们这一步要做的：看动画数一数 1 厘米里有几小格！",
+      voice: "看动画。这是一把尺子。把一厘米放大，里面藏着一二三四五六七八九十，十个小格！每个小格就是一毫米。所以一厘米等于十毫米。",
+      body: function () {
+        return '' +
+          '<h2>看动画：1 厘米 = 10 毫米</h2>' +
+          '<div class="mm-box" id="mm1">' + rulerHTML(3) +
+          '<div class="mm-zoom"><div class="zbar">' +
+          Array.apply(null, Array(10)).map(function () { return '<span class="mm"></span>'; }).join("") +
+          '</div><div class="z-lab">' +
+          Array.apply(null, Array(10)).map(function (x, i) { return "<span>" + (i + 1) + "</span>"; }).join("") +
+          "</div></div>" +
+          "</div>" +
+          '<div class="mm-tip" id="mm1-tip">准备开始…</div>' +
+          '<div class="mm-rule">1 厘米 = 10 毫米</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "分米：1分米=10厘米",
+      task: "咱们这一步要做的：看动画数 10 个 1 厘米拼成 1 分米！",
+      voice: "看动画。十个一厘米的小方块，一个接一个拼起来，正好是一分米。一拃大约就是这么长。所以一分米等于十厘米。",
+      body: function () {
+        return '' +
+          '<h2>看动画：1 分米 = 10 厘米</h2>' +
+          '<div class="mm-box" id="mm2">' +
+          '<div class="dm-blocks">' + Array.apply(null, Array(10)).map(function () { return '<span class="blk"></span>'; }).join("") + "</div>" +
+          "</div>" +
+          '<div class="mm-tip" id="mm2-tip">准备开始…</div>' +
+          '<div class="mm-rule">1 分米 = 10 厘米</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道长度单位题！",
+      voice: "现在考考你！毫米和分米的进率。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：跨两级换算，领奖！",
+      voice: "Boss 来啦！一分米等于多少毫米？一分米等于十厘米，一厘米等于十毫米，所以一分米等于一百毫米！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：1 分米 = ? 毫米</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runMm1() {
+    var tip = document.getElementById("mm1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "① 这是一把尺子，一格大格是 1 厘米"; } }, 700);
+    setTimeout(function () { if (tip) { tip.textContent = "② 把 1 厘米放大看：里面有 10 个小格"; } }, 2600);
+    setTimeout(function () { if (tip) { tip.textContent = "③ 每个小格是 1 毫米 → 1厘米 = 10毫米"; } }, 4400);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 硬币厚度大约 1 毫米"; } }, 6000);
+  }
+  function runMm2() {
+    var tip = document.getElementById("mm2-tip");
+    var blks = document.querySelectorAll("#mm2 .blk");
+    blks.forEach(function (b, i) {
+      setTimeout(function () {
+        b.classList.add("show");
+        if (tip && (i === 4 || i === 9)) { tip.textContent = "已经拼了 " + (i + 1) + " 个 1 厘米…"; }
+      }, 600 + i * 350);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 10 个 1 厘米 = 1 分米（一拃长）"; } }, 4300);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "1 厘米 = ? 毫米", right: "10", opts: ["10", "100", "5"] },
+    { q: "1 分米 = ? 厘米", right: "10", opts: ["10", "100", "1"] },
+    { q: "量硬币这么薄的物体，用哪个单位？", right: "毫米", opts: ["毫米", "千米", "米"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "1厘米=10毫米，1分米=10厘米";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">1 分米 = ? 毫米</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">100</div>' +
+      '<div class="opt" data-ok="0">10</div>' +
+      '<div class="opt" data-ok="0">1000</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 长度单位你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "1分米=10厘米，1厘米=10毫米 → 10×10=100";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runMm1(); }
+    if (step.id === "s3") { runMm2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "毫米、厘米、分米都是长度单位：1厘米=10毫米，1分米=10厘米；量很短的物体用毫米。",
+      attention: "孩子容易把进率记混（以为是 100）；可用「尺子上数格子」来感受 10 格的关系。",
+      tip: "本课约 8 分钟；拿尺子让孩子数 1 厘米里的小格，量硬币、指甲盖的厚度。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
