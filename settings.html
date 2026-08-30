@@ -16,12 +16,9 @@
     font-size: 15px; color: var(--text); outline: none;
   }
   .field select:focus { border-color: var(--accent-deep); }
-  .btn { min-height: 44px; padding: 0 18px; border-radius: 12px; border: none; background: var(--accent-deep); color: #fff; font-size: 14px; cursor: pointer; }
-  .btn:active { opacity: .85; }
   .status { font-size: 13px; color: var(--text-2); margin-top: 10px; min-height: 20px; }
   .status.ok { color: var(--green); }
   .status.warn { color: #b07900; }
-  .voice-preview { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; font-size: 13px; color: var(--text-2); }
   .note { font-size: 12px; color: var(--text-2); background: rgba(0,0,0,.04); border-radius: 10px; padding: 10px 12px; margin-top: 12px; }
 </style>
 </head>
@@ -34,14 +31,12 @@
 
   <div class="card">
     <h2>语音 · 音色</h2>
-    <div class="desc">课件讲解使用中文语音。这里只能选择<strong>中文音色</strong>，选择后所有课件都会用这个声音讲解。</div>
+    <div class="desc">课件讲解使用中文（普通话）语音。这里只提供<strong>简体中文（zh-cn）音色</strong>，选择后所有课件都会用这个声音讲解。</div>
     <div class="field">
-      <select id="voice-select" aria-label="选择中文音色">
+      <select id="voice-select" aria-label="选择简体中文音色">
         <option value="">加载中…</option>
       </select>
-      <button class="btn" id="btn-preview">试听</button>
     </div>
-    <div class="voice-preview" id="voice-preview"></div>
     <div class="status" id="voice-status"></div>
     <div class="note" id="voice-note"></div>
   </div>
@@ -49,7 +44,7 @@
   <div class="card">
     <h2>说明</h2>
     <div class="desc">
-      <p>· 音色来自你电脑系统自带的中文语音，数量取决于系统安装了哪些中文语音包。</p>
+      <p>· 音色来自你电脑系统自带的简体中文（普通话）语音，数量取决于系统安装了哪些中文语音包。</p>
       <p>· 想换更多好听的声音：Windows 到「设置 → 时间和语言 → 语音」、macOS 到「系统设置 → 辅助功能 → 朗读内容」里添加中文语音。</p>
       <p>· 建议用 Chrome / Edge 浏览器打开课件，语音效果最好。</p>
     </div>
@@ -67,7 +62,6 @@
   var select = document.getElementById("voice-select");
   var statusEl = document.getElementById("voice-status");
   var noteEl = document.getElementById("voice-note");
-  var previewEl = document.getElementById("voice-preview");
 
   /* localStorage 安全读写（file:// 下部分浏览器受限，失败则降级内存） */
   var memSettings = null;
@@ -87,8 +81,9 @@
   function collectVoices() {
     if (!("speechSynthesis" in window)) { return []; }
     var all = window.speechSynthesis.getVoices() || [];
+    /* 只保留简体中文普通话（zh-cn）音色 */
     return all.filter(function (v) {
-      return (v.lang || "").toLowerCase().indexOf("zh") === 0;
+      return (v.lang || "").toLowerCase().indexOf("zh-cn") === 0;
     });
   }
 
@@ -98,11 +93,10 @@
     var savedURI = saved && saved.voice ? saved.voice.uri : "";
 
     if (!zhVoices.length) {
-      select.innerHTML = '<option value="">（未检测到中文音色）</option>';
+      select.innerHTML = '<option value="">（未检测到简体中文音色）</option>';
       statusEl.className = "status warn";
-      statusEl.textContent = "没有找到中文语音。请换用 Chrome/Edge 浏览器，或在系统设置里添加中文语音后刷新本页。";
-      noteEl.textContent = "当前设备可用的中文音色：0 个";
-      previewEl.innerHTML = "";
+      statusEl.textContent = "没有找到简体中文（zh-cn）语音。请换用 Chrome/Edge 浏览器，或在系统设置里添加中文语音后刷新本页。";
+      noteEl.textContent = "当前设备可用的简体中文音色：0 个";
       return;
     }
 
@@ -114,19 +108,13 @@
       var label = (v.name || v.voiceURI || "未知音色") + "（" + v.lang + "）";
       html += '<option value="' + v.voiceURI.replace(/"/g, "&quot;") + '"' + sel + ">" + label + "</option>";
     });
-    // 保存的音色已不存在时回退到第一个
-    if (savedURI && !found) { html = html.replace('<option value="' + select.value + '"', '<option value="' + select.value + '"'); }
     select.innerHTML = html;
-    if (savedURI && !found) { select.value = zhVoices[0].voiceURI; }
+    // 保存的音色已不存在时回退到第一个
+    if (savedURI && !found && zhVoices[0]) { select.value = zhVoices[0].voiceURI; }
 
     statusEl.className = "status";
     statusEl.textContent = "已选择：" + (select.options[select.selectedIndex] ? select.options[select.selectedIndex].text.split("（")[0] : "");
-    noteEl.textContent = "当前设备可用的中文音色：" + zhVoices.length + " 个";
-    previewEl.innerHTML = '<span>当前音色试听：</span><button class="btn" id="btn-speak-demo">播放</button>';
-    var demo = document.getElementById("btn-speak-demo");
-    if (demo) {
-      demo.addEventListener("click", function () { preview(); });
-    }
+    noteEl.textContent = "当前设备可用的简体中文音色：" + zhVoices.length + " 个";
   }
 
   function pickVoice() {
@@ -138,21 +126,7 @@
     return null;
   }
 
-  function preview() {
-    var v = pickVoice();
-    if (!v || !("speechSynthesis" in window)) { return; }
-    try {
-      window.speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance("你好，我是你的小老师。这个声音好不好听？");
-      u.lang = v.lang || "zh-CN";
-      u.voice = v;
-      u.rate = 0.92;
-      u.pitch = 1.05;
-      window.speechSynthesis.speak(u);
-    } catch (e) { /* 忽略 */ }
-  }
-
-  /* 选择变化：保存 + 更新状态 */
+  /* 选择变化：保存 */
   select.addEventListener("change", function () {
     var v = pickVoice();
     var uri = v ? v.voiceURI : "";
@@ -160,10 +134,7 @@
     saveSettings({ voice: { uri: uri, name: name } });
     statusEl.className = "status ok";
     statusEl.textContent = "已保存音色：" + (name || uri || "默认");
-    preview();
   });
-
-  document.getElementById("btn-preview").addEventListener("click", function () { preview(); });
 
   /* voiceschanged 事件（语音列表异步加载） */
   if ("speechSynthesis" in window) {
