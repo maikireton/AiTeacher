@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小数与单位换算 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .uh-box { margin: 12px 0; }
+  .uh-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .uh-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .uh-expr { font-size: 30px; font-weight: 800; color: #d97706; text-align: center; margin: 10px 0; }
+  .uh-step { font-size: 22px; font-weight: 800; text-align: center; min-height: 34px; color: #2e7d32; }
+  .uh-bars { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+  .uh-col { text-align: center; }
+  .uh-col .lab { font-size: 15px; font-weight: 700; color: var(--text-2); }
+  .uh-col .val { font-size: 26px; font-weight: 800; color: var(--accent-deep); }
+  .uh-sym { font-size: 34px; font-weight: 800; color: #2e7d32; }
+  .meter { display: flex; width: 220px; height: 30px; border: 2px solid var(--border); border-radius: 6px; overflow: hidden; margin: 6px auto; }
+  .meter .cm { flex: 1; background: #dceaff; border-right: 1px solid #fff; transition: background .3s; }
+  .meter .cm.full { background: linear-gradient(180deg,#7eb6ff,#4a7fe0); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">小数与单位换算 <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>换算口诀"大化小，乘进率；小化大，除进率"。1 米=100 厘米、1 千米=1000 米、1 吨=1000 千克、1 千克=1000 克。</p>
+      <p><b>孩子容易走神的地方：</b>进率记错、方向搞反；先写进率再定乘除。</p>
+      <p><b>建议：</b>本课约 8 分钟；口诀"大化小乘、小化大除"，配实际物品估一估。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-040</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想 1.5 米是多少厘米！",
+      voice: "1 米等于 100 厘米。那 1.5 米是多少厘米？大单位换成小单位，要乘进率 100！今天学单位换算。",
+      body: function () {
+        return '' +
+          '<h2>单位会变身</h2>' +
+          '<p class="uh-expr">1 米 = 100 厘米</p>' +
+          '<div class="hint">👆 大化小乘进率，小化大除进率</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "米化厘米动画",
+      task: "咱们这一步要做的：看动画 1.5 米 = 150 厘米！",
+      voice: "看动画。一把 1 米长的尺子，分成 100 格，1 格是 1 厘米。1.5 米就是 1 米加 0.5 米。0.5 米是 50 厘米。所以 1.5 米等于 150 厘米。",
+      body: function () {
+        return '' +
+          '<h2>看动画：1.5 米 = 150 厘米</h2>' +
+          '<div class="uh-box" id="d1">' +
+          '<div class="meter" id="meter"></div>' +
+          '<div class="uh-expr" id="e1">1.5 米 = ? 厘米</div>' +
+          "</div>" +
+          '<div class="uh-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="uh-rule">大化小 × 100：1.5 × 100 = 150</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "克化千克动画",
+      task: "咱们这一步要做的：看动画 800 克 = 0.8 千克！",
+      voice: "看动画。800 克要换成千克。千克比克大，小单位换大单位要除进率 1000。800 除以 1000，小数点左移三位，等于 0.8 千克。",
+      body: function () {
+        return '' +
+          '<h2>看动画：800 克 = 0.8 千克</h2>' +
+          '<div class="uh-box" id="d2">' +
+          '<div class="uh-bars">' +
+          '<div class="uh-col"><div class="val" id="v1">800 克</div><div class="lab">小单位</div></div>' +
+          '<span class="uh-sym" id="sym1">→</span>' +
+          '<div class="uh-col"><div class="val" id="v2">? 千克</div><div class="lab">大单位</div></div>' +
+          "</div>" +
+          '<div class="uh-step" id="st2">？</div>' +
+          "</div>" +
+          '<div class="uh-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="uh-rule">小化大 ÷ 1000：800 ÷ 1000 = 0.8</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道单位换算题！",
+      voice: "现在考考你！单位换算。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：算 2.5 千米，领奖！",
+      voice: "Boss 来啦！2.5 千米是多少米？1 千米等于 1000 米。大化小乘 1000：2.5 乘 1000 等于 2500 米！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：2.5 千米 = ? 米</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    var meter = document.getElementById("meter");
+    var e1 = document.getElementById("e1");
+    var h = "";
+    for (var i = 0; i < 100; i++) { h += '<span class="cm"></span>'; }
+    meter.innerHTML = h;
+    setTimeout(function () { if (tip) { tip.textContent = "① 1 米分成 100 格，1 格 = 1 厘米"; } }, 700);
+    setTimeout(function () {
+      var cells = meter.querySelectorAll(".cm");
+      cells.forEach(function (c, i) { if (i < 50) { setTimeout(function () { c.classList.add("full"); }, 3 * i); } });
+      if (tip) { tip.textContent = "② 0.5 米 = 50 格 = 50 厘米（高亮半段）"; }
+    }, 2400);
+    setTimeout(function () {
+      e1.innerHTML = "1.5 米 = <b>150</b> 厘米";
+      if (tip) { tip.textContent = "③ 1.5 × 100 = 150 ✅ 大化小乘进率"; }
+    }, 6000);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    var st = document.getElementById("st2");
+    setTimeout(function () { if (tip) { tip.textContent = "① 克→千克：小单位化大单位，÷1000"; } st.textContent = "800 ÷ 1000"; }, 800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 800 的小数点左移 3 位 = 0.8"; }
+      document.getElementById("v2").textContent = "0.8 千克";
+      document.getElementById("sym1").textContent = "=";
+      st.textContent = "800 ÷ 1000 = 0.8";
+    }, 2800);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 小化大除进率：800 克 = 0.8 千克"; } }, 4600);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "3 米 = ? 厘米", right: "300", opts: ["300", "30", "3"] },
+    { q: "500 克 = ? 千克", right: "0.5", opts: ["0.5", "5", "50"] },
+    { q: "1.2 千克 = ? 克", right: "1200", opts: ["1200", "120", "0.12"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "大化小乘进率、小化大除进率（1 米=100 厘米、1 千克=1000 克）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1900);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">2.5 千米 = ? 米</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">2500</div>' +
+      '<div class="opt" data-ok="0">250</div>' +
+      '<div class="opt" data-ok="0">25</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 单位换算你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "千米→米：×1000 → 2.5 × 1000 = 2500";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "换算口诀「大化小，乘进率；小化大，除进率」。1 米=100 厘米、1 千米=1000 米、1 吨=1000 千克、1 千克=1000 克。",
+      attention: "孩子进率记错、方向搞反；先写进率再定乘除。",
+      tip: "本课约 8 分钟；口诀「大化小乘、小化大除」，配实际物品估一估。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

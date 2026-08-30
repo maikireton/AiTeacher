@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《观潮》按顺序写景物 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .tl { position: relative; width: 100%; max-width: 620px; margin: 14px 0; }
+  .tl-line { position: absolute; left: 18px; top: 6px; bottom: 6px; width: 4px; background: #dbe4f0; border-radius: 2px; }
+  .tl-item { position: relative; padding: 10px 0 10px 56px; min-height: 52px; opacity: .25; transform: translateX(-10px); transition: all .6s ease; }
+  .tl-item.on { opacity: 1; transform: translateX(0); }
+  .tl-dot { position: absolute; left: 10px; top: 14px; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 4px solid #c6d3e8; }
+  .tl-item.on .tl-dot { border-color: #6b8fd8; background: #6b8fd8; }
+  .tl-item .t-time { font-size: 14px; font-weight: 800; color: #6b8fd8; }
+  .tl-item .t-txt { font-size: 15px; color: #444; line-height: 1.6; }
+  .wave-band { font-size: 26px; letter-spacing: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 语文</a>
+    <span class="brand">《观潮》按顺序写景物 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>《观潮》按时间顺序写潮水变化：潮来前→潮来时→潮过后，靠时间词（午后一点左右、过了一会儿、霎时、过了好久）把过程写清楚。</p>
+      <p><b>孩子容易走神的地方：</b>只记"观潮"不记写法；可专门找时间词，看它们把文章连成一条线。</p>
+      <p><b>建议：</b>本课约 8 分钟；看完让孩子用自己的话把"潮水从来到走"按顺序讲一遍。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 语文 chinese-4-002</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看大潮从“小”变“大”的过程！",
+      voice: "钱塘江大潮可是天下奇观！潮水不是一下子全涌来的，它是一点一点变大变猛的。你猜，作者是照着什么顺序来写这场大潮的？答案就是——时间顺序！",
+      body: function () {
+        return '' +
+          '<h2>钱塘江大潮 · 天下奇观</h2>' +
+          '<div class="wave-band" id="s1-wave">· · ·</div>' +
+          '<div class="fc-tip" id="s1-tip">准备开始…</div>' +
+          '<div class="hint">潮水一点点涌来，作者照着时间顺序写</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：看时间轴，潮水分三段变！",
+      voice: "看时间轴动画。第一段，潮来前，江面平静。第二段，潮来时，白线出现，变成千万匹战马，这是最精彩的一段。第三段，潮过后，江面慢慢恢复平静。写景物按时间顺序，就像放电影一样一段一段来。",
+      body: function () {
+        return '' +
+          '<h2>时间轴：潮水的三段时间</h2>' +
+          '<div class="tl" id="tl">' +
+          '<div class="tl-line"></div>' +
+          '<div class="tl-item" data-i="0"><span class="tl-dot"></span><div><div class="t-time">① 潮来前</div><div class="t-txt">江面平静，越往东越宽</div></div></div>' +
+          '<div class="tl-item" data-i="1"><span class="tl-dot"></span><div><div class="t-time">② 潮来时</div><div class="t-txt">白线变粗，战马齐头并进</div></div></div>' +
+          '<div class="tl-item" data-i="2"><span class="tl-dot"></span><div><div class="t-time">③ 潮过后</div><div class="t-txt">余波还在，江面恢复平静</div></div></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：找出课文里的“时间词”！",
+      voice: "看例题。课文写潮水用了好多表示时间的词：午后一点左右，远处传来响声。过了一会儿，白线出现。霎时，白线变成白浪翻滚。过了好久，江面才恢复平静。这些时间词就像路标，告诉我们潮水走到哪一步了。",
+      body: function () {
+        return '' +
+          '<h2>找出时间词（路标）</h2>' +
+          '<div class="qtext">午后一点左右，从远处传来隆隆的响声。<br>过了一会儿，出现了一条白线。<br>霎时，白线变成水墙，白浪翻滚。<br>过了好久，钱塘江才恢复了平静。</div>' +
+          '<div class="hint" id="s3-hint">🔍 点一点，把时间词标出来！</div>' +
+          '<div class="quiz" id="s3-quiz"></div>' +
+          '<div class="fc-tip" id="s3-tip"></div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：给潮水变化排排队！",
+      voice: "现在考考你！把潮水的变化按时间顺序排好，看看你懂不懂时间顺序。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：Boss 关排顺序，领星星！",
+      voice: "最后总结！写景物可以按时间顺序：先写平静，再写变化最精彩的部分，最后写结束。用好时间词，读者就能跟着你一步一步看。Boss 关来了，给潮水过程排序！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="im-card" style="background:#f0f6ff;border-color:#bcd6f5;color:#2c5a9e">按时间顺序写景物：平静 → 变化 → 恢复<br>＋时间词（过了一会儿、霎时、过了好久）</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ---------- S1 大潮渐强动画 ---------- */
+  function runS1() {
+    var w = document.getElementById("s1-wave");
+    var tip = document.getElementById("s1-tip");
+    var states = ["· · ·", "🌊 · ·", "🌊🌊 ·", "🌊🌊🌊"];
+    states.forEach(function (s, i) {
+      setTimeout(function () { w.textContent = s; if (tip && i === states.length - 1) { tip.textContent = "✅ 潮水越来越大——这正是“时间顺序”的力量！"; } }, 800 * i);
+    });
+  }
+
+  /* ---------- S2 时间轴动画 ---------- */
+  function runS2() {
+    var items = document.querySelectorAll("#tl .tl-item");
+    var tip = document.getElementById("s2-tip");
+    items.forEach(function (it, i) {
+      setTimeout(function () { it.classList.add("on"); if (tip) { tip.textContent = (i === 0 ? "① 潮来前：江面平静" : i === 1 ? "② 潮来时：最精彩的一段！" : "③ 潮过后：慢慢恢复平静"); } }, 1000 + i * 1800);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 三段时间连起来 = 一场完整的潮！"; } }, 6800);
+  }
+
+  /* ---------- S3 找出时间词 ---------- */
+  function runS3() {
+    var box = document.getElementById("s3-quiz");
+    if (!box) { return; }
+    var words = ["午后一点左右", "过了一会儿", "霎时", "过了好久"];
+    box.innerHTML = '<div class="q">点击选择，哪个是表示时间的词？</div>' +
+      '<div class="opts">' + words.map(function (w) {
+        return '<div class="opt" data-ok="1">' + w + "</div>";
+      }).join("") + "</div><div class='qmsg'></div>";
+    var tip = document.getElementById("s3-tip");
+    var done = { n: 0 };
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (o.classList.contains("right")) { return; }
+        o.classList.add("right");
+        o.classList.add("locked");
+        done.n++;
+        apiRef.addStars(1); apiRef.comboHit();
+        box.querySelector(".qmsg").className = "qmsg ok";
+        box.querySelector(".qmsg").textContent = "对！这些都是时间词（" + done.n + "/4）";
+        if (done.n === 4) {
+          apiRef.addStars(1);
+          if (tip) { tip.textContent = "✅ 四个时间词都找到啦！它们是文章的“路标”。"; }
+        }
+      });
+    });
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "潮水的第一段（潮来前），江面是怎样的？", right: "很平静", opts: ["很平静", "白浪翻滚", "已经很高了"] },
+    { q: "表示“时间很短”的时间词是？", right: "霎时", opts: ["霎时", "过了好久", "几天后"] },
+    { q: "写景物按时间顺序，好处是？", right: "读者看得清过程，像看电影", opts: ["读者看得清过程，像看电影", "字写得多", "不用时间词"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "想一想潮水“从来到走”的顺序";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss：排序 ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    var order = ["江面平静", "白线出现", "白浪翻滚像战马", "江面恢复平静"];
+    var display = ["白浪翻滚像战马", "江面平静", "江面恢复平静", "白线出现"];
+    var qa = display.map(function (t) {
+      return { txt: t, right: (order.indexOf(t) === 1) ? "1" : "0" };
+    });
+    box.innerHTML = '<div class="q">Boss 关：选一选，哪句话是“潮来时”开始的第 1 步？</div>' +
+      '<div class="opts">' + qa.map(function (x) {
+        return '<div class="opt" data-ok="' + x.right + '">' + x.txt + "</div>";
+      }).join("") + "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 时间顺序你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 9 ? "（全部拿下！）" : n >= 6 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "潮来时从“白线出现”开始变哦";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "《观潮》按时间顺序写潮水：潮来前→潮来时→潮过后；用时间词（过了一会儿、霎时、过了好久）把过程写清楚。",
+      attention: "孩子容易只记内容不记写法；可让他专门找时间词并排序。",
+      tip: "本课约 8 分钟；看完让孩子按顺序口头复述潮水变化。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>连续观察与准确表达 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .grow { display: flex; align-items: flex-end; justify-content: center; gap: 26px; margin: 14px 0; flex-wrap: wrap; }
+  .grow-day { text-align: center; }
+  .grow-day .plant { font-size: 40px; height: 64px; display: flex; align-items: flex-end; justify-content: center; opacity: .2; transform: scale(.6); transition: all .6s ease; }
+  .grow-day.on .plant { opacity: 1; transform: scale(1); }
+  .grow-day .dlabel { font-size: 13px; color: #8a8a8a; font-weight: 700; margin-top: 4px; }
+  .verb { display: inline-block; padding: 6px 14px; margin: 4px; border-radius: 12px; background: #f0f6ff; border: 2px solid #bcd6f5; color: #2c5a9e; font-size: 16px; font-weight: 800; cursor: pointer; transition: all .3s; }
+  .verb.on { background: #6b8fd8; color: #fff; border-color: #6b8fd8; }
+  .verb.ok { background: rgba(82,196,26,.14); border-color: #52c41a; color: #3a9411; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 语文</a>
+    <span class="brand">连续观察与准确表达 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>连续观察=多天看、看变化、看得细；表达时用词准确生动（动词要准，如"触、巴、贴、爬"）。</p>
+      <p><b>孩子容易走神的地方：</b>只看一眼就走，看不到变化；可让他真的种颗豆子/养只小虫，每天记录一句话。</p>
+      <p><b>建议：</b>本课约 8 分钟；陪孩子观察窗台绿植，找出一个"用得准"的动词。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 语文 chinese-4-004</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：当“植物观察员”，看豆子发芽！",
+      voice: "你种过豆子吗？第一天种下去，看不出什么。第二天、第三天、第四天……它一点点发芽、长高。要想知道它怎么变的，就得天天看——这就是连续观察。",
+      body: function () {
+        return '' +
+          '<h2>豆子发芽记 🌱</h2>' +
+          '<div class="grow" id="s1-grow">' +
+          '<div class="grow-day" data-i="0"><div class="plant">🫘</div><div class="dlabel">第1天</div></div>' +
+          '<div class="grow-day" data-i="1"><div class="plant">🌱</div><div class="dlabel">第3天</div></div>' +
+          '<div class="grow-day" data-i="2"><div class="plant">🌿</div><div class="dlabel">第7天</div></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s1-tip">准备开始…</div>' +
+          '<div class="hint">天天看，才看得见变化 → 连续观察</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "动画讲解",
+      task: "咱们这一步要做的：学会“连续观察”三招！",
+      voice: "看动画。连续观察有三招。第一招，连续看，好几天连着观察。第二招，看变化，留意它跟昨天哪里不一样。第三招，看仔细，颜色、大小、样子都要看清楚。连续观察，就是要当个有耐心的观察员！",
+      body: function () {
+        return '' +
+          '<h2>连续观察三招</h2>' +
+          '<div class="step3" id="s2-tags" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:10px 0">' +
+          '<span class="s3tag" data-i="0">① 连续看</span>' +
+          '<span class="s3tag" data-i="1">② 看变化</span>' +
+          '<span class="s3tag" data-i="2">③ 看仔细</span>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>' +
+          '<div class="hint">观察 = 用眼睛当"摄像机"，录下变化</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "例题演示",
+      task: "咱们这一步要做的：点一点《爬山虎的脚》里的动词！",
+      voice: "看例题。《爬山虎的脚》写得好，好在动词用得准。你看：它的脚触着墙，细丝头上变成小圆片，巴住墙，把嫩茎拉一把，使它紧贴在墙上，就这样一脚一脚往上爬。触、巴、拉、贴、爬，每个动词都特别准确！",
+      body: function () {
+        return '' +
+          '<h2>《爬山虎的脚》· 用准动词</h2>' +
+          '<div class="qtext">爬山虎的脚触着墙，细丝变成小圆片，<span class="verb" data-ok="1">巴</span>住墙，把嫩茎<span class="verb" data-ok="1">拉</span>一把，使藤<span class="verb" data-ok="1">贴</span>在墙上，一脚一脚往上<span class="verb" data-ok="1">爬</span>。</div>' +
+          '<div class="hint" id="s3-hint">👆 点一点这些动词，看它们有多准！</div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：选一选，哪个动词更准！",
+      voice: "现在考考你！两个动词选一个，看看你能不能选到最准确、最生动的那个。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "要点小结",
+      task: "咱们这一步要做的：Boss 关选动词，领星星！",
+      voice: "最后总结！连续观察三招：连续看、看变化、看仔细。表达的时候要用准动词，句子就生动了。Boss 关来了，看看你能不能选出最生动的动词！",
+      body: function () {
+        return '' +
+          '<h2>要点小结</h2>' +
+          '<div class="im-card" style="background:#f0f6ff;border-color:#bcd6f5;color:#2c5a9e">连续观察：连续看 → 看变化 → 看仔细<br>生动表达：动词用得准，句子就活了</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runS1() {
+    var days = document.querySelectorAll("#s1-grow .grow-day");
+    var tip = document.getElementById("s1-tip");
+    days.forEach(function (d, i) {
+      setTimeout(function () {
+        d.classList.add("on");
+        if (tip) { tip.textContent = (i === 0 ? "① 第1天：种下小豆子" : i === 1 ? "② 第3天：冒出小芽啦！" : "③ 第7天：长成小苗了"); }
+      }, 900 + i * 1500);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 连续观察，才能看到这些变化！"; } }, 6200);
+  }
+
+  function runS2() {
+    var tags = document.querySelectorAll("#s2-tags .s3tag");
+    var tip = document.getElementById("s2-tip");
+    tags.forEach(function (t, i) {
+      setTimeout(function () {
+        t.classList.add("on");
+        if (tip) { tip.textContent = (i === 0 ? "① 连续看：连着好几天观察" : i === 1 ? "② 看变化：和昨天哪里不一样" : "③ 看仔细：颜色大小样子都看清"); }
+      }, 900 + i * 1700);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 三招齐了，你就是观察小能手！"; } }, 6400);
+  }
+
+  function runS3() {
+    var vs = document.querySelectorAll("#s3 .verb");
+    var tip = document.getElementById("s3-tip");
+    vs.forEach(function (v, i) {
+      setTimeout(function () {
+        v.classList.add("on");
+        if (tip) { tip.textContent = "第 " + (i + 1) + " 个动词点亮：" + v.textContent + " — 用得准！"; }
+      }, 900 + i * 1100);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 触、巴、拉、贴、爬——动词准，画面活！"; } }, 900 + vs.length * 1100 + 400);
+  }
+
+  /* ---------- S4 练习 ---------- */
+  var QUIZ = [
+    { q: "小猫（　）上桌来，哪个动词最生动？", right: "蹿", opts: ["蹿", "走", "移"] },
+    { q: "太阳从山后（　）起来，哪个更准确？", right: "爬", opts: ["爬", "走", "跳"] },
+    { q: "连续观察最重要的是？", right: "连着几天看变化", opts: ["连着几天看变化", "只看一次", "用望远镜看"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "想想哪个动词更能表现动作的样子";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ---------- S5 Boss ---------- */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">Boss 关：“泉水从石缝里（　）出来”，哪个动词最生动？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">冒</div>' +
+      '<div class="opt" data-ok="0">走</div>' +
+      '<div class="opt" data-ok="0">放</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 准确表达你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 9 ? "（全部拿下！）" : n >= 6 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "泉水从缝里“冒”出来——冒字最有画面感";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1500);
+        }
+      });
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "连续观察三招：连续看、看变化、看仔细；表达时动词用得准句子才生动。",
+      attention: "孩子易只看一眼不看变化；可种颗豆子每天记录一句话。",
+      tip: "本课约 8 分钟；陪孩子观察绿植，找找用得准的动词。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

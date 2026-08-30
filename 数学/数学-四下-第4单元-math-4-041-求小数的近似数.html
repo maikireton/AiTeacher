@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>求小数的近似数 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .an-box { margin: 12px 0; }
+  .an-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .an-rule { display: inline-block; background: #e8f6ff; border: 1px solid #91caff; color: #0b5e91; border-radius: 10px; padding: 6px 14px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .an-expr { font-size: 30px; font-weight: 800; color: #d97706; text-align: center; margin: 10px 0; }
+  .an-step { font-size: 22px; font-weight: 800; text-align: center; min-height: 34px; color: #2e7d32; }
+  .numline { position: relative; height: 70px; margin: 12px auto; max-width: 460px; }
+  .numline .axis { position: absolute; top: 40px; left: 0; right: 0; height: 4px; background: #dfe6f0; border-radius: 2px; }
+  .numline .tick { position: absolute; top: 30px; transform: translateX(-50%); text-align: center; font-size: 16px; font-weight: 800; color: var(--text-2); }
+  .numline .tick::before { content: ""; display: block; width: 2px; height: 10px; background: var(--text-2); margin: 0 auto 4px; }
+  .numline .ball { position: absolute; top: 42px; transform: translate(-50%, -50%); width: 26px; height: 26px; border-radius: 50%; background: var(--accent-deep); color: #fff; text-align: center; line-height: 26px; font-weight: 800; font-size: 14px; transition: all .5s; }
+  .numline .mark { position: absolute; top: -2px; transform: translateX(-50%); font-size: 20px; }
+  .dig { display: inline-block; padding: 2px 6px; border-radius: 6px; font-weight: 800; margin: 0 1px; }
+  .dig.t { background: #dceaff; }
+  .dig.h { background: #ffd591; }
+  .dig.look { background: #ff8a80; color: #fff; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">求小数的近似数 <small>4年级·下册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>求近似数用"四舍五入"：看保留位后一位，≥5 进一，&lt;5 舍去；保留一位小数时末尾的 0 不能丢（0.984≈1.0）。</p>
+      <p><b>孩子容易走神的地方：</b>保留一位小数把 1.0 写成 1；强调近似数要看"保留到哪一位"再"看下一位"。</p>
+      <p><b>建议：</b>本课约 8 分钟；口诀"四舍五入看下位，满了五就进一"。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-041</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：想想 2.6 接近哪个整数！",
+      voice: "2.6 接近 2 还是 3？它离 3 更近。我们把它写成约等于 3。这就是求近似数。今天学四舍五入。",
+      body: function () {
+        return '' +
+          '<h2>求近似数</h2>' +
+          '<p class="an-expr">2.6 ≈ ?</p>' +
+          '<div class="hint">👆 四舍五入：看要舍去那一位</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "数轴找最近动画",
+      task: "咱们这一步要做的：看动画 2.6 离 3 更近！",
+      voice: "看动画。数字轴上 2 和 3 之间。2.6 站在中间靠右，离 3 更近。所以保留整数，2.6 约等于 3。因为十分位是 6，6 比 5 大，进一！",
+      body: function () {
+        return '' +
+          '<h2>看动画：2.6 ≈ 3</h2>' +
+          '<div class="an-box" id="d1">' +
+          '<div class="numline" id="nl1">' +
+          '<div class="axis"></div>' +
+          '<div class="tick" style="left:10%">2</div>' +
+          '<div class="tick" style="left:90%">3</div>' +
+          '<div class="mark" style="left:50%">2.6</div>' +
+          '<div class="ball" id="ball1" style="left:10%">2</div>' +
+          "</div>" +
+          '<div class="an-step" id="st1">？</div>' +
+          "</div>" +
+          '<div class="an-tip" id="d1-tip">准备开始…</div>' +
+          '<div class="an-rule">十分位 6 ≥ 5 → 向个位进一 → 3</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "保留一位小数动画",
+      task: "咱们这一步要做的：看动画 0.984 ≈ 1.0！",
+      voice: "看动画。0.984 保留一位小数。看百分位，是 8。8 比 5 大，要进一。十分位 9 进一，变成 10，就向整数位进一。结果是 1.0。注意，保留一位小数，末尾的 0 不能丢！",
+      body: function () {
+        return '' +
+          '<h2>看动画：0.984 ≈ 1.0（保留一位小数）</h2>' +
+          '<div class="an-box" id="d2">' +
+          '<div class="an-expr" id="ex2"><span class="dig t">0</span>.<span class="dig t">9</span><span class="dig look" id="dig3">8</span><span class="dig" id="dig4">4</span></div>' +
+          '<div class="an-step" id="st2">？</div>' +
+          "</div>" +
+          '<div class="an-tip" id="d2-tip">准备开始…</div>' +
+          '<div class="an-rule">保留一位：看百分位 8≥5 → 十分位 9 进 1 → 1.0（0 不能丢）</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道近似数题！",
+      voice: "现在考考你！求近似数。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：2.38 保留一位小数，领奖！",
+      voice: "Boss 来啦！2.38 保留一位小数。看百分位是 8，8 比 5 大，十分位 3 进一变成 4。结果是 2.4！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：2.38 ≈ ?（保留一位小数）</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runD1() {
+    var tip = document.getElementById("d1-tip");
+    var st = document.getElementById("st1");
+    setTimeout(function () { if (tip) { tip.textContent = "① 2.6 在 2 和 3 之间"; } st.textContent = "2.6 保留整数"; }, 700);
+    setTimeout(function () {
+      var b = document.getElementById("ball1");
+      b.style.left = "90%"; b.textContent = "3";
+      if (tip) { tip.textContent = "② 小球滚向 3：2.6 离 3 更近"; }
+      st.textContent = "2.6 ≈ 3";
+    }, 2600);
+    setTimeout(function () { if (tip) { tip.textContent = "③ 十分位 6 ≥ 5 → 进一 → 3 ✅"; } }, 4400);
+  }
+  function runD2() {
+    var tip = document.getElementById("d2-tip");
+    var st = document.getElementById("st2");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 保留一位小数：只看百分位（红）"; }
+      st.textContent = "看百分位：8";
+    }, 700);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 8 ≥ 5 → 十分位 9 进一"; }
+      st.textContent = "8 ≥ 5，进一";
+    }, 2400);
+    setTimeout(function () {
+      var ex = document.getElementById("ex2");
+      ex.innerHTML = "<span class='dig t'>1</span>.<span class='dig t'>0</span>";
+      if (tip) { tip.textContent = "③ 9 进 1 → 1.0（保留一位，0 不能丢）✅"; }
+      st.textContent = "0.984 ≈ 1.0";
+    }, 4400);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "3.4 保留整数 ≈ ?", right: "3", opts: ["3", "4", "3.5"] },
+    { q: "4.7 保留整数 ≈ ?", right: "5", opts: ["5", "4", "4.7"] },
+    { q: "0.96 保留一位小数 ≈ ?", right: "1.0", opts: ["1.0", "1", "0.9"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) { box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>'; return; }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "四舍五入：看保留位后一位，≥5 进一，<5 舍去；保留一位末尾 0 不丢";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1900);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">2.38 保留一位小数 ≈ ?</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">2.4</div>' +
+      '<div class="opt" data-ok="0">2.3</div>' +
+      '<div class="opt" data-ok="0">2.0</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 近似数你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "百分位 8≥5 → 十分位 3 进一 → 2.4";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runD1(); }
+    if (step.id === "s3") { runD2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "求近似数用「四舍五入」：看保留位后一位，≥5 进一，<5 舍去；保留一位小数时末尾的 0 不能丢（0.984≈1.0）。",
+      attention: "孩子保留一位小数时把 1.0 写成 1；强调「保留到哪一位」再「看下一位」。",
+      tip: "本课约 8 分钟；口诀「四舍五入看下位，满了五就进一」。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
