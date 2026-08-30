@@ -10,13 +10,16 @@
 <div class="container">
   <header class="topbar">
     <span class="brand">AI 教师 <small>家庭知识课件库</small></span>
-    <a class="btn-home" href="settings.html" style="margin-left:auto">⚙ 设置</a>
+    <a class="btn-home" href="map.html" style="margin-left:auto">🗺 地图</a>
+    <a class="btn-home" href="settings.html">⚙ 设置</a>
   </header>
 
   <div class="hero">
     <h1>今天想学点什么？</h1>
     <p>语文 · 数学 · 英语 · 自然科学，从教材知识清单开始，一点一点打牢基础。</p>
   </div>
+
+  <div id="today" class="today-card"></div>
 
   <div id="subj" class="subject-cards"></div>
 
@@ -32,6 +35,7 @@
 
 <script src="assets/knowledge-base.js"></script>
 <script src="assets/kb-utils.js"></script>
+<script src="assets/record.js"></script>
 <script>
 (function () {
   "use strict";
@@ -39,6 +43,37 @@
     var util = window.KB;
     var KB = window.KNOWLEDGE_BASE;
     if (!util || !KB) { console.error("[主页] 数据源未加载"); return; }
+
+    /* 今日任务卡片（回顾系统驱动） */
+    var todayEl = document.getElementById("today");
+    if (todayEl && window.Record) {
+      try {
+        var rec = window.Record;
+        var st = rec.stats();
+        var kp = rec.recommend();
+        var weakSet = {};
+        rec.weakIds().forEach(function (k) { weakSet[k] = true; });
+
+        var h = '<div class="today-head">今日任务</div>';
+        h += '<div class="today-stat">今日已学 <b>' + st.today + '</b> 个 · 连续学习 <b>' + st.streak + '</b> 天 · 共得 <b>' + st.totalStars + '</b> 星</div>';
+
+        if (kp) {
+          var isWeak = !!weakSet[kp.id];
+          h += '<div class="today-reco">';
+          h += '<div class="today-reco-label">' + (isWeak ? "薄弱点复习：" : "今天推荐学：") + "</div>";
+          h += '<a class="today-reco-name" href="' + kp.file + '">' + kp.name + "</a>";
+          h += '<div class="today-reco-meta"><span class="tag">' + util.subjectName(kp.subject) + '</span><span class="tag grade">' + kp.grade + "年级·" + (kp.term || "") + "</span>";
+          if (isWeak) { h += '<span class="tag diff-挑战">薄弱点</span>'; }
+          h += "</div>";
+          h += '<div class="today-reco-sum">' + kp.summary + "</div>";
+          h += '<a class="today-btn" href="' + kp.file + '">开始学习 →</a>';
+          h += "</div>";
+        } else {
+          h += '<div class="today-done">今天的任务都完成啦，明天继续！</div>';
+        }
+        todayEl.innerHTML = h;
+      } catch (e) { console.error("[主页] 今日任务渲染失败:", e); }
+    }
 
     /* 学科入口卡片 */
     var subjEl = document.getElementById("subj");

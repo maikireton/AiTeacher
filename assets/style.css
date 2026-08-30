@@ -79,6 +79,7 @@ body {
   width: 10px; height: 10px; border-radius: 50%; background: var(--red);
   display: inline-block; margin-right: 6px;
 }
+.rec-ok { color: var(--green); font-weight: 700; }
 .kp.todo { opacity: 0.55; cursor: default; }
 .kp.todo .soon { font-size: 12px; color: var(--text-2); }
 .kp.revise { border-color: var(--yellow); }
@@ -88,6 +89,29 @@ body {
 .hero { margin: 28px 0 20px; }
 .hero h1 { font-size: 30px; font-weight: 800; }
 .hero p { color: var(--text-2); font-size: 14px; margin-top: 4px; }
+
+/* 今日任务卡片 */
+.today-card {
+  border: 1.5px solid var(--accent-deep); border-radius: 16px;
+  background: linear-gradient(180deg, rgba(155,187,244,.10), rgba(155,187,244,.03));
+  padding: 16px 18px; margin: 0 0 20px;
+}
+.today-head { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+.today-head::before { content: "🎯 "; }
+.today-stat { font-size: 13px; color: var(--text-2); margin-bottom: 10px; }
+.today-stat b { color: var(--accent-deep); font-size: 15px; }
+.today-reco { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.today-reco-label { font-size: 12px; color: var(--text-2); margin-bottom: 4px; }
+.today-reco-name { display: inline-block; font-size: 20px; font-weight: 800; color: var(--accent-deep); text-decoration: none; }
+.today-reco-meta { margin: 6px 0 4px; }
+.today-reco-sum { font-size: 13px; color: var(--text-2); line-height: 1.5; margin-bottom: 10px; }
+.today-btn {
+  display: inline-block; min-height: 44px; line-height: 44px; padding: 0 20px;
+  background: var(--accent-deep); color: #fff; font-size: 14px; font-weight: 700;
+  border-radius: 12px; text-decoration: none;
+}
+.today-btn:active { opacity: .85; }
+.today-done { font-size: 14px; color: var(--green); font-weight: 700; }
 .subject-cards { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0 24px; }
 .subj {
   flex: 1 1 220px; min-width: 0; padding: 20px; background: var(--card);

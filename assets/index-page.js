@@ -12,6 +12,12 @@
     var KB = window.KNOWLEDGE_BASE;
     if (!util || !KB) { console.error("[index-page] 数据源未加载"); return; }
 
+    /* 薄弱点集合（回顾系统 record.js 判定） */
+    var weakSet = {};
+    if (window.Record) {
+      window.Record.weakIds().forEach(function (k) { weakSet[k] = true; });
+    }
+
     var searchEl = document.getElementById("search");
     var filtersEl = document.getElementById("filters");
     var listEl = document.getElementById("list");
@@ -96,7 +102,9 @@
 
         html += '<a class="kp ' + cls + '" href="' + href + '"' +
           (stt !== "已完成" ? ' aria-disabled="true"' : "") + ">";
-        html += '<div class="name">' + k.name + "</div>";
+        html += '<div class="name">' +
+          (weakSet[k.id] ? '<span class="dot-weak" title="薄弱点，建议先复习"></span>' : "") +
+          k.name + "</div>";
         html += '<div class="summary">' + k.summary + "</div>";
         html += '<div class="tags">';
         html += '<span class="tag grade">' + k.grade + "年级·" + (k.term || "") + "</span>";

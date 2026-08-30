@@ -32,6 +32,7 @@
 .score-row { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 12px; font-size: 14px; color: var(--text-2); }
 .star { font-size: 20px; }
 .combo { color: #b07900; font-weight: 700; }
+.rec-ok { color: var(--green); font-weight: 700; }
 .result-big { font-size: 34px; margin: 6px 0; }
 
 /* 控制栏 */

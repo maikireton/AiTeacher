@@ -32,6 +32,11 @@ window.PlayerCore = (function () {
     var state = { cur: 0, stars: 0, combo: 0, auto: false, voice: true };
     var voiceToken = 0, voicePlaying = false, autoTimer = null;
 
+    /* ---------- 回顾系统接入（record.js，可选） ---------- */
+    var kpId = (window.Record && window.Record.getKpId()) || "";
+    var answerStats = { correct: 0, wrong: 0 };
+    var finished = false, startTime = Date.now();
+
     function el(id) { return document.getElementById(id); }
     var stage = el("stage"), taskLine = el("task-line"), dots = el("dots"), scoreRow = el("score-row");
     var btnPrev = el("btn-prev"), btnNext = el("btn-next"), btnAuto = el("btn-auto"), btnVoice = el("btn-voice");
@@ -92,7 +97,23 @@ window.PlayerCore = (function () {
       if (!scoreRow) { return; }
       var h = '<span class="star">⭐×' + state.stars + "</span>";
       if (state.combo >= 2) { h += '<span class="combo">🔥 连击 ×' + state.combo + "</span>"; }
+      if (finished && kpId) { h += '<span class="rec-ok">✓ 今日学习已记录</span>'; }
       scoreRow.innerHTML = h;
+    }
+
+    /* 走到最后一步（要点小结/结算）即视为学完本课，写入学习记录（幂等） */
+    function tryFinish() {
+      if (!kpId || finished) { return; }
+      if (!window.Record) { return; }
+      finished = true;
+      var timeUsed = Math.round((Date.now() - startTime) / 1000);
+      window.Record.logFinish(kpId, {
+        stars: state.stars,
+        correct: answerStats.correct,
+        wrong: answerStats.wrong,
+        timeUsed: timeUsed
+      });
+      renderScore();
     }
     function render() {
       if (!steps.length || state.cur < 0 || state.cur >= steps.length) { return; }
@@ -115,6 +136,9 @@ window.PlayerCore = (function () {
         btnNext.disabled = false;
         btnNext.textContent = state.cur === steps.length - 1 ? "完成 🎉" : "下一步";
       }
+
+      /* 走到最后一步：记录本次学习 */
+      if (state.cur === steps.length - 1) { tryFinish(); }
     }
 
     /* ---------- 自动播放：等音频读完再走 ---------- */
@@ -187,10 +211,13 @@ window.PlayerCore = (function () {
       cur: function () { return state.cur; },
       stars: function () { return state.stars; },
       addStars: function (n) { state.stars += n; renderScore(); },
-      comboHit: function () { state.combo++; renderScore(); },
-      comboReset: function () { state.combo = 0; renderScore(); },
+      comboHit: function () { state.combo++; answerStats.correct++; renderScore(); },
+      comboReset: function () { state.combo = 0; answerStats.wrong++; renderScore(); },
       speak: speak,
       stopSpeak: stopSpeak,
+      /* 课件可在合适时机显式调用完成记录（通常无需，走到最后一步自动记录） */
+      finish: tryFinish,
+      kpId: function () { return kpId; },
       state: state
     };
 

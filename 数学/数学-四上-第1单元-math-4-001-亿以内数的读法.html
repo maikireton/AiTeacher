@@ -131,6 +131,7 @@
 </div>
 
 <script src="../assets/voice.js"></script>
+<script src="../assets/record.js"></script>
 <script>
 (function () {
   "use strict";
@@ -279,6 +280,7 @@
   function renderScore() {
     var h = '<span class="star">⭐×' + state.stars + '</span>';
     if (state.combo >= 2) { h += '<span class="combo">🔥 连击 ×' + state.combo + "</span>"; }
+    if (window.__recDone) { h += '<span class="rec-ok">✓ 今日学习已记录</span>'; }
     scoreRow.innerHTML = h;
   }
 
@@ -302,7 +304,20 @@
     el("btn-prev").disabled = state.cur === 0;
     el("btn-next").disabled = false;
     el("btn-next").textContent = state.cur === steps.length - 1 ? "完成 🎉" : "下一步";
+
+    // 回顾系统：走到最后一步（小结闯关）视为学完，写入学习记录（幂等）
+    if (state.cur === steps.length - 1 && window.Record && !window.__recDone) {
+      window.__recDone = true;
+      window.Record.logFinish(window.Record.getKpId(), {
+        stars: state.stars,
+        timeUsed: Math.round((Date.now() - window.__recStart) / 1000)
+      });
+      renderScore();
+    }
   }
+
+  /* 记录学习开始时间（供完成时统计用时） */
+  window.__recStart = Date.now();
 
   /* ========== S2 分级动画 ========== */
   /* 动画演示：大数 30500000 的 8 个数字逐个点亮，从右往左依次圈出个级、万级 */
