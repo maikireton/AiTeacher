@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用量角器量角 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .mang-box { margin: 10px 0; }
+  .mang-box svg { max-width: 380px; width: 100%; }
+  .mang-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .mang-res { font-size: 26px; font-weight: 800; color: #e65100; min-height: 36px; }
+  .edge { stroke: #4a7fe0; stroke-width: 5; stroke-linecap: round; }
+  .proto { opacity: 0; transition: opacity .6s; }
+  .proto.on { opacity: 1; }
+  .zero-line { stroke: #e65100; stroke-width: 3; stroke-dasharray: 5 3; opacity: 0; transition: opacity .5s; }
+  .zero-line.on { opacity: 1; }
+  .hilit { stroke: #e65100; stroke-width: 5; opacity: 0; transition: opacity .4s; }
+  .hilit.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">用量角器量角 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>量角三步：①量角器中心对准顶点 ②0° 刻度线对准角的一边 ③看另一边指着几度。</p>
+      <p><b>孩子容易走神的地方：</b>内外圈刻度读反（如 130° 读成 50°）；判断标准是看 0° 线用的是哪一圈。</p>
+      <p><b>建议：</b>本课约 8 分钟；让孩子先明确"0° 线在哪一圈，就顺着那一圈读"。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-008</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+
+  /* 画量角器（半圆 + 每10°刻度 + 0°/90/180 数字），返回 0°线元素 */
+  function buildProto(svg, cx, cy, r, highlight) {
+    var arc = svgEl("path", { d: "M " + (cx - r) + " " + cy + " A " + r + " " + r + " 0 0 1 " + (cx + r) + " " + cy, fill: "rgba(250,250,252,.9)", stroke: "#c9ced9", "stroke-width": "2" });
+    svg.appendChild(arc);
+    var hl = null;
+    for (var d = 0; d <= 180; d += 10) {
+      var rad = d * Math.PI / 180;
+      var x1 = cx + r * Math.cos(rad), y1 = cy - r * Math.sin(rad);
+      var len = (d % 30 === 0) ? 10 : 6;
+      var x2 = cx + (r - len) * Math.cos(rad), y2 = cy - (r - len) * Math.sin(rad);
+      var line = svgEl("line", { x1: x1, y1: y1, x2: x2, y2: y2, stroke: "#7d8794", "stroke-width": "1.5" });
+      if (d === highlight) { line.setAttribute("stroke", "#e65100"); line.setAttribute("stroke-width", "5"); hl = line; }
+      svg.appendChild(line);
+      if (d % 30 === 0) {
+        var tx = cx + (r - 20) * Math.cos(rad), ty = cy - (r - 20) * Math.sin(rad);
+        var t = svgEl("text", { x: tx, y: ty + 4, "text-anchor": "middle", "font-size": "13", fill: "#4a5568" });
+        t.textContent = d;
+        svg.appendChild(t);
+      }
+    }
+    var v = svgEl("circle", { cx: cx, cy: cy, r: 4, fill: "#e65100" });
+    svg.appendChild(v);
+    var z = svgEl("line", { x1: cx, y1: cy, x2: cx + r, y2: cy, class: "zero-line" });
+    svg.appendChild(z);
+    return { zero: z, hl: hl };
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：这个角有几度？用什么工具量？",
+      voice: "角的分类我们会了，可一个角到底有几度呢？光靠眼睛看不准。数学家发明了量角器，今天我们学用它量角。",
+      body: function () {
+        return '' +
+          '<h2>这个角几度？</h2>' +
+          '<p>打开的书、斜斜的楼梯……每个角都有准确的度数。</p>' +
+          '<p>想量准，就要请出神器：<b>量角器</b>。</p>' +
+          '<div class="hint">👆 猜一猜：下面这个角的度数，比 90° 大还是小？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "认识量角器",
+      task: "咱们这一步要做的：认识量角器的「中心、0° 刻度线、刻度圈」！",
+      voice: "量角器是半圆形的。中间这个小点叫中心点。水平向右这一条是零度刻度线。半圆上有刻度，从零到一百八十。零度线朝右，往左转一圈就是刻度。记住这三个：中心点、零度线、刻度圈。",
+      body: function () {
+        return '' +
+          '<h2>看动画：认识量角器</h2>' +
+          '<div class="mang-box" id="proto1"></div>' +
+          '<div class="mang-tip" id="proto1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "量角步骤动画",
+      task: "咱们这一步要做的：看动画学会「三步量角」！",
+      voice: "看动画量角。第一步，量角器的中心对准角的顶点。第二步，零度刻度线对准角的一条边。第三步，看角的另一条边指着哪个刻度，这个角就是多少度。看，它指着七十，所以这个角是七十度。",
+      body: function () {
+        return '' +
+          '<h2>看动画：三步量出一个角</h2>' +
+          '<div class="mang-box" id="proto2"></div>' +
+          '<div class="mang-tip" id="proto2-tip">准备开始…</div>' +
+          '<div class="mang-res" id="proto2-res"></div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：读 3 个量角器上的角！",
+      voice: "现在轮到你啦！读一读量角器上的角，从零度线那边开始读。小心不要读反了。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习：读量角器</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：读一个容易读反的角，领奖！",
+      voice: "Boss 来啦！这个角接近平角，从零度线顺着读，别读成另一边的小角哦！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：读出这个角</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 动画：认识量角器 ========== */
+  function runProto1() {
+    var box = document.getElementById("proto1");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 300 170", width: "300", height: "170" });
+    buildProto(svg, 150, 140, 110, -1);
+    box.appendChild(svg);
+    var tip = document.getElementById("proto1-tip");
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 量角器是半圆形，中间有「中心点」（橙点）"; }
+    }, 400);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 水平向右的线是「0° 刻度线」（橙色虚线）"; }
+      var z = box.querySelector(".zero-line");
+      if (z) { z.classList.add("on"); }
+    }, 1800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 半圆上有「刻度」：0° 到 180°（每 30° 标数字）"; }
+    }, 3000);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 三个要点：中心点、0° 刻度线、刻度圈"; }
+    }, 4300);
+  }
+
+  /* ========== S3 动画：三步量角（70°） ========== */
+  function runProto2() {
+    var box = document.getElementById("proto2");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 300 170", width: "300", height: "170" });
+    var cx = 150, cy = 140, r = 110, theta = 70;
+    var rad = theta * Math.PI / 180;
+    // 角的两条边
+    var e1 = svgEl("line", { x1: cx, y1: cy, x2: cx + 150, y2: cy, class: "edge" });
+    var e2 = svgEl("line", { x1: cx, y1: cy, x2: cx + 150 * Math.cos(rad), y2: cy - 150 * Math.sin(rad), class: "edge" });
+    svg.appendChild(e1);
+    svg.appendChild(e2);
+    // 量角器
+    var pg = svgEl("g", { class: "proto" });
+    var ref = buildProto(pg, cx, cy, r, theta);
+    svg.appendChild(pg);
+    box.appendChild(svg);
+    var tip = document.getElementById("proto2-tip");
+    var res = document.getElementById("proto2-res");
+
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 量角器中心 对准 角的顶点"; }
+      pg.classList.add("on");
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 0° 刻度线 对准 角的一条边（水平边）"; }
+      ref.zero.classList.add("on");
+    }, 2200);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 角的另一条边指着 70° → 这个角是 70°！"; }
+      if (ref.hl) { ref.hl.classList.add("on"); }
+      if (res) { res.textContent = "这个角 = 70°"; }
+    }, 3900);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 口诀：中心对顶点、0°线对边、再看另一边"; }
+    }, 5400);
+  }
+
+  /* ========== 读角小图 ========== */
+  function buildAngle(svg, theta) {
+    var cx = 90, cy = 100, r = 62;
+    var rad = theta * Math.PI / 180;
+    var e1 = svgEl("line", { x1: cx, y1: cy, x2: cx + 110, y2: cy, stroke: "#4a7fe0", "stroke-width": "4", "stroke-linecap": "round" });
+    var e2 = svgEl("line", { x1: cx, y1: cy, x2: cx + 110 * Math.cos(rad), y2: cy - 110 * Math.sin(rad), stroke: "#4a7fe0", "stroke-width": "4", "stroke-linecap": "round" });
+    svg.appendChild(e1);
+    svg.appendChild(e2);
+    buildProto(svg, cx, cy, r, theta);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { theta: 50, right: "50°", opts: ["50°", "130°", "40°"] },
+    { theta: 110, right: "110°", opts: ["110°", "70°", "90°"] },
+    { theta: 90, right: "90°", opts: ["90°", "180°", "45°"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    var svg = svgEl("svg", { viewBox: "0 0 200 140", width: "180", height: "126" });
+    buildAngle(svg, q.theta);
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：读出这个角</div>" +
+      '<div style="margin:6px 0"></div>' +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    box.querySelector(".q").after(svg);
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "从 0° 线顺着刻度读，看角的另一边指着几";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1300);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    var svg = svgEl("svg", { viewBox: "0 0 200 140", width: "180", height: "126" });
+    buildAngle(svg, 145);
+    box.innerHTML = '<div class="q">读出这个角（接近平角）</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">145°</div>' +
+      '<div class="opt" data-ok="0">35°</div>' +
+      '<div class="opt" data-ok="0">55°</div>' +
+      "</div><div class='qmsg'></div>";
+    box.querySelector(".q").after(svg);
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 量角你过关啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "从 0° 顺着刻度读：0→180 方向，这条边指着 145°（不是 35°）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1700);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runProto1(); }
+    if (step.id === "s3") { runProto2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "量角三步：①量角器中心对准顶点 ②0° 刻度线对准角的一边 ③看另一边指着几度。",
+      attention: "孩子最容易内外圈读反（145° 读成 35°）；判断标准是看 0° 线用哪一圈就顺着那圈读。",
+      tip: "本课约 8 分钟；让孩子先说出「0° 线在哪一圈」，再读数，可减少读反。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

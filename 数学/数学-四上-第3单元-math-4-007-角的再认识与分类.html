@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角的再认识与分类 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .ang-box { margin: 10px 0; }
+  .ang-box svg { max-width: 380px; width: 100%; }
+  .ang-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .ang-name { font-size: 30px; font-weight: 800; color: #2e7d32; min-height: 40px; }
+  .ang-deg { font-size: 20px; color: var(--text-2); }
+  .arm-fixed { stroke: #9aa4b2; stroke-width: 5; stroke-linecap: round; }
+  .arm-move { stroke: #4a7fe0; stroke-width: 5; stroke-linecap: round; transition: all .03s linear; }
+  .arm2 { stroke: #4a7fe0; stroke-width: 5; stroke-linecap: round; opacity: 0; transition: opacity .5s; }
+  .arm2.on { opacity: 1; }
+  .vtx { fill: #4a7fe0; transition: all .4s; }
+  .vtx.on { fill: #c23a3d; r: 7; }
+  .arc-path { fill: rgba(155,187,244,.32); transition: all .03s linear; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">角的再认识与分类 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>角 = 顶点 + 两条射线；按大小分：锐角＜直角(90°)＜钝角＜平角(180°)＜周角(360°)。</p>
+      <p><b>孩子容易走神的地方：</b>平角看起来像一条直线、周角像一条射线，容易认错；可结合钟表指针理解"转了多少"。</p>
+      <p><b>建议：</b>本课约 8 分钟；在家用两根铅笔模拟旋转，直观感受"角是转出来的"。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-007</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== SVG 工具 ========== */
+  function svgNS() { return "http://www.w3.org/2000/svg"; }
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(svgNS(), tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看生活里的角！",
+      voice: "生活里的角到处都是：钟表的指针、打开的扇子、三角形的尖角。角到底是什么？它又分成哪几种？今天我们一起去认识角。",
+      body: function () {
+        return '' +
+          '<h2>生活里的角</h2>' +
+          '<p>钟表指针张得大大的、扇子开得小小的……</p>' +
+          '<p>这些"张开的大小"，就是 <b>角</b>。</p>' +
+          '<div class="hint">👆 想一想：指针从 12 点转到 1 点，角是大是小？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "角的组成动画",
+      task: "咱们这一步要做的：看动画认识「角 = 顶点 + 两条射线」！",
+      voice: "看动画。角是这样组成的：先有一个点，叫顶点。从顶点引出一条射线，像一束光射出去。再引出另一条射线。两条射线和这个顶点，就组成了一个角。角的大小，和两边张开的大小有关。",
+      body: function () {
+        return '' +
+          '<h2>看动画：角是怎么组成的</h2>' +
+          '<div class="ang-box" id="ang1"></div>' +
+          '<div class="ang-tip" id="ang1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "角的分类动画",
+      task: "咱们这一步要做的：看动画认识五种角，记住它们的度数！",
+      voice: "看动画。一条射线绕顶点慢慢转起来。转到比直角小，是锐角。转到正好九十度，是直角。转到比直角大又比平角小，是钝角。转到一百八十度，是平角。再转一圈三百六十度，是周角。",
+      body: function () {
+        return '' +
+          '<h2>看动画：一条射线转出五种角</h2>' +
+          '<div class="ang-box" id="ang2"></div>' +
+          '<div class="ang-name" id="ang2-name"></div>' +
+          '<div class="ang-deg" id="ang2-deg"></div>' +
+          '<div class="ang-tip" id="ang2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道「判断角类型」！",
+      voice: "现在考考你！给你一个角的度数，判断它是什么角。想想：比九十小是锐角，正好九十是直角，九十到一百八十之间是钝角。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：判断一个容易混的角，领奖！",
+      voice: "Boss 来啦！一百二十度是什么角？想想九十度和一百八十度之间是什么。别把钝角和平角搞混哦！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：120° 是什么角？</h2>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 动画：角的组成 ========== */
+  function runAngle1() {
+    var box = document.getElementById("ang1");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 360 220", width: "360", height: "220" });
+    var arm1 = svgEl("line", { x1: 40, y1: 180, x2: 300, y2: 180, class: "arm-fixed" });
+    var arm2 = svgEl("line", { x1: 40, y1: 180, x2: 290, y2: 60, class: "arm2" });
+    var vtx = svgEl("circle", { cx: 40, cy: 180, r: 6, class: "vtx" });
+    svg.appendChild(arm1);
+    svg.appendChild(arm2);
+    svg.appendChild(vtx);
+    box.appendChild(svg);
+    var tip = document.getElementById("ang1-tip");
+
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 先有一个点，叫「顶点」（红点）"; }
+      vtx.setAttribute("class", "vtx on");
+    }, 500);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 从顶点引出一条射线（向右边射出去）"; }
+    }, 1800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 再从顶点引出另一条射线（向右上方）"; }
+      arm2.setAttribute("class", "arm2 on");
+    }, 2800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 顶点 + 两条射线 = 一个角！角的大小看两边张开的程度"; }
+    }, 4400);
+  }
+
+  /* ========== S3 动画：五种角 ========== */
+  var ANGLES = [
+    { deg: 45, name: "锐角", d: "0° ＜ 角 ＜ 90°" },
+    { deg: 90, name: "直角", d: "角 = 90°" },
+    { deg: 135, name: "钝角", d: "90° ＜ 角 ＜ 180°" },
+    { deg: 180, name: "平角", d: "角 = 180°" },
+    { deg: 360, name: "周角", d: "角 = 360°" }
+  ];
+  function runAngle2() {
+    var box = document.getElementById("ang2");
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 360 220", width: "360", height: "220" });
+    var fixed = svgEl("line", { x1: 40, y1: 180, x2: 300, y2: 180, class: "arm-fixed" });
+    var move = svgEl("line", { x1: 40, y1: 180, x2: 190, y2: 180, class: "arm-move" });
+    var arc = svgEl("path", { d: "", class: "arc-path" });
+    var vtx = svgEl("circle", { cx: 40, cy: 180, r: 6, fill: "#4a7fe0" });
+    svg.appendChild(arc);
+    svg.appendChild(fixed);
+    svg.appendChild(move);
+    svg.appendChild(vtx);
+    box.appendChild(svg);
+
+    var tip = document.getElementById("ang2-tip");
+    var nm = document.getElementById("ang2-name");
+    var dg = document.getElementById("ang2-deg");
+    var deg = 0, targetIdx = 0, paused = false, timer = null;
+    var R = 150, AR = 62;
+
+    function draw() {
+      var rad = deg * Math.PI / 180;
+      var x = 40 + R * Math.cos(rad), y = 180 - R * Math.sin(rad);
+      move.setAttribute("x2", x);
+      move.setAttribute("y2", y);
+      // 弧
+      var ax = 40 + AR * Math.cos(rad), ay = 180 - AR * Math.sin(rad);
+      var large = deg > 180 ? 1 : 0;
+      var dd = "M " + (40 + AR) + " 180 A " + AR + " " + AR + " 0 " + large + " 1 " + ax + " " + ay;
+      arc.setAttribute("d", dd);
+      if (dg) { dg.textContent = deg + "°"; }
+    }
+    draw();
+    if (tip) { tip.textContent = "① 射线从 0° 开始慢慢转…"; }
+    timer = setInterval(function () {
+      if (paused) { return; }
+      var t = ANGLES[targetIdx];
+      if (deg < t.deg) {
+        deg = Math.min(deg + 2, t.deg);
+        draw();
+      } else {
+        paused = true;
+        if (nm) { nm.textContent = t.name; }
+        if (tip) { tip.textContent = "② 这是「" + t.name + "」：" + t.d; }
+        setTimeout(function () {
+          paused = false;
+          targetIdx++;
+          if (targetIdx >= ANGLES.length) {
+            clearInterval(timer);
+            if (tip) { tip.textContent = "✅ 五种角：锐角 ＜ 直角 ＜ 钝角 ＜ 平角 ＜ 周角"; }
+          } else {
+            if (nm) { nm.textContent = ""; }
+          }
+        }, 1900);
+      }
+    }, 30);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "90° 是什么角？", right: "直角", opts: ["锐角", "直角", "钝角"] },
+    { q: "60° 是什么角？", right: "锐角", opts: ["锐角", "直角", "钝角"] },
+    { q: "130° 是什么角？", right: "钝角", opts: ["锐角", "钝角", "平角"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "小于 90° 是锐角，等于 90° 是直角，90°~180° 是钝角";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1300);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">120° 是什么角？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="0">锐角</div>' +
+      '<div class="opt" data-ok="1">钝角</div>' +
+      '<div class="opt" data-ok="0">平角</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 角的分类你掌握啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "120° 在 90° 和 180° 之间 → 钝角（平角是 180°）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runAngle1(); }
+    if (step.id === "s3") { runAngle2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "角 = 顶点 + 两条射线；按大小分：锐角＜直角(90°)＜钝角＜平角(180°)＜周角(360°)。",
+      attention: "平角看起来像一条直线、周角像一条射线，孩子容易认错；可结合钟表指针理解「转了多少」。",
+      tip: "本课约 8 分钟；在家用两根铅笔模拟旋转，直观感受「角是转出来的」。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

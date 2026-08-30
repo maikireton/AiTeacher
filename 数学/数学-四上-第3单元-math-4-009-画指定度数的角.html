@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>画指定度数的角 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .draw-box { margin: 10px 0; }
+  .draw-box svg { max-width: 380px; width: 100%; }
+  .draw-tip { font-size: 15px; font-weight: 700; min-height: 26px; margin: 8px 0; color: var(--accent-deep); }
+  .edge { stroke: #4a7fe0; stroke-width: 5; stroke-linecap: round; }
+  .proto { opacity: 0; transition: opacity .6s; }
+  .proto.on { opacity: 1; }
+  .zero-line { stroke: #e65100; stroke-width: 3; stroke-dasharray: 5 3; opacity: 0; transition: opacity .5s; }
+  .zero-line.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">画指定度数的角 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>画角四步：①画射线 ②量角器中心对顶点、0°线对射线 ③在指定刻度处点一点 ④连接端点与点。</p>
+      <p><b>孩子容易走神的地方：</b>点刻度时看错内外圈（要画 120° 点在 60° 上）；或连线时连错端点。</p>
+      <p><b>建议：</b>本课约 8 分钟；让孩子在纸上实际画一遍 65° 和 120°，感受步骤。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-009</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+  var NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+  function buildProto(svg, cx, cy, r, highlight) {
+    var arc = svgEl("path", { d: "M " + (cx - r) + " " + cy + " A " + r + " " + r + " 0 0 1 " + (cx + r) + " " + cy, fill: "rgba(250,250,252,.9)", stroke: "#c9ced9", "stroke-width": "2" });
+    svg.appendChild(arc);
+    var hl = null;
+    for (var d = 0; d <= 180; d += 10) {
+      var rad = d * Math.PI / 180;
+      var x1 = cx + r * Math.cos(rad), y1 = cy - r * Math.sin(rad);
+      var len = (d % 30 === 0) ? 10 : 6;
+      var x2 = cx + (r - len) * Math.cos(rad), y2 = cy - (r - len) * Math.sin(rad);
+      var line = svgEl("line", { x1: x1, y1: y1, x2: x2, y2: y2, stroke: "#7d8794", "stroke-width": "1.5" });
+      if (d === highlight) { line.setAttribute("stroke", "#e65100"); line.setAttribute("stroke-width", "5"); hl = line; }
+      svg.appendChild(line);
+      if (d % 30 === 0) {
+        var tx = cx + (r - 20) * Math.cos(rad), ty = cy - (r - 20) * Math.sin(rad);
+        var t = svgEl("text", { x: tx, y: ty + 4, "text-anchor": "middle", "font-size": "13", fill: "#4a5568" });
+        t.textContent = d;
+        svg.appendChild(t);
+      }
+    }
+    var v = svgEl("circle", { cx: cx, cy: cy, r: 4, fill: "#e65100" });
+    svg.appendChild(v);
+    var z = svgEl("line", { x1: cx, y1: cy, x2: cx + r, y2: cy, class: "zero-line" });
+    svg.appendChild(z);
+    return { zero: z, hl: hl };
+  }
+
+  /* ========== 画角动画 ========== */
+  function runDraw(boxId, tipId, theta) {
+    var box = document.getElementById(boxId);
+    if (!box) { return; }
+    box.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 320 200", width: "320", height: "200" });
+    var cx = 60, cy = 145, r = 125;
+    var ray = svgEl("line", { x1: cx, y1: cy, x2: cx + 210, y2: cy, class: "edge", opacity: "0" });
+    var vtx = svgEl("circle", { cx: cx, cy: cy, r: 5, fill: "#4a7fe0", opacity: "0" });
+    svg.appendChild(ray);
+    svg.appendChild(vtx);
+    var pg = svgEl("g", { class: "proto" });
+    var ref = buildProto(pg, cx, cy, r, theta);
+    svg.appendChild(pg);
+    var rad = theta * Math.PI / 180;
+    var px = cx + r * Math.cos(rad), py = cy - r * Math.sin(rad);
+    var pt = svgEl("circle", { cx: px, cy: py, r: 7, fill: "#e65100", opacity: "0" });
+    svg.appendChild(pt);
+    var e2 = svgEl("line", { x1: cx, y1: cy, x2: px, y2: py, stroke: "#4a7fe0", "stroke-width": "5", "stroke-linecap": "round", opacity: "0" });
+    svg.appendChild(e2);
+    var lab = svgEl("text", { x: px + 8, y: py - 8, "font-size": "18", fill: "#e65100", "font-weight": "800", opacity: "0" });
+    lab.textContent = theta + "°";
+    svg.appendChild(lab);
+    box.appendChild(svg);
+    var tip = document.getElementById(tipId);
+
+    setTimeout(function () {
+      ray.setAttribute("opacity", "1");
+      vtx.setAttribute("opacity", "1");
+      if (tip) { tip.textContent = "① 先画一条射线，端点是角的顶点"; }
+    }, 400);
+    setTimeout(function () {
+      pg.classList.add("on");
+      ref.zero.classList.add("on");
+      if (tip) { tip.textContent = "② 量角器中心对顶点，0° 线对射线"; }
+    }, 2100);
+    setTimeout(function () {
+      pt.setAttribute("opacity", "1");
+      if (tip) { tip.textContent = "③ 在 " + theta + "° 刻度处点一个点"; }
+    }, 3700);
+    setTimeout(function () {
+      pg.style.display = "none";
+      e2.setAttribute("opacity", "1");
+      lab.setAttribute("opacity", "1");
+      if (tip) { tip.textContent = "④ 连接顶点和点，标上度数 → " + theta + "° 画好了！"; }
+    }, 5100);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 口诀：画射线 → 对 0° 线 → 点刻度 → 连线标度数"; }
+    }, 6800);
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：试着画一个 65° 的角！",
+      voice: "会量角，还得会画角。比如工程师要画一个六十五度的角，该怎么办？有了量角器，画角也很简单。今天我们学怎么画指定度数的角。",
+      body: function () {
+        return '' +
+          '<h2>要画一个 65° 的角</h2>' +
+          '<p>先画一条射线当一条边，再用量角器定出 65° 的方向……</p>' +
+          '<p>跟着动画一步步来。</p>' +
+          '<div class="hint">👆 在草稿纸上先试画：65° 是锐角还是钝角？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "画角步骤动画（65°）",
+      task: "咱们这一步要做的：看动画学会「四步画角」！",
+      voice: "看动画画一个六十五度的角。第一步，画一条射线，端点就是顶点。第二步，量角器中心对准顶点，零度线对准射线。第三步，在六十五度的刻度处点一个点。第四步，连接顶点和这个点，标上六十五度。一个角就画好了。",
+      body: function () {
+        return '' +
+          '<h2>看动画：四步画出 65°</h2>' +
+          '<div class="draw-box" id="draw1"></div>' +
+          '<div class="draw-tip" id="draw1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "再练一个（110°）",
+      task: "咱们这一步要做的：再看一遍画钝角 110°！",
+      voice: "再画一个一百一十度的钝角。方法和刚才一样：画射线，对零度线，在刻度一百一十的地方点一个点，再连线。看，钝角也能画得很准。",
+      body: function () {
+        return '' +
+          '<h2>看动画：画出 110°（钝角）</h2>' +
+          '<div class="draw-box" id="draw2"></div>' +
+          '<div class="draw-tip" id="draw2-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道画角小知识！",
+      voice: "现在考考你！关于画角步骤和要点的小问题，来挑战吧。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：搞定容易看反刻度的画角题，领奖！",
+      voice: "Boss 来啦！要画七十五度的角，该在量角器的哪个刻度点个点？小心，别点到一百零五那边去了。",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：该点在哪个刻度？</h2>' +
+          '<p class="big">要画 75°，刻度点在哪？</p>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { q: "画角的第一步应该是？", right: "画一条射线", opts: ["画一条射线", "直接画角", "先画量角器"] },
+    { q: "量角器放上去后，0° 刻度线要对准？", right: "角的一条边（射线）", opts: ["角的一条边（射线）", "角的顶点", "随便放"] },
+    { q: "要画 120°，应该在哪个刻度点一个点？", right: "120° 刻度处", opts: ["120° 刻度处", "60° 刻度处", "180° 刻度处"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div><button class='qnext' disabled>下一题</button>";
+    var tried = false;
+    var opts = box.querySelectorAll(".opt");
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "记住四步：画射线 → 对 0° 线 → 点刻度 → 连线标度数";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">要画 75°，刻度点在哪？</div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">75° 刻度处</div>' +
+      '<div class="opt" data-ok="0">105° 刻度处</div>' +
+      '<div class="opt" data-ok="0">15° 刻度处</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 画角你过关啦！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "要画几度就在几度的刻度处点：75° 就点 75°（别点成 105°）";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runDraw("draw1", "draw1-tip", 65); }
+    if (step.id === "s3") { runDraw("draw2", "draw2-tip", 110); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "画角四步：①画射线 ②量角器中心对顶点、0° 线对射线 ③在指定刻度处点一点 ④连接端点与点。",
+      attention: "孩子容易点刻度时看反内外圈（要画 120° 点到 60°），或连线连错端点；Boss 题专练刻度选择。",
+      tip: "本课约 8 分钟；让孩子在纸上实际画一遍 65° 和 110°，比看动画更牢。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
