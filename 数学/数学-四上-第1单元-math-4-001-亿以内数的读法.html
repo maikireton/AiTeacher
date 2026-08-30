@@ -206,12 +206,26 @@
   var scoreRow = el("score-row");
 
   /* ========== 语音 ========== */
+  /* 读取设置页保存的中文音色（aiTeacher:settings.voice.uri） */
+  function pickSavedVoice() {
+    if (!("speechSynthesis" in window)) { return null; }
+    var saved = null;
+    try { saved = JSON.parse(window.localStorage.getItem("aiTeacher:settings") || "null"); } catch (e) { saved = null; }
+    if (!saved || !saved.voice || !saved.voice.uri) { return null; }
+    var voices = window.speechSynthesis.getVoices() || [];
+    for (var i = 0; i < voices.length; i++) {
+      if (voices[i].voiceURI === saved.voice.uri) { return voices[i]; }
+    }
+    return null;
+  }
   function speak(text) {
     if (!state.voice || !("speechSynthesis" in window)) { return; }
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
-      u.lang = "zh-CN";
+      var sv = pickSavedVoice();
+      if (sv) { u.voice = sv; u.lang = sv.lang || "zh-CN"; }
+      else { u.lang = "zh-CN"; }
       u.rate = 0.92;
       u.pitch = 1.05;
       window.speechSynthesis.speak(u);
