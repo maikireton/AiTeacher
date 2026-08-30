@@ -207,20 +207,45 @@
   var scoreRow = el("score-row");
 
   /* ========== 语音 ========== */
-  /* 统一走 assets/voice.js（读取设置页保存的音色，全局生效） */
-  function speak(text) {
-    if (!state.voice) { return; }
-    if (window.AiVoice) { window.AiVoice.speak(text); return; }
+  /* 统一走 assets/voice.js（读取设置页保存的音色，全局生效）
+     onEnd：音频读完/语音不可用时回调，供自动播放等读完再前进 */
+  var voiceToken = 0;      // 当前步骤语音令牌（切步后旧语音回调作废）
+  var voicePlaying = false; // 当前是否有语音在播
+  function speak(text, onEnd) {
+    var done = false;
+    function finish() {
+      if (done) { return; }
+      done = true;
+      voicePlaying = false;
+      if (typeof onEnd === "function") { onEnd(); }
+    }
+    voicePlaying = true;
+    if (!state.voice) {
+      // 语音关闭：短停顿模拟结束，自动播放才不会卡住
+      if (typeof onEnd === "function") { setTimeout(finish, 1200); }
+      else { finish(); }
+      return;
+    }
+    if (!("speechSynthesis" in window)) {
+      if (typeof onEnd === "function") { setTimeout(finish, 1200); }
+      else { finish(); }
+      return;
+    }
+    if (window.AiVoice) {
+      window.AiVoice.speak(text, { rate: 0.92, pitch: 1.05, onEnd: finish });
+      return;
+    }
     /* 回退：未加载 voice.js 时使用默认中文语音 */
-    if (!("speechSynthesis" in window)) { return; }
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
       u.lang = "zh-CN";
       u.rate = 0.92;
       u.pitch = 1.05;
+      u.onend = finish;
+      u.onerror = finish;
       window.speechSynthesis.speak(u);
-    } catch (e) { /* 语音失败不阻塞学习 */ }
+    } catch (e) { if (typeof onEnd === "function") { setTimeout(finish, 1000); } else { finish(); } }
   }
   function stopSpeak() { try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {} }
 
@@ -251,7 +276,10 @@
     if (s.id === "s3") { runReadDemo(); }
     if (s.id === "s4") { startQuiz(); }
     if (s.id === "s5") { startBoss(); }
-    speak(s.voice);
+    // 朗读本步讲解；自动播放时等读完后前进
+    voiceToken++;
+    var vtoken = voiceToken;
+    speak(s.voice, function () { onStepVoiceEnd(vtoken); });
 
     el("btn-prev").disabled = state.cur === 0;
     el("btn-next").disabled = false;
@@ -289,7 +317,6 @@
         clearInterval(timer);
         var r = el("read-result");
         if (r) { r.textContent = "读出结果：三千零五十万六千"; }
-        if (state.voice) { speak("三千零五十万六千。万级读作三千零五十，要加一个万字。个级是六个零，末尾的零不读。"); }
       }
     }, 1200);
   }
@@ -394,13 +421,55 @@
   /* ========== 控制栏 ========== */
   var btnPrev = el("btn-prev"), btnNext = el("btn-next"), btnAuto = el("btn-auto"), btnVoice = el("btn-voice");
 
+  /* ========== 自动播放 ========== */
+  var autoTimer = null; // 语音结束后的停顿定时器
+  function clearAutoTimer() {
+    if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+  }
+  function stopAuto() {
+    clearAutoTimer();
+    state.auto = false;
+    btnAuto.classList.remove("on");
+  }
+  function autoAdvance() {
+    autoTimer = null;
+    if (!state.auto) { return; }
+    if (state.cur < steps.length - 1) {
+      state.cur++;
+      render(); // 新步骤重新朗读并注册 onEnd → 继续自动链
+    } else {
+      stopAuto();
+    }
+  }
+  /* 当前步音频读完：自动播放模式下停顿后进入下一步 */
+  function onStepVoiceEnd(vtoken) {
+    if (vtoken !== voiceToken) { return; } // 已切步，忽略旧语音
+    if (!state.auto) { return; }
+    if (state.cur === 3 || state.cur === 4) { stopAuto(); return; }
+    if (state.cur >= steps.length - 1) { stopAuto(); return; }
+    clearAutoTimer();
+    autoTimer = setTimeout(autoAdvance, 2500);
+  }
+  function startAuto() {
+    state.auto = true;
+    btnAuto.classList.add("on");
+    if (state.cur === 3 || state.cur === 4) { stopAuto(); return; }
+    if (state.cur >= steps.length - 1) { stopAuto(); return; }
+    if (voicePlaying) { return; } // 语音在读，读完会走 onStepVoiceEnd
+    // 语音已结束/未朗读：直接安排停顿前进
+    clearAutoTimer();
+    autoTimer = setTimeout(autoAdvance, 2500);
+  }
+
   btnPrev.addEventListener("click", function () {
     stopSpeak();
+    clearAutoTimer();
     if (state.cur > 0) { state.cur--; }
     render();
   });
   btnNext.addEventListener("click", function () {
     stopSpeak();
+    clearAutoTimer();
     if (state.cur < steps.length - 1) { state.cur++; render(); }
     else { render(); /* 结束，停留在结算 */ }
   });
@@ -413,27 +482,8 @@
     state.auto = !state.auto;
     btnAuto.classList.toggle("on", state.auto);
     if (state.auto) { startAuto(); }
-    else { stopSpeak(); }
+    else { stopSpeak(); clearAutoTimer(); }
   });
-
-  /* 自动播放：讲解步等语音读完再前进；练习步自动暂停等孩子 */
-  function startAuto() {
-    var timer = setInterval(function () {
-      if (!state.auto) { clearInterval(timer); return; }
-      if (state.cur === 3 || state.cur === 4) {
-        // 练习步不自动前进
-        return;
-      }
-      if (state.cur < steps.length - 1) {
-        state.cur++;
-        render();
-        // 进入练习步后关闭自动播放等待孩子
-        if (state.cur === 3) { state.auto = false; btnAuto.classList.remove("on"); }
-      } else {
-        clearInterval(timer);
-      }
-    }, 3000);
-  }
 
   /* 初始化 */
   render();

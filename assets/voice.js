@@ -97,6 +97,11 @@
       else { u.lang = "zh-CN"; }
       u.rate = (opts && opts.rate) || 0.92;
       u.pitch = (opts && opts.pitch) || 1.05;
+      /* onEnd：音频播放结束/中断时回调（供自动播放等读完再前进） */
+      if (opts && typeof opts.onEnd === "function") {
+        u.onend = function () { try { opts.onEnd(); } catch (e) {} };
+        u.onerror = function () { try { opts.onEnd(); } catch (e) {} };
+      }
       window.speechSynthesis.speak(u);
     } catch (e) { /* 语音失败不阻塞学习 */ }
   }
