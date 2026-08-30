@@ -1,0 +1,58 @@
+/* ============================================================
+ * AI 教师 · 课件播放器通用样式（course.css）
+ * 所有课件页共用：五段式播放器、控制栏、进度点、家长面板
+ * 依赖 style.css（提供 CSS 变量与基础排版）
+ * ============================================================ */
+.player { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px 18px; }
+.task-line { background: rgba(155,187,244,0.16); color: var(--accent-deep); border-radius: 10px; padding: 8px 14px; font-size: 13px; margin-bottom: 14px; }
+.task-line b { font-weight: 700; }
+.stage { min-height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 8px 4px; }
+.stage h2 { font-size: 22px; margin-bottom: 10px; }
+.stage p { color: var(--text-2); font-size: 15px; max-width: 560px; }
+.stage .big { font-size: 20px; font-weight: 800; letter-spacing: 2px; margin: 8px 0; }
+.stage .demo { margin: 16px 0; width: 100%; max-width: 620px; }
+.stage .hint { font-size: 13px; color: var(--text-2); margin-top: 12px; }
+
+/* 练习 */
+.quiz { width: 100%; max-width: 480px; }
+.quiz .q { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt { display: flex; align-items: center; justify-content: center; min-height: 52px; border: 2px solid var(--border); border-radius: 12px; font-size: 17px; background: var(--card); cursor: pointer; }
+.opt:active { background: #eef0f5; }
+.opt.right { border-color: var(--green); background: rgba(82,196,26,.12); }
+.opt.wrong { border-color: var(--red); background: rgba(234,102,104,.12); }
+.opt.locked { pointer-events: none; opacity: .6; }
+.qmsg { min-height: 24px; font-size: 14px; margin-top: 10px; }
+.qmsg.ok { color: var(--green); font-weight: 700; }
+.qmsg.no { color: #b07900; }
+.qnext { margin-top: 12px; min-height: 44px; padding: 0 22px; border-radius: 12px; border: none; background: var(--accent-deep); color: #fff; font-size: 15px; cursor: pointer; }
+.qnext:disabled { background: var(--border); cursor: default; }
+
+/* 星星 / 连击 */
+.score-row { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 12px; font-size: 14px; color: var(--text-2); }
+.star { font-size: 20px; }
+.combo { color: #b07900; font-weight: 700; }
+.result-big { font-size: 34px; margin: 6px 0; }
+
+/* 控制栏 */
+.controls { display: flex; gap: 10px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+.cbtn { flex: 1 1 0; min-width: 76px; min-height: 48px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); font-size: 14px; color: var(--text); cursor: pointer; }
+.cbtn.on { background: rgba(155,187,244,.22); border-color: var(--accent-deep); font-weight: 700; }
+.cbtn:disabled { opacity: .4; cursor: default; }
+.cbtn.main { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); }
+.dots { display: flex; gap: 8px; justify-content: center; margin: 14px 0 4px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+.dot.done { background: var(--accent-deep); }
+.dot.cur { background: var(--accent-deep); box-shadow: 0 0 0 4px rgba(155,187,244,.3); }
+
+/* 家长模式 */
+.parent-panel { margin-top: 16px; border: 1px dashed var(--border); border-radius: 12px; padding: 12px 14px; }
+.parent-panel summary { cursor: pointer; color: var(--text-2); font-size: 13px; }
+.parent-panel .pbody { font-size: 13px; color: var(--text-2); margin-top: 10px; }
+.parent-panel .pbody p { margin: 6px 0; }
+.parent-panel .pbody b { color: var(--text); }
+
+@media (max-width: 480px) {
+  .stage h2 { font-size: 19px; }
+  .opt { font-size: 15px; min-height: 48px; }
+}

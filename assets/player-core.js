@@ -1,0 +1,199 @@
+/* ============================================================
+ * AI 教师 · 通用五段式播放器内核（player-core.js）
+ * 所有课件共用：步骤渲染 / 控制栏 / 自动播放 / 语音 / 星星连击 / 家长面板
+ *
+ * 课件页使用方法（HTML 骨架须包含以下 id）：
+ *   task-line、stage、dots、btn-prev、btn-auto、btn-voice、btn-next、
+ *   score-row、parent-summary、parent-attention、parent-tip
+ * 课件只负责定义 steps 数据 + 动画/练习函数（onEnterStep 钩子），
+ * 具体见「数学/math-4-002-亿以内数的写法.html」示例。
+ *
+ * PlayerCore.init({ steps, parent, onEnterStep, settings })
+ *   steps: [{ id,title,task,voice, body:function(){return html} }]
+ *   parent: { summary, attention, tip }（家长面板文案）
+ *   onEnterStep: function(step, api) 进入步骤钩子（启动动画/练习）
+ *   settings: { autoStopSteps:[..], pauseMs, voiceRate, voicePitch }
+ * 返回 api：{ el, cur, addStars, comboHit, comboReset, speak, stopSpeak }
+ * ============================================================ */
+window.PlayerCore = (function () {
+  "use strict";
+
+  function init(cfg) {
+    cfg = cfg || {};
+    var steps = cfg.steps || [];
+    var parent = cfg.parent || {};
+    var onEnterStep = cfg.onEnterStep || null;
+    var settings = cfg.settings || {};
+    var PAUSE = settings.pauseMs != null ? settings.pauseMs : 2500;
+    var RATE = settings.voiceRate || 0.92;
+    var PITCH = settings.voicePitch || 1.05;
+    var AUTO_STOP = settings.autoStopSteps || [];
+
+    var state = { cur: 0, stars: 0, combo: 0, auto: false, voice: true };
+    var voiceToken = 0, voicePlaying = false, autoTimer = null;
+
+    function el(id) { return document.getElementById(id); }
+    var stage = el("stage"), taskLine = el("task-line"), dots = el("dots"), scoreRow = el("score-row");
+    var btnPrev = el("btn-prev"), btnNext = el("btn-next"), btnAuto = el("btn-auto"), btnVoice = el("btn-voice");
+
+    /* ---------- 语音（统一走 voice.js，支持 onEnd 供自动播放等读完） ---------- */
+    function speak(text, onEnd) {
+      var done = false;
+      function finish() {
+        if (done) { return; }
+        done = true;
+        voicePlaying = false;
+        if (typeof onEnd === "function") { onEnd(); }
+      }
+      voicePlaying = true;
+      if (!state.voice) {
+        if (typeof onEnd === "function") { setTimeout(finish, 1200); }
+        else { finish(); }
+        return;
+      }
+      if (!("speechSynthesis" in window)) {
+        if (typeof onEnd === "function") { setTimeout(finish, 1200); }
+        else { finish(); }
+        return;
+      }
+      if (window.AiVoice) {
+        window.AiVoice.speak(text, { rate: RATE, pitch: PITCH, onEnd: finish });
+        return;
+      }
+      try {
+        window.speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = "zh-CN";
+        u.rate = RATE;
+        u.pitch = PITCH;
+        u.onend = finish;
+        u.onerror = finish;
+        window.speechSynthesis.speak(u);
+      } catch (e) {
+        if (typeof onEnd === "function") { setTimeout(finish, 1000); }
+        else { finish(); }
+      }
+    }
+    function stopSpeak() { try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {} }
+
+    /* ---------- 渲染 ---------- */
+    function renderDots() {
+      var h = "";
+      steps.forEach(function (_, i) {
+        h += '<span class="dot' + (i < state.cur ? " done" : "") + (i === state.cur ? " cur" : "") + '"></span>';
+      });
+      if (dots) { dots.innerHTML = h; }
+    }
+    function renderScore() {
+      if (!scoreRow) { return; }
+      var h = '<span class="star">⭐×' + state.stars + "</span>";
+      if (state.combo >= 2) { h += '<span class="combo">🔥 连击 ×' + state.combo + "</span>"; }
+      scoreRow.innerHTML = h;
+    }
+    function render() {
+      if (!steps.length || state.cur < 0 || state.cur >= steps.length) { return; }
+      var s = steps[state.cur];
+      if (taskLine) { taskLine.innerHTML = "🎯 <b>任务：</b>" + s.task; }
+      if (stage) { stage.innerHTML = s.body(); }
+      renderDots();
+      renderScore();
+
+      voiceToken++;
+      var vtoken = voiceToken;
+      speak(s.voice, function () { onStepVoiceEnd(vtoken); });
+
+      if (onEnterStep) {
+        try { onEnterStep(s, api); } catch (e) { console.error("[player-core] onEnterStep 出错:", e); }
+      }
+
+      if (btnPrev) { btnPrev.disabled = state.cur === 0; }
+      if (btnNext) {
+        btnNext.disabled = false;
+        btnNext.textContent = state.cur === steps.length - 1 ? "完成 🎉" : "下一步";
+      }
+    }
+
+    /* ---------- 自动播放：等音频读完再走 ---------- */
+    function clearAutoTimer() { if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; } }
+    function stopAuto() { clearAutoTimer(); state.auto = false; if (btnAuto) { btnAuto.classList.remove("on"); } }
+    function autoAdvance() {
+      autoTimer = null;
+      if (!state.auto) { return; }
+      if (state.cur < steps.length - 1) { state.cur++; render(); }
+      else { stopAuto(); }
+    }
+    function onStepVoiceEnd(vtoken) {
+      if (vtoken !== voiceToken) { return; }
+      if (!state.auto) { return; }
+      if (AUTO_STOP.indexOf(state.cur) !== -1) { stopAuto(); return; }
+      if (state.cur >= steps.length - 1) { stopAuto(); return; }
+      clearAutoTimer();
+      autoTimer = setTimeout(autoAdvance, PAUSE);
+    }
+    function startAuto() {
+      state.auto = true;
+      if (btnAuto) { btnAuto.classList.add("on"); }
+      if (AUTO_STOP.indexOf(state.cur) !== -1) { stopAuto(); return; }
+      if (state.cur >= steps.length - 1) { stopAuto(); return; }
+      if (voicePlaying) { return; }
+      clearAutoTimer();
+      autoTimer = setTimeout(autoAdvance, PAUSE);
+    }
+
+    /* ---------- 控制栏 ---------- */
+    if (btnPrev) {
+      btnPrev.addEventListener("click", function () {
+        stopSpeak(); clearAutoTimer();
+        if (state.cur > 0) { state.cur--; }
+        render();
+      });
+    }
+    if (btnNext) {
+      btnNext.addEventListener("click", function () {
+        stopSpeak(); clearAutoTimer();
+        if (state.cur < steps.length - 1) { state.cur++; render(); }
+        else { render(); }
+      });
+    }
+    if (btnVoice) {
+      btnVoice.addEventListener("click", function () {
+        state.voice = !state.voice;
+        btnVoice.classList.toggle("on", state.voice);
+        if (!state.voice) { stopSpeak(); }
+      });
+    }
+    if (btnAuto) {
+      btnAuto.addEventListener("click", function () {
+        state.auto = !state.auto;
+        btnAuto.classList.toggle("on", state.auto);
+        if (state.auto) { startAuto(); }
+        else { stopSpeak(); clearAutoTimer(); }
+      });
+    }
+
+    /* ---------- 家长面板 ---------- */
+    var ps = el("parent-summary"), pa = el("parent-attention"), pt = el("parent-tip");
+    if (ps && parent.summary) { ps.textContent = parent.summary; }
+    if (pa && parent.attention) { pa.textContent = parent.attention; }
+    if (pt && parent.tip) { pt.textContent = parent.tip; }
+
+    /* ---------- 公开 API（供 onEnterStep 的动画/练习使用） ---------- */
+    var api = {
+      el: el,
+      cur: function () { return state.cur; },
+      stars: function () { return state.stars; },
+      addStars: function (n) { state.stars += n; renderScore(); },
+      comboHit: function () { state.combo++; renderScore(); },
+      comboReset: function () { state.combo = 0; renderScore(); },
+      speak: speak,
+      stopSpeak: stopSpeak,
+      state: state
+    };
+
+    render();
+    if (btnPrev) { btnPrev.disabled = true; }
+    return api;
+  }
+
+  return { init: init };
+})();

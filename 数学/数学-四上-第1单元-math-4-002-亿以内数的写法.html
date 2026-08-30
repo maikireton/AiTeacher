@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>亿以内数的写法 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  /* 数位写数表 */
+  .place-table { display: flex; gap: 6px; justify-content: center; margin: 12px auto 8px; flex-wrap: wrap; }
+  .place-cell { width: 54px; }
+  .place-cell .digit {
+    width: 54px; height: 56px; border-radius: 10px; border: 2px dashed var(--border);
+    background: var(--card); display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 800; color: transparent; transition: all .3s;
+  }
+  .place-cell .digit.dig { color: var(--text); border-style: solid; transform: translateY(-6px); }
+  .place-cell .digit.dig.gw { border-color: #8bc34a; background: rgba(139,195,74,.14); color: #2e7d32; }
+  .place-cell .digit.dig.gg { border-color: var(--accent-deep); background: rgba(155,187,244,.16); }
+  .place-cell .digit.dig.vac { border-color: var(--red); background: rgba(234,102,104,.12); color: #c23a3d; }
+  .place-cell .pname { font-size: 12px; color: var(--text-2); margin-top: 4px; text-align: center; transition: all .3s; }
+  .place-cell.hlw .pname { color: #3a9411; font-weight: 700; }
+  .place-cell.hlg .pname { color: var(--accent-deep); font-weight: 700; }
+  .write-tip { font-size: 14px; font-weight: 700; color: var(--accent-deep); min-height: 22px; margin-top: 8px; }
+  .write-desc { font-size: 14px; color: var(--text-2); margin-top: 4px; }
+  .vac-line { display: inline-block; font-size: 13px; color: #c23a3d; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 数学</a>
+    <span class="brand">亿以内数的写法 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>本课一句话总结：</b>写数先分级，从最高级写起、一级一级写；哪一位一个单位也没有，就在那一位上写 0 占位。</p>
+      <p><b>孩子容易走神的地方：</b>最容易漏写 0 占位（个级 4 位不够数）和把 0 的位置写错，重点看练习第 2、3 题和 Boss 关。</p>
+      <p><b>建议：</b>本课约 8 分钟；写数要在草稿纸上跟着动画自己写一遍再对答案。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 示范课件 math-4-002</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  /* ========== 数位表工具 ========== */
+  function renderTable(boxId, cells) {
+    var box = document.getElementById(boxId);
+    if (!box) { return; }
+    var h = "";
+    cells.forEach(function (c, i) {
+      h += '<div class="place-cell" id="pc-' + boxId + "-" + i + '" data-i="' + i + '">' +
+        '<div class="digit"></div>' +
+        '<div class="pname">' + c.name + "</div></div>";
+    });
+    box.innerHTML = h;
+  }
+  function fillDigit(boxId, i, digit, cls) {
+    var pc = document.getElementById("pc-" + boxId + "-" + i);
+    if (!pc) { return; }
+    var d = pc.querySelector(".digit");
+    d.textContent = digit;
+    d.className = "digit dig " + (cls || "");
+    if (cls && cls.indexOf("vac") !== -1) {
+      var line = document.createElement("div");
+      line.className = "vac-line";
+      line.textContent = "这里空着，写 0 占位";
+      pc.appendChild(line);
+    }
+  }
+  function highlightGroup(boxId, indices, cls) {
+    indices.forEach(function (i) {
+      var pc = document.getElementById("pc-" + boxId + "-" + i);
+      if (pc) { pc.className = "place-cell " + cls; }
+    });
+  }
+
+  /* ========== 五段式步骤 ========== */
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：看看「三百二十万」该怎么写出来！",
+      voice: "读一个数我们学会了，写一个数也很有意思。三百二十万，要怎么写呢？今天我们一起来变写数的魔法。",
+      body: function () {
+        return '' +
+          '<h2>写数的魔法</h2>' +
+          '<p>给你一个数：<span class="big">三百二十万</span></p>' +
+          '<p>读起来很顺口，可要写到纸上，你得先想清楚：它有几位？哪些位要写 0？</p>' +
+          '<div class="hint">👆 先在草稿纸上试一试，写出来是多少？</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "写法步骤动画",
+      task: "咱们这一步要做的：看动画，学会「先分级、从最高级写起」！",
+      voice: "写数先分级。三百二十万里有个万字，说明万级上有数。先写万级：三二零，也就是百万位写三，十万位写二，万位写零。再写个级：一个都没有，要补四个零。合起来就是三百二十万。",
+      body: function () {
+        return '' +
+          '<h2>看动画学写数：三百二十万</h2>' +
+          '<div class="demo">' +
+            '<div class="place-table" id="w1-table"></div>' +
+            '<div class="write-tip" id="w1-tip">准备开始…</div>' +
+            '<div class="write-desc" id="w1-desc"></div>' +
+          '</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "0 的占位动画",
+      task: "咱们这一步要做的：看「零」是怎么占位置的，别漏写 0！",
+      voice: "这个数更难：二千零三十万零五十。先写万级：二千零三十，千万位写二，百万位读到零要写零占位，十万位写三，万位写零。再写个级：零五十，千位写零，百位写零，十位写五，个位写零。每一个读到的零，都要用零占住它的位置。",
+      body: function () {
+        return '' +
+          '<h2>看动画学 0 占位：二千零三十万零五十</h2>' +
+          '<div class="demo">' +
+            '<div class="place-table" id="w2-table"></div>' +
+            '<div class="write-tip" id="w2-tip">准备开始…</div>' +
+            '<div class="write-desc" id="w2-desc"></div>' +
+          '</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "互动练习",
+      task: "咱们这一步要做的：连闯 3 道写数题，把写法用起来！",
+      voice: "现在轮到你啦！一共三道写数题，选对就能得到星星。注意零的个数和位置哦。",
+      body: function () {
+        return '' +
+          '<h2>闯关练习</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "Boss 关",
+      task: "咱们这一步要做的：写一个全是零的大 Boss，然后领奖！",
+      voice: "最后的大 Boss 来啦！把九千零三万零六十写出来。这个数有好多零，看你能不能一个都不写错！",
+      body: function () {
+        return '' +
+          '<h2>Boss 关：写出这个大数</h2>' +
+          '<p class="big">九千零三万零六十</p>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  /* ========== S2 写数动画：三百二十万 = 3200000 ========== */
+  var W1 = [
+    { name: "千万", v: "", gw: true },
+    { name: "百万", v: "3", gw: true },
+    { name: "十万", v: "2", gw: true },
+    { name: "万",   v: "0", gw: true },
+    { name: "千",   v: "0", gw: false },
+    { name: "百",   v: "0", gw: false },
+    { name: "十",   v: "0", gw: false },
+    { name: "个",   v: "0", gw: false }
+  ];
+  function runWriteDemo1() {
+    var box = document.getElementById("w1-table");
+    if (!box) { return; }
+    renderTable("w1-table", W1);
+    var tip = document.getElementById("w1-tip");
+    var desc = document.getElementById("w1-desc");
+
+    // 1) 高亮万级
+    setTimeout(function () {
+      highlightGroup("w1-table", [1, 2, 3], "hlw");
+      if (tip) { tip.textContent = "① 数里有「万」→ 先写万级（百万/十万/万位）"; }
+      if (desc) { desc.textContent = "三百二十万 → 万级读作「三百二十」"; }
+    }, 400);
+    // 2) 万级数字逐个落入
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 万级写「320」"; }
+      fillDigit("w1-table", 1, "3", "gw");
+      setTimeout(function () { fillDigit("w1-table", 2, "2", "gw"); }, 500);
+      setTimeout(function () { fillDigit("w1-table", 3, "0", "gw"); }, 1000);
+    }, 1800);
+    // 3) 个级补 0
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 个级一个都没有 → 补 4 个 0 占位！"; }
+      if (desc) { desc.textContent = "三百二十万 = 3200000（注意有 4 个 0）"; }
+      fillDigit("w1-table", 4, "0", "gg");
+      setTimeout(function () { fillDigit("w1-table", 5, "0", "gg"); }, 400);
+      setTimeout(function () { fillDigit("w1-table", 6, "0", "gg"); }, 800);
+      setTimeout(function () { fillDigit("w1-table", 7, "0", "gg"); }, 1200);
+    }, 3400);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 完成！三百二十万 = 3200000"; }
+    }, 5200);
+  }
+
+  /* ========== S3 0 占位动画：二千零三十万零五十 = 20300050 ========== */
+  var W2 = [
+    { name: "千万", v: "2", vac: false },
+    { name: "百万", v: "0", vac: true },
+    { name: "十万", v: "3", vac: false },
+    { name: "万",   v: "0", vac: true },
+    { name: "千",   v: "0", vac: true },
+    { name: "百",   v: "0", vac: true },
+    { name: "十",   v: "5", vac: false },
+    { name: "个",   v: "0", vac: true }
+  ];
+  function runWriteDemo2() {
+    var box = document.getElementById("w2-table");
+    if (!box) { return; }
+    renderTable("w2-table", W2);
+    var tip = document.getElementById("w2-tip");
+    var desc = document.getElementById("w2-desc");
+
+    // 1) 万级：千万位写2
+    setTimeout(function () {
+      if (tip) { tip.textContent = "① 先写万级：千万位写「2」"; }
+      fillDigit("w2-table", 0, "2", "gw");
+    }, 400);
+    // 2) 百万位：读到"零"→ 占位
+    setTimeout(function () {
+      if (tip) { tip.textContent = "② 读到「零」→ 百万位空着，写 0 占位！"; }
+      if (desc) { desc.textContent = "二千零三十万 → 千万2 百万0 十万3 万0"; }
+      fillDigit("w2-table", 1, "0", "vac");
+      setTimeout(function () { fillDigit("w2-table", 2, "3", "gw"); }, 900);
+      setTimeout(function () { fillDigit("w2-table", 3, "0", "gw"); }, 1400);
+    }, 1500);
+    // 3) 个级：零五十 → 千0 百0 十5 个0
+    setTimeout(function () {
+      if (tip) { tip.textContent = "③ 再写个级「零五十」：千位百位都要 0 占位！"; }
+      if (desc) { desc.textContent = "二千零三十万零五十 = 20300050"; }
+      fillDigit("w2-table", 4, "0", "vac");
+      setTimeout(function () { fillDigit("w2-table", 5, "0", "vac"); }, 450);
+      setTimeout(function () { fillDigit("w2-table", 6, "5", "gg"); }, 900);
+      setTimeout(function () { fillDigit("w2-table", 7, "0", "vac"); }, 1350);
+    }, 3800);
+    setTimeout(function () {
+      if (tip) { tip.textContent = "✅ 完成！二千零三十万零五十 = 20300050（漏一个 0 都不行！）"; }
+    }, 6000);
+  }
+
+  /* ========== S4 练习 ========== */
+  var QUIZ = [
+    { name: "四十五万", right: "450000", opts: ["450000", "4500000", "45000"] },
+    { name: "三百零二万", right: "3020000", opts: ["3020000", "3200000", "302000"] },
+    { name: "六千万零八十", right: "60000080", opts: ["60000080", "6000080", "6080000"] }
+  ];
+  var quizDone = { q1: false, q2: false, q3: false };
+  function startQuiz() {
+    quizDone = { q1: false, q2: false, q3: false };
+    renderQuiz();
+  }
+  function renderQuiz() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var idx = -1;
+    ["q1", "q2", "q3"].forEach(function (k, i) { if (!quizDone[k] && idx === -1) { idx = i; } });
+    if (idx === -1) {
+      box.innerHTML = '<div class="q">全部完成！⭐ 你真棒</div>';
+      return;
+    }
+    var q = QUIZ[idx];
+    box.innerHTML = '<div class="q">第 ' + (idx + 1) + " 题：写出「<b>" + q.name + "</b>」</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      '<div class="qmsg"></div><button class="qnext" disabled>下一题</button>';
+
+    var opts = box.querySelectorAll(".opt");
+    var tried = false;
+    var that = this;
+    opts.forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          opts.forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "写对啦！⭐ +1" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          box.querySelector(".qnext").disabled = false;
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "差一点点～ 数一下位数，看看 0 够不够！";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1200);
+        }
+      });
+    });
+    box.querySelector(".qnext").addEventListener("click", function () {
+      quizDone["q" + (idx + 1)] = true;
+      renderQuiz();
+    });
+  }
+
+  /* ========== S5 Boss 关 ========== */
+  function startBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    box.innerHTML = '<div class="q">写出这个数：<b>九千零三万零六十</b></div>' +
+      '<div class="opts">' +
+      '<div class="opt" data-ok="1">90030060</div>' +
+      '<div class="opt" data-ok="0">90300060</div>' +
+      '<div class="opt" data-ok="0">9003060</div>' +
+      "</div><div class='qmsg'></div>";
+    var rs = document.getElementById("result-stars");
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2 今天你是写数小勇士！";
+          if (rs) {
+            var n = apiRef.stars();
+            rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+              (n >= 8 ? "（全部拿下！）" : n >= 5 ? "（很不错！）" : "（下次再来！）");
+          }
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "再试一次！先分级：九千零三万 ｜ 零六十，想想每个零的位置";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+  }
+
+  /* ========== 启动播放器 ========== */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s2") { runWriteDemo1(); }
+    if (step.id === "s3") { runWriteDemo2(); }
+    if (step.id === "s4") { startQuiz(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "写数先分级，从最高级写起、一级一级写；哪一位一个单位也没有，就在那一位上写 0 占位。",
+      attention: "最容易漏写 0 占位（个级 4 位不够数）和把 0 的位置写错，重点看练习第 2、3 题和 Boss 关。",
+      tip: "本课约 8 分钟；写数要在草稿纸上跟着动画自己写一遍再对答案。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>
