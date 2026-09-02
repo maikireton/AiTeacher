@@ -11,6 +11,7 @@ window.Record = (function () {
 
   var KEY = "aiTeacher:records";
   var TASK_KEY = "aiTeacher:dailyTask";
+  var SETTINGS_KEY = "aiTeacher:taskSettings";
   var mem = null;
 
   /* ---------- 存储 ---------- */
@@ -157,40 +158,36 @@ window.Record = (function () {
   }
 
   /* ---------- 今日任务推荐（供主页） ----------
-   * 优先级：薄弱点优先 → 其次最久未复习的已完成课件；
-   * 返回最多 n 个，并尽量覆盖不同学科（学科多样性） */
-  function recommendList(n) {
-    n = (typeof n === "number" && n > 0) ? n : 2;
+   * 规则：每个学科各取 perSubject 个（默认 1），学科间互不抢占；
+   * 每科内优先级：薄弱点优先 → 最久未复习优先；
+   * 支持按家长设置的年级范围过滤（见 getTaskSettings）。 */
+  function recommendList(perSubject) {
+    perSubject = (typeof perSubject === "number" && perSubject > 0) ? perSubject : 1;
     var KB = window.KNOWLEDGE_BASE;
     if (!KB || !Array.isArray(KB.knowledgePoints)) { return []; }
+    var settings = getTaskSettings();
+    var grades = settings.grades; // null=全部年级
     var doneSet = {};
     todayDone().forEach(function (k) { doneSet[k] = true; });
-    // 候选：已制作完成、可点击、今日还没学过
-    var cands = KB.knowledgePoints.filter(function (k) {
-      return k.status === "已完成" && k.file && !doneSet[k.id];
-    }).sort(byLastStudy);
-    if (!cands.length) { return []; }
-
     var weakSet = {};
     weakIds().forEach(function (k) { weakSet[k] = true; });
-    var weakCands = cands.filter(function (k) { return weakSet[k.id]; });
-    var rest = cands.filter(function (k) { return !weakSet[k.id]; });
 
+    // 学科顺序：按知识库学科字典
+    var subjects = (KB.subjects || []).map(function (s) { return s.id; });
     var out = [];
-    // 1) 先取薄弱点（最久未学优先）
-    for (var i = 0; i < weakCands.length && out.length < n; i++) { out.push(weakCands[i]); }
-    // 2) 补足到 n：优先未覆盖学科，保证学科多样性
-    while (out.length < n && rest.length) {
-      var usedSubj = {};
-      out.forEach(function (k) { usedSubj[k.subject] = true; });
-      var best = null, bi = -1;
-      for (var j = 0; j < rest.length; j++) {
-        if (!usedSubj[rest[j].subject]) { best = rest[j]; bi = j; break; }
-      }
-      if (!best) { best = rest[0]; bi = 0; }
-      out.push(best);
-      rest.splice(bi, 1);
-    }
+    subjects.forEach(function (subj) {
+      var cands = KB.knowledgePoints.filter(function (k) {
+        return k.subject === subj && k.status === "已完成" && k.file && !doneSet[k.id] &&
+          (!grades || grades.indexOf(k.grade) !== -1);
+      }).sort(byLastStudy);
+      if (!cands.length) { return; }
+      var weak = cands.filter(function (k) { return weakSet[k.id]; });
+      var rest = cands.filter(function (k) { return !weakSet[k.id]; });
+      var take = [];
+      for (var i = 0; i < weak.length && take.length < perSubject; i++) { take.push(weak[i]); }
+      for (var j = 0; j < rest.length && take.length < perSubject; j++) { take.push(rest[j]); }
+      out = out.concat(take);
+    });
     return out;
   }
 
@@ -199,16 +196,49 @@ window.Record = (function () {
     return recommendList(1)[0] || null;
   }
 
+  /* ---------- 任务抽取设置（家长可配） ----------
+   * 格式：{ grades: [3,4] } 抽取指定年级；{ grades: null } 全部年级 */
+  function getTaskSettings() {
+    try {
+      var raw = window.localStorage.getItem(SETTINGS_KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && Array.isArray(s.grades) && s.grades.length) {
+          return { grades: s.grades.map(function (g) { return +g; }).sort() };
+        }
+      }
+    } catch (e) { /* 忽略 */ }
+    return { grades: null };
+  }
+  function saveTaskSettings(s) {
+    try {
+      window.localStorage.setItem(SETTINGS_KEY, JSON.stringify({ grades: (s && Array.isArray(s.grades) && s.grades.length) ? s.grades.map(function (g) { return +g; }) : null }));
+    } catch (e) { /* 忽略 */ }
+  }
+  function sameSettings(a, b) {
+    if (!a && !b) { return true; }
+    if (!a || !b) { return false; }
+    var ga = a.grades, gb = b.grades;
+    if (ga && gb) {
+      if (ga.length !== gb.length) { return false; }
+      return ga.every(function (g) { return gb.indexOf(g) !== -1; });
+    }
+    return !ga && !gb;
+  }
+
   /* ---------- 当日任务（锁定制） ----------
-   * 当天第一次调用时生成并锁定 2 个知识点，当天内固定不变；
-   * 学完一个标记一个，不因完成而补新的。第二天自动重新生成。 */
+   * 当天第一次调用时生成并锁定任务（每个学科各一个），当天内固定不变；
+   * 学完一个标记一个，不因完成而补新的。第二天自动重新生成；
+   * 家长修改抽取年级后，当天任务按新设置重新生成。 */
   function dailyTask() {
     var rec = loadTask();
-    if (rec && rec.date === today() && Array.isArray(rec.ids) && rec.ids.length) {
+    var curSettings = getTaskSettings();
+    if (rec && rec.date === today() && Array.isArray(rec.ids) && rec.ids.length &&
+        sameSettings(rec.settings, curSettings)) {
       return rec;
     }
-    var list = recommendList(2);
-    var task = { date: today(), ids: list.map(function (k) { return k.id; }) };
+    var list = recommendList(1);
+    var task = { date: today(), ids: list.map(function (k) { return k.id; }), settings: curSettings };
     saveTask(task);
     return task;
   }
@@ -246,6 +276,58 @@ window.Record = (function () {
     recommend: recommend,
     recommendList: recommendList,
     dailyTask: dailyTask,
+    getTaskSettings: getTaskSettings,
+    saveTaskSettings: saveTaskSettings,
     today: today
   };
+})();
+
+/* ============================================================
+ * 选择题选项随机化（record.js 版，覆盖未加载 player-core.js 的课件，
+ * 如 math-4-001 样板课件——它只引用 record.js + voice.js）。
+ * 所有课件的选择题最终都以 <div class="opt" data-ok="0|1"> 渲染进 DOM。
+ * 监听新增选项并打乱同一题容器内选项顺序——正确答案位置每次随机，
+ * 避免孩子靠“答案总在第一个”蒙对。答对/答错仍按元素 data-ok 判定。
+ * data-shuffled 标记同一容器只洗一次；步骤重进容器重建会重新随机。
+ * ============================================================ */
+(function () {
+  if (typeof MutationObserver === "undefined") { return; }
+  window.__shuffleReady = true;
+
+  function shuffleContainer(container) {
+    var opts = Array.prototype.slice.call(container.querySelectorAll(".opt[data-ok]"));
+    if (opts.length < 2) { return; }
+    for (var i = opts.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = opts[i]; opts[i] = opts[j]; opts[j] = t;
+    }
+    for (var k = 0; k < opts.length; k++) { container.appendChild(opts[k]); }
+  }
+
+  function scanOptions(root) {
+    if (!root || !root.querySelectorAll) { return; }
+    var found = root.querySelectorAll(".opt[data-ok]");
+    var seen = {};
+    for (var i = 0; i < found.length; i++) {
+      var c = found[i].parentNode;
+      if (!c || seen[c]) { continue; }
+      seen[c] = true;
+      if (c.getAttribute && c.getAttribute("data-shuffled") === "1") { continue; }
+      if (c.setAttribute) { c.setAttribute("data-shuffled", "1"); }
+      shuffleContainer(c);
+    }
+  }
+
+  var mo = new MutationObserver(function (muts) {
+    for (var i = 0; i < muts.length; i++) {
+      var nodes = muts[i].addedNodes;
+      for (var j = 0; j < nodes.length; j++) {
+        var n = nodes[j];
+        if (n && n.nodeType === 1 && n.querySelector && n.querySelector(".opt[data-ok]")) {
+          scanOptions(n);
+        }
+      }
+    }
+  });
+  mo.observe(document.documentElement, { childList: true, subtree: true });
 })();

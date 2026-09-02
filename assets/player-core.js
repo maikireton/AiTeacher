@@ -139,6 +139,9 @@ window.PlayerCore = (function () {
 
       /* 走到最后一步：记录本次学习 */
       if (state.cur === steps.length - 1) { tryFinish(); }
+
+      /* 选择题选项随机化：进入步骤后兜底扫描（覆盖静态 HTML 与同步 innerHTML 生成的选项） */
+      scanOptions(document);
     }
 
     /* ---------- 自动播放：等音频读完再走 ---------- */
@@ -224,6 +227,55 @@ window.PlayerCore = (function () {
     render();
     if (btnPrev) { btnPrev.disabled = true; }
     return api;
+  }
+
+  /* ============================================================
+   * 选择题选项随机化
+   * 所有课件的选择题最终都以 <div class="opt" data-ok="0|1"> 渲染进 DOM
+   * （旧课件内嵌 startQuiz/startBoss 与英语课件 english-ui 均为此结构）。
+   * 每次进入步骤时（render 末尾）扫描并打乱同一题容器内选项顺序——
+   * 正确答案位置每次随机，避免孩子靠“答案总在第一个”蒙对。
+   * 答对/答错仍按元素 data-ok 判定，不受影响。
+   * 用 data-shuffled 标记同一容器只洗一次；步骤重进时容器重建会重新随机。
+   * ============================================================ */
+  function shuffleContainer(container) {
+    var opts = Array.prototype.slice.call(container.querySelectorAll(".opt[data-ok]"));
+    if (opts.length < 2) { return; }
+    for (var i = opts.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = opts[i]; opts[i] = opts[j]; opts[j] = t;
+    }
+    for (var k = 0; k < opts.length; k++) { container.appendChild(opts[k]); }
+  }
+
+  function scanOptions(root) {
+    if (!root || !root.querySelectorAll) { return; }
+    var found = root.querySelectorAll(".opt[data-ok]");
+    var seen = {};
+    for (var i = 0; i < found.length; i++) {
+      var c = found[i].parentNode;
+      if (!c || seen[c]) { continue; }
+      seen[c] = true;
+      if (c.getAttribute && c.getAttribute("data-shuffled") === "1") { continue; }
+      if (c.setAttribute) { c.setAttribute("data-shuffled", "1"); }
+      shuffleContainer(c);
+    }
+  }
+
+  /* 兜底：异步插入的选项（如 setTimeout 后 innerHTML）也能被捕获 */
+  if (typeof MutationObserver !== "undefined") {
+    var mo = new MutationObserver(function (muts) {
+      for (var i = 0; i < muts.length; i++) {
+        var nodes = muts[i].addedNodes;
+        for (var j = 0; j < nodes.length; j++) {
+          var n = nodes[j];
+          if (n && n.nodeType === 1 && n.querySelector && n.querySelector(".opt[data-ok]")) {
+            scanOptions(n);
+          }
+        }
+      }
+    });
+    mo.observe(document.documentElement, { childList: true, subtree: true });
   }
 
   return { init: init };

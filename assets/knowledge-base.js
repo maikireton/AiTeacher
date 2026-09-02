@@ -9,7 +9,7 @@
 
   var KB = {
     version: "0.1.0",
-    updatedAt: "2026-08-30",
+    updatedAt: "2026-09-02",
 
     /* 学科字典 */
     subjects: [
@@ -159,6 +159,9 @@
       { id: "chinese-4-012", name: "习作：推荐一个好地方", subject: "chinese", grade: 4, term: "上册", unit: "第1单元·习作", module: "writing", difficulty: "基础", source: "syllabus", prerequisiteIds: ["chinese-4-002"], status: "已完成", file: "语文/语文-四上-第1单元-chinese-4-012-习作推荐一个好地方.html", summary: "写清推荐理由与这个地方的特点", keywords: ["习作","推荐"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
       { id: "chinese-4-013", name: "习作：记一次游戏", subject: "chinese", grade: 4, term: "上册", unit: "第6单元·习作", module: "writing", difficulty: "基础", source: "syllabus", prerequisiteIds: ["chinese-4-008"], status: "已完成", file: "语文/语文-四上-第6单元-chinese-4-013-习作记一次游戏.html", summary: "把游戏过程与心情写清楚", keywords: ["习作","游戏","记事"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
       { id: "chinese-4-014", name: "口语交际：我们与环境 / 安慰", subject: "chinese", grade: 4, term: "上册", unit: "口语交际", module: "writing", difficulty: "基础", source: "syllabus", prerequisiteIds: [], status: "已完成", file: "语文/语文-四上-口语交际-chinese-4-014-我们与环境-安慰.html", summary: "有礼貌地表达观点与安慰他人", keywords: ["口语交际","表达","倾听"], createdAt: "2026-08-30", updatedAt: "2026-08-30" },
+
+      /* ---------- 语文专项（按需补充，source: custom） ---------- */
+      { id: "chinese-4-015", name: "《观潮》3-4 段背诵闯关（专项）", subject: "chinese", grade: 4, term: "上册", unit: "专项·观潮背诵", module: "reading", difficulty: "基础", source: "custom", prerequisiteIds: ["chinese-4-002"], status: "已完成", file: "语文/语文-四上-专项-chinese-4-015-观潮3-4段背诵闯关.html", summary: "背诵四步法+挖空验证+考点练习", keywords: ["观潮","背诵","考点","钱塘江大潮","闷雷","山崩地裂"], createdAt: "2026-09-02", updatedAt: "2026-09-02" },
 
       /* ================= 英语（人教 PEP 一年级起点 · 新起点版，1–6 年级） ================= */
 

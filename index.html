@@ -57,8 +57,30 @@
         rec.weakIds().forEach(function (k) { weakSet[k] = true; });
         var taskKps = ((task && task.ids) || []).map(function (id) { return util.get(id); }).filter(Boolean);
 
-        var h = '<div class="today-head">今日任务</div>';
+        /* 年级设置 */
+        var settings = rec.getTaskSettings();
+        var gradeLabel = settings.grades ? settings.grades.join("、") + " 年级" : "全部年级";
+        var gradeOptions = [];
+        KB.knowledgePoints.forEach(function (k) {
+          if (k.status === "已完成" && gradeOptions.indexOf(k.grade) === -1) { gradeOptions.push(k.grade); }
+        });
+        gradeOptions.sort(function (a, b) { return a - b; });
+        var panelOpen = window.__taskPanelOpen ? "block" : "none";
+        var panelHtml = '<div class="task-settings-panel" id="task-settings-panel" style="display:' + panelOpen + '">';
+        panelHtml += '<div class="set-title">每日任务抽取年级</div>';
+        panelHtml += '<div class="set-opts">';
+        panelHtml += '<label class="set-opt"><input type="radio" name="sg" value="all"' + (!settings.grades ? " checked" : "") + '><span>全部年级</span></label>';
+        gradeOptions.forEach(function (g) {
+          panelHtml += '<label class="set-opt"><input type="radio" name="sg" value="' + g + '"' + (settings.grades && settings.grades.indexOf(g) !== -1 ? " checked" : "") + '><span>' + g + " 年级</span></label>";
+        });
+        panelHtml += "</div>";
+        panelHtml += '<div class="set-actions"><button class="set-save" onclick="saveTaskSettings()">保存并重新生成今日任务</button></div>';
+        panelHtml += "</div>";
+
+        var h = '<div class="today-head"><span>今日任务</span>' +
+          '<button class="task-settings-btn" onclick="toggleTaskSettings()">⚙ 年级设置：' + gradeLabel + "</button></div>";
         h += '<div class="today-stat">今日已学 <b>' + st.today + '</b> 个 · 连续学习 <b>' + st.streak + '</b> 天 · 共得 <b>' + st.totalStars + '</b> 星</div>';
+        h += panelHtml;
 
         if (taskKps.length) {
           h += '<div class="today-list">';
@@ -80,7 +102,7 @@
             h += '<div class="today-all-done">今日任务全部完成，明天继续！</div>';
           }
         } else {
-          h += '<div class="today-done">今天的任务都完成啦，明天继续！</div>';
+          h += '<div class="today-done">当前设置下暂无可学习的知识点，试试调整抽取年级～</div>';
         }
         todayEl.innerHTML = h;
       } catch (e) { console.error("[主页] 今日任务渲染失败:", e); }
@@ -130,6 +152,24 @@
     console.error("[主页] 渲染失败:", e);
   }
 })();
+
+/* 任务设置：年级选择面板 */
+function toggleTaskSettings() {
+  var p = document.getElementById("task-settings-panel");
+  if (!p) { return; }
+  var open = p.style.display === "none";
+  p.style.display = open ? "block" : "none";
+  window.__taskPanelOpen = open;
+}
+function saveTaskSettings() {
+  var sel = document.querySelector('input[name="sg"]:checked');
+  if (!sel || !window.Record) { return; }
+  var val = sel.value;
+  var s = val === "all" ? { grades: null } : { grades: [parseInt(val, 10)] };
+  window.Record.saveTaskSettings(s);
+  window.__taskPanelOpen = false;
+  location.reload();
+}
 </script>
 </body>
 </html>

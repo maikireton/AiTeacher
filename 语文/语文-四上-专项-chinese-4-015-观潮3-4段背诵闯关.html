@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《观潮》3-4 段背诵闯关营 · AI 教师</title>
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .recite { background: #f0f6ff; border: 2px solid #bcd6f5; border-radius: 14px; padding: 14px 16px; margin: 8px 0; max-width: 640px; width: 100%; text-align: left; line-height: 1.9; font-size: 16px; color: #2c4a6e; }
+  .recite .blank { display: inline-block; min-width: 70px; border-bottom: 2px dashed #6b8fd8; color: #b0531f; font-weight: 800; text-align: center; }
+  .recite .hl { color: #b0531f; font-weight: 800; }
+  .map { max-width: 620px; width: 100%; margin: 12px 0; }
+  .map-row { display: flex; align-items: center; gap: 8px; padding: 8px 12px; margin: 6px 0; background: #fff; border: 2px solid #e4e3dd; border-radius: 12px; opacity: .25; transform: translateX(-8px); transition: all .6s ease; text-align: left; }
+  .map-row.on { opacity: 1; transform: translateX(0); }
+  .map-row .m-tag { min-width: 74px; font-size: 13px; font-weight: 800; padding: 3px 8px; border-radius: 999px; text-align: center; color: #fff; }
+  .map-row .m-txt { font-size: 14px; color: #444; }
+  .tag-c { background: #6b8fd8; }
+  .tag-x { background: #52a16b; }
+  .method { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 8px 0; }
+  .method .mt { min-height: 44px; display: inline-flex; align-items: center; padding: 0 16px; border-radius: 12px; background: #eef1f6; color: #6b7280; font-weight: 700; font-size: 14px; transition: all .3s; }
+  .method .mt.on { background: #6b8fd8; color: #fff; }
+  .kw { display: inline-block; background: rgba(250,173,20,.25); color: #a0671a; border-radius: 6px; padding: 0 4px; font-weight: 800; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 语文</a>
+    <span class="brand">《观潮》3-4 段背诵闯关营 <small>4年级·上册</small></span>
+  </header>
+
+  <div class="player">
+    <div class="task-line" id="task-line"></div>
+    <div class="stage" id="stage"></div>
+    <div class="dots" id="dots"></div>
+    <div class="controls">
+      <button class="cbtn" id="btn-prev">上一步</button>
+      <button class="cbtn" id="btn-auto">▶ 自动播放</button>
+      <button class="cbtn" id="btn-voice">🔊 语音</button>
+      <button class="cbtn main" id="btn-next">下一步</button>
+    </div>
+    <div class="score-row" id="score-row"></div>
+  </div>
+
+  <details class="parent-panel">
+    <summary>家长模式（点击展开）</summary>
+    <div class="pbody">
+      <p><b>背诵四步法：</b>①读：通读 5 遍，读准「鼎、沸、踮、贯、霎、吼」；②理：理结构（第 3 段·人群听声见线、第 4 段·潮水奔涌，两段都由远及近）；③串：关键词串联法（每句记 1-2 个关键词）；④验：分层验证（挖词背→挖句背→全段背）。</p>
+      <p><b>易错字音/字形：</b>踮着脚、水天相接处、横贯、山崩地裂、浩浩荡荡（勿写「荡荡」漏字）。</p>
+      <p><b>建议：</b>每天 10 分钟；先让孩子看结构地图讲一遍「两段各写什么」，再用挖空验证；错处当天复背，次日晨起再验一遍。</p>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <div>AI 教师 · 语文 chinese-4-015 · 观潮背诵专项</div>
+  </footer>
+</div>
+
+<script src="../assets/voice.js"></script>
+<script src="../assets/player-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var apiRef = null;
+
+  var steps = [
+    {
+      id: "s1",
+      title: "情境引入",
+      task: "咱们这一步要做的：当“背潮小达人”，征服 3、4 段！",
+      voice: "钱塘江大潮来了！第三段写人群听到响声、看到白线，第四段写潮水奔涌而来的壮观。今天我们用四步法把这两段背下来，还要闯关验证、打考点 Boss。准备好了吗？出发！",
+      body: function () {
+        return '' +
+          '<h2>背潮小达人 🌊</h2>' +
+          '<div style="font-size:44px;letter-spacing:6px">📜🌊</div>' +
+          '<div class="recite" style="text-align:center">第 3 段：人群听声见线<br>第 4 段：潮水奔涌而来<br><span class="hl">四步法：读 → 理 → 串 → 验</span></div>' +
+          '<div class="fc-tip" id="s1-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s2",
+      title: "背诵方案",
+      task: "咱们这一步要做的：看“结构地图”，记住两段各写什么！",
+      voice: "看结构地图。第三段潮水还远：远处传来像闷雷一样的响声，人群开始沸腾；我们踮着脚往东望，江面还平静，过了一会儿东边水天相接处出现一条白线，人群再次沸腾。第四段潮水奔涌：白线迅速移来，拉长变粗，横贯江面；再近些白浪变成两丈多高的水墙；浪潮像千万匹战马奔来，声音像山崩地裂，仿佛大地都在颤动。记住地图就好背了！",
+      body: function () {
+        return '' +
+          '<h2>结构地图：两段四层</h2>' +
+          '<div class="map">' +
+          '<div class="map-row" data-i="0"><span class="m-tag tag-c">第3段·1</span><span class="m-txt">远处响声像闷雷 → 人群开始沸腾</span></div>' +
+          '<div class="map-row" data-i="1"><span class="m-tag tag-c">第3段·2</span><span class="m-txt">踮脚东望，江面平静 → 出现白线 → 人群再次沸腾</span></div>' +
+          '<div class="map-row" data-i="2"><span class="m-tag tag-x">第4段·1</span><span class="m-txt">白线迅速移来 → 拉长变粗 → 横贯江面</span></div>' +
+          '<div class="map-row" data-i="3"><span class="m-tag tag-x">第4段·2</span><span class="m-txt">白浪翻滚 → 两丈多高的水墙</span></div>' +
+          '<div class="map-row" data-i="4"><span class="m-tag tag-x">第4段·3</span><span class="m-txt">浪潮像千万匹战马齐头并进 → 声音像山崩地裂</span></div>' +
+          '</div>' +
+          '<div class="fc-tip" id="s2-tip">准备开始…</div>' +
+          '<div class="hint">两段都写潮水，声音、景象由远及近</div>';
+      }
+    },
+    {
+      id: "s3",
+      title: "背诵方法",
+      task: "咱们这一步要做的：学“关键词串联法”，一句一个钩子！",
+      voice: "看方法。关键词串联法：每句抓一两个关键词，像串珠子一样背下来。第一句抓住“闷雷”和“沸腾”。第二句抓“踮脚、白线、再次沸腾”。第三句抓“迅速、拉长变粗、水墙”。第四句抓“战马、山崩地裂”。把关键词串起来，句子就顺口背出来了！",
+      body: function () {
+        return '' +
+          '<h2>关键词串联法：一句一钩子</h2>' +
+          '<div class="recite">' +
+          '① 远处传来<span class="kw">闷雷</span>声 → 人群<span class="kw">沸腾</span><br>' +
+          '② 踮脚东望，江面<span class="kw">平静</span> → 出现<span class="kw">白线</span> → 人群<span class="kw">再次沸腾</span><br>' +
+          '③ 白线<span class="kw">迅速移来</span> → <span class="kw">拉长变粗</span> → 横贯江面<br>' +
+          '④ 白浪翻滚 → <span class="kw">两丈多高</span>的<span class="kw">水墙</span><br>' +
+          '⑤ 浪潮像<span class="kw">千万匹战马</span> → 声音像<span class="kw">山崩地裂</span>' +
+          '</div>' +
+          '<div class="method" id="s3-method">' +
+          '<span class="mt">① 抓关键词</span>' +
+          '<span class="mt">② 串成句子</span>' +
+          '<span class="mt">③ 看词背句</span>' +
+          '</div>' +
+          '<div class="fc-tip" id="s3-tip">准备开始…</div>';
+      }
+    },
+    {
+      id: "s4",
+      title: "背诵验证",
+      task: "咱们这一步要做的：挖空闯关，把关键词填回去！",
+      voice: "现在验证背诵！我挖掉一些词，你来选词填回去。先填第三段，再填第四段。填得对，就说明关键词记住了，离全背下来不远啦！",
+      body: function () {
+        return '' +
+          '<h2>挖空闯关（选词填空）</h2>' +
+          '<div class="quiz" id="quiz"></div>';
+      }
+    },
+    {
+      id: "s5",
+      title: "考点 Boss",
+      task: "咱们这一步要做的：打考点 Boss，全背通关！",
+      voice: "最后一步！考点 Boss 来了，考考你对这两段的理解。答对了就通关，成为真正的背潮小达人！",
+      body: function () {
+        return '' +
+          '<h2>考点 Boss + 口诀</h2>' +
+          '<div class="recite" style="text-align:center"><span class="hl">背潮口诀：</span>两段都写潮水来，声形由远及近<br>闷雷·沸腾·白线·水墙·战马·山崩地裂</div>' +
+          '<div class="quiz" id="boss-quiz"></div>' +
+          '<div class="result-big" id="result-stars"></div>';
+      }
+    }
+  ];
+
+  function runS1() {
+    var tip = document.getElementById("s1-tip");
+    setTimeout(function () { if (tip) { tip.textContent = "第 3 段：人群听声见线（远处闷雷 → 白线出现）"; } }, 1300);
+    setTimeout(function () { if (tip) { tip.textContent = "第 4 段：潮水奔涌（水墙 → 战马 → 山崩地裂）"; } }, 2800);
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 四步法：读→理→串→验，出发！"; } }, 4300);
+  }
+
+  function runS2() {
+    var rows = document.querySelectorAll("#s2 .map-row");
+    var tip = document.getElementById("s2-tip");
+    var msgs = ["① 远处响声像闷雷 → 人群开始沸腾", "② 踮脚东望江面平静 → 出现白线 → 再次沸腾", "③ 白线迅速移来 → 拉长变粗 → 横贯江面", "④ 白浪翻滚 → 两丈多高的水墙", "⑤ 战马齐头并进 → 声音像山崩地裂"];
+    rows.forEach(function (r, i) {
+      setTimeout(function () {
+        r.classList.add("on");
+        if (tip) { tip.textContent = msgs[i]; }
+      }, 800 + i * 1300);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 地图记牢：两段都写潮水，由远及近！"; } }, 800 + rows.length * 1300 + 300);
+  }
+
+  function runS3() {
+    var tags = document.querySelectorAll("#s3-method .mt");
+    var tip = document.getElementById("s3-tip");
+    tags.forEach(function (t, i) {
+      setTimeout(function () {
+        t.classList.add("on");
+        if (tip) { tip.textContent = (i === 0 ? "① 每句抓 1-2 个关键词" : i === 1 ? "② 把关键词串起来" : "③ 看关键词，句子顺口就出来了"); }
+      }, 900 + i * 1700);
+    });
+    setTimeout(function () { if (tip) { tip.textContent = "✅ 关键词串联法：闷雷·沸腾·白线·水墙·战马·山崩地裂！"; } }, 6600);
+  }
+
+  /* ---------- S4 挖空验证（按用户提供原文） ---------- */
+  var FILL_1 = [
+    { pre: "午后一点左右，远处传来", blank: "隆隆的响声", post: "，像闷雷滚动。", opts: ["隆隆的响声", "轻轻的响声", "嗒嗒的声音"] },
+    { pre: "", blank: "人群", post: "开始沸腾，潮水来了！", opts: ["人群", "江面", "我们"] },
+    { pre: "我们踮着脚往东望去，", blank: "江面", post: "平静，看不出任何变化。", opts: ["江面", "天空", "岸边"] },
+    { pre: "过了一会儿，响声越来越大，", blank: "东边", post: "水天相接处出现了一条白线。", opts: ["东边", "西边", "南边"] },
+    { pre: "人群", blank: "再次", post: "沸腾！", opts: ["再次", "渐渐", "终于"] }
+  ];
+  var FILL_2 = [
+    { pre: "那条白线", blank: "迅速", post: "向我们移来，逐渐拉长变粗，横贯江面。", opts: ["迅速", "缓慢", "悄悄"] },
+    { pre: "再近些，只见白浪翻滚，形成一堵", blank: "两丈多高", post: "的水墙。", opts: ["两丈多高", "一丈多高", "三米多高"] },
+    { pre: "浪潮越来越近，犹如", blank: "千万匹", post: "白色战马齐头并进，", opts: ["千万匹", "几万匹", "几十匹"] },
+    { pre: "浩浩荡荡地", blank: "飞奔", post: "而来！", opts: ["飞奔", "散步", "滑动"] },
+    { pre: "那声音如同", blank: "山崩地裂", post: "，仿佛大地都被震得颤动起来。", opts: ["山崩地裂", "雷声滚滚", "狂风大作"] }
+  ];
+  var fillStage = 0;     // 0=第3段 1=第4段
+  var fillIdx = 0;
+  var fillDone = { s1: [], s2: [] };
+
+  function startFill() {
+    fillStage = 0; fillIdx = 0;
+    fillDone = { s1: [], s2: [] };
+    renderFill();
+  }
+  function renderFill() {
+    var box = document.getElementById("quiz");
+    if (!box) { return; }
+    var list = fillStage === 0 ? FILL_1 : FILL_2;
+    var key = fillStage === 0 ? "s1" : "s2";
+    var idx = -1;
+    for (var i = 0; i < list.length; i++) { if (fillDone[key].indexOf(i) === -1) { idx = i; break; } }
+    if (idx === -1) {
+      if (fillStage === 0) {
+        fillStage = 1; fillIdx = 0;
+        box.innerHTML = '<div class="q">✅ 第 3 段全部填对！进入第 4 段…</div>';
+        setTimeout(function () { renderFill(); }, 1600);
+        return;
+      }
+      box.innerHTML = '<div class="q">全部完成！⭐ 两段关键词都记住了，真棒！</div>';
+      return;
+    }
+    var item = list[idx];
+    var title = (fillStage === 0 ? "第 3 段（人群听声见线）" : "第 4 段（潮水奔涌而来）") + " 第 " + (idx + 1) + " 空";
+    box.innerHTML = '<div class="q">' + title + '</div>' +
+      '<div class="recite" style="font-size:15px">' + item.pre + ' <span class="blank">？</span> ' + item.post + '</div>' +
+      '<div class="opts">' + item.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === item.blank ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(1); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "对啦！⭐ +1 关键词记住啦" + (apiRef.state.combo >= 2 ? "（连击 +" + apiRef.state.combo + "）" : "");
+          fillDone[key].push(idx);
+          setTimeout(function () { renderFill(); }, 1300);
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "再回忆一下课文原句，这个词该是什么？";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1400);
+        }
+      });
+    });
+  }
+
+  /* ---------- S5 考点 Boss（针对这两段） ---------- */
+  var BOSS = [
+    { q: "“浪潮越来越近，犹如千万匹白色战马齐头并进”用了什么修辞？", right: "比喻", opts: ["比喻", "拟人", "反问"] },
+    { q: "“那声音如同山崩地裂”把声音比作什么？", right: "山崩地裂", opts: ["山崩地裂", "闷雷", "战马"] },
+    { q: "这两段写潮水是由（　）到（　）的变化？", right: "远 → 近", opts: ["远 → 近", "近 → 远", "上 → 下"] }
+  ];
+  var bossIdx = 0;
+  function startBoss() {
+    bossIdx = 0;
+    renderBoss();
+  }
+  function renderBoss() {
+    var box = document.getElementById("boss-quiz");
+    if (!box) { return; }
+    if (bossIdx >= BOSS.length) {
+      var rs = document.getElementById("result-stars");
+      box.innerHTML = '<div class="q">Boss 全部击败！🏆 你就是背潮小达人！</div>';
+      if (rs) {
+        var n = apiRef.stars();
+        rs.innerHTML = "🏆 共获得 <b>" + n + "</b> 颗星" +
+          (n >= 14 ? "（全部拿下！）" : n >= 10 ? "（很不错！）" : "（明天再练一遍！）");
+      }
+      return;
+    }
+    var q = BOSS[bossIdx];
+    box.innerHTML = '<div class="q">Boss ' + (bossIdx + 1) + "/" + BOSS.length + "：" + q.q + "</div>" +
+      '<div class="opts">' + q.opts.map(function (o) {
+        return '<div class="opt" data-ok="' + (o === q.right ? "1" : "0") + '">' + o + "</div>";
+      }).join("") + "</div>" +
+      "<div class='qmsg'></div>";
+    var tried = false;
+    box.querySelectorAll(".opt").forEach(function (o) {
+      o.addEventListener("click", function () {
+        if (tried) { return; }
+        var ok = o.getAttribute("data-ok") === "1";
+        var msg = box.querySelector(".qmsg");
+        if (ok) {
+          o.classList.add("right");
+          box.querySelectorAll(".opt").forEach(function (x) { x.classList.add("locked"); });
+          apiRef.addStars(2); apiRef.comboHit();
+          msg.className = "qmsg ok";
+          msg.textContent = "Boss 击败！⭐ +2";
+          bossIdx++;
+          setTimeout(function () { renderBoss(); }, 1400);
+        } else {
+          o.classList.add("wrong");
+          tried = true;
+          apiRef.comboReset();
+          msg.className = "qmsg no";
+          msg.textContent = "再看一遍课文原句体会一下";
+          setTimeout(function () { o.classList.remove("wrong"); tried = false; }, 1600);
+        }
+      });
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  function onEnterStep(step, api) {
+    apiRef = api;
+    if (step.id === "s1") { runS1(); }
+    if (step.id === "s2") { runS2(); }
+    if (step.id === "s3") { runS3(); }
+    if (step.id === "s4") { startFill(); }
+    if (step.id === "s5") { startBoss(); }
+  }
+
+  PlayerCore.init({
+    steps: steps,
+    parent: {
+      summary: "背诵四步法：读（5遍读准字音）→理（结构地图）→串（关键词串联）→验（挖空验证）。第3段人群听声见线，第4段潮水奔涌而来，两段都由远及近。",
+      attention: "孩子易只读不验、背混词（腾腾/鼎沸、相接/相结）；用挖空验证找错，错处当天复背。",
+      tip: "每天 10 分钟；先讲一遍结构地图，再挖空验证；次日晨起再验一遍更牢。"
+    },
+    onEnterStep: onEnterStep,
+    settings: { autoStopSteps: [3, 4], pauseMs: 2500 }
+  });
+})();
+</script>
+</body>
+</html>

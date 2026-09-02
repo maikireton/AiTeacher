@@ -96,8 +96,29 @@ body {
   background: linear-gradient(180deg, rgba(155,187,244,.10), rgba(155,187,244,.03));
   padding: 16px 18px; margin: 0 0 20px;
 }
-.today-head { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+.today-head { font-size: 16px; font-weight: 800; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
 .today-head::before { content: "🎯 "; }
+.task-settings-btn {
+  font-size: 12px; color: var(--text-2); background: #f2f5f8; border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 10px; cursor: pointer;
+}
+.task-settings-btn:hover { color: var(--accent-deep); border-color: var(--accent-deep); }
+.task-settings-panel {
+  background: #fafbfd; border: 1px dashed var(--border); border-radius: 10px;
+  padding: 12px 14px; margin-bottom: 12px;
+}
+.task-settings-panel .set-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.task-settings-panel .set-opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.task-settings-panel .set-opt {
+  display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text-2);
+  background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 5px 10px; cursor: pointer;
+}
+.task-settings-panel .set-opt:has(input:checked) { border-color: var(--accent-deep); color: var(--accent-deep); }
+.task-settings-panel .set-opt input { accent-color: var(--accent-deep); }
+.task-settings-panel .set-save {
+  background: var(--accent-deep); color: #fff; border: 0; border-radius: 8px;
+  font-size: 13px; font-weight: 700; padding: 8px 16px; cursor: pointer;
+}
 .today-stat { font-size: 13px; color: var(--text-2); margin-bottom: 10px; }
 .today-stat b { color: var(--accent-deep); font-size: 15px; }
 .today-reco { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
