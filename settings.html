@@ -51,13 +51,19 @@
     </div>
     <div class="status" id="voice-status"></div>
     <div class="note" id="voice-note"></div>
+    <div style="margin-top:12px;">
+      <button class="btn" id="btn-refresh" type="button">🔄 重新检测音色</button>
+      <button class="btn" id="btn-test" type="button" style="background:#4a90d9;margin-left:8px;">🔊 测试朗读</button>
+    </div>
+    <div class="note" id="voice-guide" style="margin-top:12px;"></div>
   </div>
 
   <div class="card">
     <h2>说明</h2>
     <div class="desc">
-      <p>· 音色来自你电脑系统自带的语音，数量取决于系统安装了哪些语音包。</p>
-      <p>· 想换更多好听的声音：Windows 到「设置 → 时间和语言 → 语音」、macOS 到「系统设置 → 辅助功能 → 朗读内容」里添加中文/英文语音。</p>
+      <p>· 音色来自设备系统自带的语音能力，数量取决于系统/浏览器安装了哪些语音。</p>
+      <p>· <b>Android pad 提示：</b>若这里检测不到音色，先到「设置 → 辅助功能 → 文字转语音(TTS)输出」确认已启用 TTS 引擎并下载「中文（普通话）」语音数据，然后点上方「重新检测音色」；Chrome 在 Android 上对语音支持有限，可换用 Edge / Samsung Internet 打开。</p>
+      <p>· Windows 到「设置 → 时间和语言 → 语音」、macOS 到「系统设置 → 辅助功能 → 朗读内容」里添加中文/英文语音。</p>
       <p>· 建议用 Chrome / Edge 浏览器打开课件，语音效果最好。</p>
     </div>
   </div>
@@ -75,6 +81,7 @@
   var selEn = document.getElementById("voice-en");
   var statusEl = document.getElementById("voice-status");
   var noteEl = document.getElementById("voice-note");
+  var guideEl = document.getElementById("voice-guide");
 
   /* localStorage 安全读写（file:// 下部分浏览器受限，失败则降级内存） */
   var memSettings = null;
@@ -90,10 +97,17 @@
     try { window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch (e) { /* 降级：仅本次会话生效 */ }
   }
 
-  var zhVoices = [], enVoices = [];
+  /* 环境判定 */
+  var hasAPI = ("speechSynthesis" in window);
+  var isAndroid = /Android/i.test(navigator.userAgent || "");
+  var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+
+  var zhVoices = [], enVoices = [], pollTries = 0;
+
   function collectVoices() {
-    if (!("speechSynthesis" in window)) { return; }
-    var all = window.speechSynthesis.getVoices() || [];
+    if (!hasAPI) { return; }
+    var all = [];
+    try { all = window.speechSynthesis.getVoices() || []; } catch (e) { all = []; }
     zhVoices = all.filter(function (v) { return (v.lang || "").toLowerCase().indexOf("zh") === 0; });
     enVoices = all.filter(function (v) { return (v.lang || "").toLowerCase().indexOf("en") === 0; });
   }
@@ -115,18 +129,50 @@
     if (savedURI && !found && list[0]) { sel.value = list[0].voiceURI; }
   }
 
+  /* 细分诊断 + 引导（不同设备/浏览器给出对应的解决动作） */
+  function showGuide() {
+    if (!guideEl) { return; }
+    var g = [];
+    if (!hasAPI) {
+      g.push("当前浏览器不支持语音合成（Web Speech API）。请在 pad/手机上换用支持语音的浏览器，或用电脑 Chrome/Edge 打开。");
+    } else if (!zhVoices.length && !enVoices.length) {
+      g.push("浏览器支持语音，但没检测到任何可用音色，多半是设备缺 TTS 引擎或语音包。");
+      if (isAndroid) {
+        g.push("Android 解决步骤：① 打开设备「设置 → 辅助功能 → 文字转语音(TTS)输出」，确认已启用 TTS 引擎（Google 文字转语音 / 华为 HiVoice / 讯飞语记等），并下载「中文（普通话）」语音数据；② Chrome 在 Android 上对语音支持有限，若仍为空，可换用「Edge」「Samsung Internet」等浏览器打开本页；③ 装好语音后点上方「重新检测音色」。");
+      } else if (isIOS) {
+        g.push("iOS 解决步骤：打开「设置 → 辅助功能 → 朗读内容 → 声音」，下载「简体中文」语音，并用 Safari 打开本页后点「重新检测音色」。");
+      } else {
+        g.push("请到系统设置添加语音：macOS「系统设置 → 辅助功能 → 朗读内容 → 系统声音」；Windows「设置 → 时间和语言 → 语音」。完成后点「重新检测音色」。");
+      }
+    } else if (zhVoices.length && !enVoices.length) {
+      g.push("未检测到英文音色，课件里的英文部分可能无法朗读，可在系统 TTS 中下载英文语音包。");
+    }
+    guideEl.innerHTML = g.length ? ("<b>诊断：</b>" + g.join("<br>")) : "";
+  }
+
   function render() {
     collectVoices();
     var saved = readSettings();
     var savedZh = saved && saved.voice ? saved.voice.uri : "";
     var savedEn = saved && saved.voiceEn ? saved.voiceEn.uri : "";
 
-    if (!zhVoices.length && !enVoices.length) {
-      selZh.innerHTML = '<option value="">（未检测到语音）</option>';
-      selEn.innerHTML = '<option value="">（未检测到语音）</option>';
+    if (!hasAPI) {
+      selZh.innerHTML = '<option value="">（浏览器不支持）</option>';
+      selEn.innerHTML = '<option value="">（浏览器不支持）</option>';
       statusEl.className = "status warn";
-      statusEl.textContent = "没有找到可用语音。请换用 Chrome/Edge 浏览器，或在系统设置里添加语音后刷新本页。";
-      noteEl.textContent = "当前设备可用语音：中文 0 个 · 英文 0 个";
+      statusEl.textContent = "当前浏览器不支持语音合成，请换用支持语音的浏览器。";
+      noteEl.textContent = "音色依赖浏览器/系统语音能力，当前环境不可用";
+      showGuide();
+      return;
+    }
+
+    if (!zhVoices.length && !enVoices.length) {
+      selZh.innerHTML = '<option value="">（检测中…可点下方重新检测）</option>';
+      selEn.innerHTML = '<option value="">（检测中…可点下方重新检测）</option>';
+      statusEl.className = "status warn";
+      statusEl.textContent = pollTries >= 10 ? "未检测到音色，请看下方诊断" : "正在检测音色…";
+      noteEl.textContent = "当前设备可用音色：中文 0 个 · 英文 0 个";
+      showGuide();
       return;
     }
 
@@ -138,6 +184,7 @@
     statusEl.className = "status";
     statusEl.textContent = "中文音色：" + zhName + "　·　英文音色：" + enName;
     noteEl.textContent = "当前设备可用音色：中文 " + zhVoices.length + " 个 · 英文 " + enVoices.length + " 个";
+    showGuide();
   }
 
   function pick(sel, list) {
@@ -151,13 +198,13 @@
 
   /* 试听：用当前选中的音色朗读测试句 */
   function preview(sel, list, text, fallbackLang) {
+    if (!hasAPI) { return; }
     var v = pick(sel, list);
-    if (!v || !("speechSynthesis" in window)) { return; }
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text);
-      u.lang = v.lang || fallbackLang;
-      u.voice = v;
+      if (v) { u.voice = v; u.lang = v.lang || fallbackLang; }
+      else { u.lang = fallbackLang; }
       u.rate = 0.92;
       u.pitch = 1.05;
       window.speechSynthesis.speak(u);
@@ -165,8 +212,24 @@
   }
   var btnZh = document.getElementById("btn-preview-zh");
   var btnEn = document.getElementById("btn-preview-en");
+  var btnRefresh = document.getElementById("btn-refresh");
+  var btnTest = document.getElementById("btn-test");
   if (btnZh) { btnZh.addEventListener("click", function () { preview(selZh, zhVoices, "你好，我是你的小老师。这个声音好不好听？", "zh-CN"); }); }
   if (btnEn) { btnEn.addEventListener("click", function () { preview(selEn, enVoices, "Hello! I am your little teacher. Do you like this voice?", "en-US"); }); }
+  if (btnRefresh) {
+    btnRefresh.addEventListener("click", function () {
+      pollTries = 0;
+      collectVoices();
+      render();
+    });
+  }
+  if (btnTest) {
+    btnTest.addEventListener("click", function () {
+      var zh = pick(selZh, zhVoices);
+      var en = pick(selEn, enVoices);
+      preview(selZh, zhVoices, (zh ? "中文音色测试" : "") + (en ? " English voice test." : ""), "zh-CN");
+    });
+  }
 
   /* 选择变化：保存 */
   function onChange(sel, list, key) {
@@ -182,10 +245,28 @@
   selEn.addEventListener("change", function () { onChange(selEn, enVoices, "voiceEn"); });
 
   /* voiceschanged 事件（语音列表异步加载） */
-  if ("speechSynthesis" in window) {
-    window.speechSynthesis.onvoiceschanged = function () { render(); };
+  if (hasAPI && "onvoiceschanged" in window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = function () { collectVoices(); render(); };
   }
-  render();
+
+  /* Android 常见问题：语音列表在用户首次触摸后才加载。首次交互时重新检测 */
+  function onFirstGesture() {
+    collectVoices();
+    render();
+  }
+  document.addEventListener("touchstart", function () { onFirstGesture(); }, { once: true, passive: true });
+  document.addEventListener("click", function () { onFirstGesture(); }, { once: true, passive: true });
+
+  /* 轮询重试：语音列表异步加载，最多 10 次 × 500ms */
+  function poll() {
+    collectVoices();
+    render();
+    if (hasAPI && !zhVoices.length && !enVoices.length && pollTries < 10) {
+      pollTries++;
+      setTimeout(poll, 500);
+    }
+  }
+  poll();
 })();
 </script>
 </body>
