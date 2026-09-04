@@ -138,7 +138,12 @@
     }
     if (kind === "sentence") {
       var opts4 = [target].concat(pickDistractors(target, pool, 3));
-      return { kind: "sentence", target: target, prompt: "选词填空：" + target.w.ex[0].replace(target.w.w, "____"), opts: shuffle(opts4) };
+      return { kind: "sentence", target: target, prompt: "选词填空：" + target.w.ex[0].replace(new RegExp(target.w.w, "i"), "____"), opts: shuffle(opts4) };
+    }
+    // spell：短语(含空格/连字符)不适合26字母键盘，退化为中译英
+    if (target.w.w.indexOf(" ") >= 0 || target.w.w.indexOf("-") >= 0) {
+      var opts5 = [target].concat(pickDistractors(target, pool, 3));
+      return { kind: "zh2en", target: target, prompt: "选出意思为「" + target.w.zh + "」的单词", opts: shuffle(opts5) };
     }
     return { kind: "spell", target: target, prompt: "听一听 / 想一想，拼出「" + target.w.zh + "」的单词" };
   }
@@ -233,21 +238,39 @@
   /* ---------------- 学习流程 ---------------- */
   var learn = { gid: null, idx: 0, list: [] };
   function renderGroups() {
-    var h = '<div class="ws-sec-title">选择主题，开始闯关</div>';
-    h += '<div class="ws-groups">';
+    var h = '<div class="ws-sec-title">选择教材单元，开始闯关</div>';
+    // 按册分组
+    var books = {};
+    var bookOrder = [];
     groupMeta.forEach(function (g) {
-      var recs = wordsOf(g.id).map(function (it) { return recOf(it.id); });
-      var learned = recs.filter(function (r) { return r.lv >= 1; }).length;
-      var pct = Math.round(learned / g.count * 100);
-      h += '<button class="ws-group" data-act="pick" data-gid="' + g.id + '">';
-      h += '<div class="ws-group-em">' + g.em + "</div>";
-      h += '<div class="ws-group-name">' + g.name + "</div>";
-      h += '<div class="ws-group-sub">' + g.grade + " · " + g.count + "词</div>";
-      h += '<div class="ws-prog"><div class="ws-prog-bar" style="width:' + pct + '%"></div></div>';
-      h += '<div class="ws-group-sub">已学 ' + learned + " / " + g.count + "</div>";
-      h += "</button>";
+      if (!books[g.grade]) { books[g.grade] = []; bookOrder.push(g.grade); }
+      books[g.grade].push(g);
     });
-    h += "</div>";
+    bookOrder.forEach(function (bk) {
+      var gs = books[bk];
+      var total = gs.reduce(function (s, g) { return s + g.count; }, 0);
+      var learned = gs.reduce(function (s, g) {
+        return s + wordsOf(g.id).filter(function (it) { return recOf(it.id).lv >= 1; }).length;
+      }, 0);
+      var pct = total ? Math.round(learned / total * 100) : 0;
+      h += '<div class="ws-book">';
+      h += '<div class="ws-book-head"><span class="ws-book-name">' + bk + '</span>';
+      h += '<span class="ws-book-meta">' + gs.length + '单元 · ' + total + '词 · 已学' + learned + '</span>';
+      h += '<div class="ws-prog sm"><div class="ws-prog-bar" style="width:' + pct + '%"></div></div></div>';
+      h += '<div class="ws-groups tight">';
+      gs.forEach(function (g) {
+        var recs = wordsOf(g.id).map(function (it) { return recOf(it.id); });
+        var lrn = recs.filter(function (r) { return r.lv >= 1; }).length;
+        var gpct = Math.round(lrn / g.count * 100);
+        h += '<button class="ws-group" data-act="pick" data-gid="' + g.id + '">';
+        h += '<div class="ws-group-em">' + g.em + "</div>";
+        h += '<div class="ws-group-name">' + g.name.replace(/^[三四五六]上?下?\s*U\d+\s*/, "") + "</div>";
+        h += '<div class="ws-group-sub">' + g.count + "词 · " + lrn + "已学</div>";
+        h += '<div class="ws-prog"><div class="ws-prog-bar" style="width:' + gpct + '%"></div></div>';
+        h += "</button>";
+      });
+      h += "</div></div>";
+    });
     body.innerHTML = h;
   }
   function openGroup(gid) {
@@ -266,7 +289,7 @@
     h += '<div class="ws-card">';
     h += '<div class="ws-card-em">' + w.em + "</div>";
     h += '<div class="ws-card-word">' + w.w + "</div>";
-    h += '<div class="ws-card-ph">' + (w.p || "") + " · " + w.pos + " · " + w.zh + "</div>";
+    h += '<div class="ws-card-ph">' + (w.p ? w.p + " · " : "") + w.pos + " · " + w.zh + "</div>";
     h += '<div class="ws-card-sy">' + (w.sy ? w.sy.join(" · ") : "") + "</div>";
     h += '<div class="ws-card-lv">' + starRow(rec.lv) + " <small>" + lvName(rec.lv) + "</small></div>";
     h += "</div>";
