@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>单词闯关 · AI 教师</title>
+<link rel="stylesheet" href="../../assets/style.css">
+<link rel="stylesheet" href="../../assets/words.css">
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="../index.html">← 英语</a>
+    <span class="brand">单词闯关 <small>小学英语词汇</small></span>
+    <a class="btn-home" href="../../settings.html">🎵 音色</a>
+  </header>
+
+  <!-- 顶部状态条：等级 / 星星 / 打卡 -->
+  <div class="ws-top">
+    <div class="ws-chip" id="ws-lv">👶 萌新学者</div>
+    <div class="ws-chip" id="ws-stars">⭐ 0</div>
+    <button class="ws-chip ws-chip-btn" id="ws-checkin" data-act="checkin">📅 打卡</button>
+  </div>
+
+  <!-- 主内容区 -->
+  <div id="ws-body"></div>
+
+  <!-- 底部导航 -->
+  <nav class="ws-tabs">
+    <button class="ws-tab on" data-act="tab" data-tab="learn">📚 学习</button>
+    <button class="ws-tab" data-act="tab" data-tab="drill">🎯 练习</button>
+    <button class="ws-tab" data-act="tab" data-tab="test">📝 测试</button>
+    <button class="ws-tab" data-act="tab" data-tab="stats">📊 统计</button>
+  </nav>
+</div>
+<script src="../../assets/voice.js"></script>
+<script src="../../assets/wordbank.js"></script>
+<script src="../../assets/words-ui.js"></script>
+</body>
+</html>

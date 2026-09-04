@@ -1,0 +1,123 @@
+/* ============================================================
+ * AI 教师 · 单词闯关模块样式（words.css）
+ * 依赖 style.css 变量；服务于 英语/words/index.html
+ * ============================================================ */
+.ws-top { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.ws-chip { min-height: 40px; display: inline-flex; align-items: center; padding: 0 12px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px; font-size: 13px; color: var(--text); }
+.ws-chip-btn { cursor: pointer; }
+.ws-chip-btn:active { background: #eef0f5; }
+
+.ws-tabs { display: flex; gap: 8px; position: sticky; bottom: 10px; z-index: 20; margin-top: 18px; }
+.ws-tab { flex: 1 1 0; min-height: 50px; border: 1px solid var(--border); border-radius: 14px;
+  background: var(--card); font-size: 14px; color: var(--text); cursor: pointer; }
+.ws-tab.on { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); font-weight: 700; }
+
+.ws-sec-title { font-size: 16px; font-weight: 700; margin: 4px 0 12px; }
+.ws-sec-title2 { font-size: 14px; font-weight: 700; margin: 14px 0 8px; }
+
+/* 主题网格 */
+.ws-groups { display: flex; flex-wrap: wrap; gap: 10px; }
+.ws-group { flex: 1 1 150px; min-width: 140px; box-sizing: border-box; text-align: left;
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px; cursor: pointer; }
+.ws-group:active { background: #eef0f5; }
+.ws-group-em { font-size: 26px; }
+.ws-group-name { font-size: 14px; font-weight: 700; margin-top: 6px; }
+.ws-group-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.ws-prog { height: 6px; background: rgba(0,0,0,.06); border-radius: 4px; overflow: hidden; margin: 8px 0 4px; }
+.ws-prog-bar { height: 100%; background: var(--accent-deep); border-radius: 4px; }
+
+/* 学习卡片 */
+.ws-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 20px 16px; text-align: center; }
+.ws-card-em { font-size: 44px; }
+.ws-card-word { font-size: 34px; font-weight: 800; letter-spacing: 2px; margin: 8px 0 4px; }
+.ws-card-ph { font-size: 13px; color: var(--text-2); }
+.ws-card-sy { font-size: 14px; color: var(--accent-deep); font-weight: 600; margin-top: 6px; }
+.ws-card-lv { font-size: 13px; margin-top: 10px; color: var(--text-2); }
+
+.ws-uses { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.ws-use { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 14px; }
+.ws-use span { font-weight: 600; display: block; margin-bottom: 4px; font-size: 13px; }
+.ws-ex { font-size: 15px; }
+.ws-ex small { color: var(--text-2); }
+.ws-co { font-size: 14px; }
+.ws-co small { color: var(--text-2); }
+
+.ws-nav { display: flex; gap: 10px; margin-top: 16px; }
+.ws-btn { flex: 1 1 0; min-height: 48px; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--card); color: var(--text); font-size: 14px; cursor: pointer; padding: 0 10px; }
+.ws-btn:disabled { opacity: .4; cursor: default; }
+.ws-btn.main { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); font-weight: 700; }
+.ws-btn.sm { flex: 0 0 auto; min-height: 40px; padding: 0 14px; font-size: 13px; }
+.ws-btn.sm.on { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); }
+
+/* 答题 */
+.ws-qhead { font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+.ws-qprompt { font-size: 17px; font-weight: 700; margin-bottom: 12px; }
+.ws-play { min-height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--card); color: var(--text); font-size: 13px; cursor: pointer; margin-bottom: 12px; }
+.ws-opts { display: flex; flex-direction: column; gap: 10px; }
+.ws-opt { min-height: 54px; border: 2px solid var(--border); border-radius: 12px; background: var(--card);
+  font-size: 17px; cursor: pointer; padding: 0 12px; }
+.ws-opt small { color: var(--text-2); font-size: 12px; }
+.ws-opt.right { border-color: var(--green); background: rgba(82,196,26,.12); }
+.ws-opt.wrong { border-color: var(--red); background: rgba(234,102,104,.12); }
+.ws-opt.locked { pointer-events: none; opacity: .75; }
+
+.ws-fb { margin-top: 12px; min-height: 30px; }
+.ws-fb-ok { color: var(--green); font-weight: 700; margin-bottom: 8px; }
+.ws-fb-no { color: var(--red); font-weight: 700; margin-bottom: 8px; }
+
+/* 拼写虚拟键盘 */
+.ws-spell-word { font-size: 26px; font-weight: 800; letter-spacing: 6px; text-align: center;
+  min-height: 40px; margin: 8px 0 14px; font-family: "Courier New", monospace; }
+.ws-spell-keys { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.ws-key { width: 46px; height: 46px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--card); font-size: 17px; cursor: pointer; }
+.ws-key:active { background: var(--accent-deep); color: #fff; }
+.ws-key-lg { width: 58px; }
+.ws-key-ok { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); }
+
+/* 统计 */
+.ws-stat-cards { display: flex; flex-wrap: wrap; gap: 10px; }
+.ws-stat { flex: 1 1 120px; min-width: 110px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 12px; text-align: center; }
+.ws-stat-label { font-size: 12px; color: var(--text-2); }
+.ws-stat-val { font-size: 22px; font-weight: 800; margin-top: 4px; }
+.ws-dist { display: flex; flex-direction: column; gap: 6px; }
+.ws-dist-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.ws-dist-lv { flex: 0 0 96px; }
+.ws-dist-n { flex: 0 0 24px; text-align: right; color: var(--text-2); }
+
+.ws-weak { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ws-weak-item { min-height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px;
+  background: rgba(234,102,104,.08); font-size: 14px; cursor: pointer; }
+.ws-weak-item small { color: var(--text-2); }
+
+.ws-cal { display: flex; gap: 4px; flex-wrap: wrap; }
+.ws-cal-d { width: 32px; height: 32px; border-radius: 8px; background: var(--card); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-2); }
+.ws-cal-d.on { background: var(--accent-deep); color: #fff; border-color: var(--accent-deep); }
+
+.ws-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.ws-badge { background: linear-gradient(135deg, rgba(155,187,244,.2), rgba(155,187,244,.35));
+  border-radius: 12px; padding: 8px 12px; font-size: 13px; }
+.ws-badge small { display: block; color: var(--text-2); font-size: 11px; }
+
+.ws-result { font-size: 52px; font-weight: 800; text-align: center; color: var(--accent-deep); }
+.ws-result small { font-size: 18px; }
+.ws-result-sub { text-align: center; font-size: 15px; margin: 4px 0 10px; }
+.ws-empty { background: var(--card); border: 1px dashed var(--border); border-radius: 12px;
+  padding: 14px; color: var(--text-2); font-size: 14px; margin-bottom: 12px; }
+.ws-cfg { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+
+.ws-toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%);
+  background: var(--accent-deep); color: #fff; padding: 10px 18px; border-radius: 12px;
+  font-size: 14px; z-index: 99; box-shadow: 0 4px 16px rgba(0,0,0,.18); transition: opacity .3s; }
+.ws-toast.hide { opacity: 0; }
+
+@media (max-width: 480px) {
+  .ws-key { width: 40px; height: 44px; font-size: 16px; }
+  .ws-key-lg { width: 52px; }
+  .ws-card-word { font-size: 28px; }
+}
