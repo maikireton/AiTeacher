@@ -11,6 +11,20 @@
 (function () {
   "use strict";
 
+  /* 动态加载在线音色引擎（与 voice.js 同目录；避免改 120+ 个课件页面）
+   * 在线音色用于 Android pad 等系统语音不可用的设备 */
+  (function () {
+    if (window.OnlineVoice) { return; }
+    try {
+      var cur = document.currentScript;
+      var base = "assets/";
+      if (cur && cur.src) { base = cur.src.replace(/[^/]*$/, ""); }
+      var s = document.createElement("script");
+      s.src = base + "voice-online.js";
+      document.head.appendChild(s);
+    } catch (e) {}
+  })();
+
   var SETTINGS_KEY = "aiTeacher:settings";
   var voicesCache = null;
   var voiceReady = false;          // 语音列表是否已就绪
@@ -95,6 +109,15 @@
     return null;
   }
 
+  /* 返回设置页保存的在线音色对象（{uri,name,online:true}）；未启用/不可用返回 null */
+  function onlineVoiceFor(lang) {
+    var saved = readSettings();
+    var isEn = String(lang || "").toLowerCase().indexOf("en") === 0;
+    var o = saved && saved[isEn ? "voiceEn" : "voice"];
+    if (o && o.online && o.uri && window.OnlineVoice) { return o; }
+    return null;
+  }
+
   /* 真正朗读（语音列表已就绪后调用） */
   function speakNow(text, opts) {
     if (!("speechSynthesis" in window)) { return; }
@@ -123,6 +146,19 @@
 
   /* 统一朗读入口：语音列表未就绪时等待，就绪后用正确音色 */
   function speak(text, opts) {
+    /* 在线音色优先（Android pad 等系统语音不可用时的方案） */
+    var online = onlineVoiceFor("zh");
+    if (online) {
+      ++speechToken; /* 使旧的朗读链作废 */
+      try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+      window.OnlineVoice.speak(text, {
+        voice: online.uri,
+        lang: "zh-CN",
+        rate: (opts && opts.rate) || 0.92,
+        onEnd: opts && typeof opts.onEnd === "function" ? function () { try { opts.onEnd(); } catch (e) {} } : null
+      });
+      return;
+    }
     if (!("speechSynthesis" in window)) { return; }
     if (!voiceReady) { waitForVoices(function () { speakNow(text, opts); }); return; }
     speakNow(text, opts);
@@ -224,8 +260,40 @@
     setTimeout(playSegment, 80);
   }
 
+  /* 在线中英混读：按分段串行朗读（每段一次 WebSocket 请求） */
+  function speakMixedOnline(text, opts, oZh, oEn) {
+    var parts = splitMixed(text);
+    var idx = 0;
+    var tok = ++speechToken;
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+    function done() {
+      if (opts && typeof opts.onEnd === "function") { try { opts.onEnd(); } catch (e) {} }
+    }
+    function next() {
+      if (tok !== speechToken) { return; }
+      if (idx >= parts.length) { done(); return; }
+      var p = parts[idx++];
+      var o = p.en ? (oEn || oZh) : (oZh || oEn);
+      if (!o) { next(); return; }
+      window.OnlineVoice.speak(p.text, {
+        voice: o.uri,
+        lang: p.en ? "en-US" : "zh-CN",
+        rate: (opts && opts.rate) || 0.92,
+        onEnd: next
+      });
+    }
+    next();
+  }
+
   /* 中英混读入口：语音列表未就绪时等待 */
   function speakMixed(text, opts) {
+    /* 在线音色优先 */
+    var oZh = onlineVoiceFor("zh");
+    var oEn = onlineVoiceFor("en");
+    if (oZh || oEn) {
+      speakMixedOnline(text, opts, oZh, oEn);
+      return;
+    }
     if (!("speechSynthesis" in window)) { return; }
     if (!voiceReady) { waitForVoices(function () { speakMixedNow(text, opts); }); return; }
     speakMixedNow(text, opts);
