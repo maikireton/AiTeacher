@@ -408,7 +408,7 @@
     }
     h += "</div>";
     body.innerHTML = h;
-    sayWord(w);
+    if (recState === "idle") { sayWord(w); }
   }
 
   /* ---------------- 统计 ---------------- */
