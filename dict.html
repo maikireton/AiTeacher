@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>查词典 · AI 教师</title>
+<link rel="stylesheet" href="assets/style.css">
+<script src="assets/dict.js"></script>
+<style>
+  .dict-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+  .dict-search { display: flex; gap: 10px; margin-bottom: 4px; }
+  .dict-search input {
+    flex: 1; min-height: 48px; padding: 0 16px; border: 2px solid var(--border);
+    border-radius: 14px; font-size: 18px; color: var(--text); outline: none; background: var(--bg);
+  }
+  .dict-search input:focus { border-color: var(--accent-deep); }
+  .dict-search button {
+    min-height: 48px; padding: 0 22px; border: none; border-radius: 14px;
+    background: var(--accent-deep); color: #fff; font-size: 16px; cursor: pointer;
+  }
+  .dict-hint { font-size: 13px; color: var(--text-2); margin: 8px 2px 14px; }
+  .hot { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .hot button {
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    border-radius: 20px; padding: 6px 14px; font-size: 14px; cursor: pointer;
+  }
+  .hot button:active { background: rgba(0,0,0,.05); }
+  #dict-result { min-height: 120px; }
+  .word-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .word-head .w { font-size: 32px; font-weight: 800; color: var(--text); }
+  .word-head .ph { font-size: 15px; color: var(--text-2); }
+  .voice-btns { margin: 12px 0 4px; display: flex; gap: 10px; }
+  .voice-btns button {
+    background: #3b6ef5; color: #fff; border: none; border-radius: 20px;
+    padding: 9px 18px; font-size: 14px; cursor: pointer;
+  }
+  .def { display: flex; align-items: flex-start; gap: 8px; margin: 8px 0; font-size: 16px; color: var(--text); }
+  .def .pos { background: #eef2ff; color: #3b6ef5; border-radius: 6px; padding: 1px 7px; font-size: 12px; white-space: nowrap; margin-top: 3px; }
+  .ex { border-top: 1px dashed var(--border); margin-top: 14px; padding-top: 12px; }
+  .ex .en { font-size: 15px; color: var(--text); margin: 8px 0 2px; }
+  .ex .cn { font-size: 13px; color: var(--text-2); }
+  .notfound { color: #c0392b; font-size: 15px; padding: 16px 0; }
+  .loading { color: var(--text-2); font-size: 14px; padding: 16px 0; }
+  .tag { font-size: 11px; color: #bbb; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="topbar">
+    <a class="btn-home" href="index.html">← 主页</a>
+    <span class="brand">查词典</span>
+  </header>
+
+  <div class="dict-box">
+    <div class="dict-search">
+      <input id="q" type="search" placeholder="输入英文单词，如 apple、school…" autocomplete="off" enterkeyhint="search">
+      <button id="go" type="button">查词</button>
+    </div>
+    <div class="dict-hint">含音标、词性、中文释义和双语例句；点 🔊 可听真人发音。</div>
+    <div class="hot">
+      <button type="button" data-w="apple">apple</button>
+      <button type="button" data-w="family">family</button>
+      <button type="button" data-w="happy">happy</button>
+      <button type="button" data-w="school">school</button>
+      <button type="button" data-w="teacher">teacher</button>
+      <button type="button" data-w="football">football</button>
+      <button type="button" data-w="beautiful">beautiful</button>
+    </div>
+    <div id="dict-result"></div>
+  </div>
+
+  <footer class="foot">
+    <div>AI 教师 · 查词典（词库覆盖小学 PEP 三四年级 + 课件词汇）</div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var inp = document.getElementById("q");
+  var go = document.getElementById("go");
+  var res = document.getElementById("dict-result");
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function doSearch() {
+    var word = inp.value.trim();
+    if (!word) { return; }
+    res.innerHTML = '<div class="loading">正在查词…</div>';
+    window.Dict.lookup(word, function (data) {
+      if (!data) {
+        res.innerHTML = '<div class="notfound">没有找到「' + esc(word) + '」的释义。请检查拼写，或试试更常见的单词。</div>';
+        return;
+      }
+      var h = '<div class="word-head"><span class="w">' + esc(word) + "</span>";
+      if (data.uk || data.us) {
+        h += '<span class="ph">' + (data.uk ? "英 /" + esc(data.uk) + "/" : "") + (data.us ? "　美 /" + esc(data.us) + "/" : "") + "</span>";
+      }
+      h += "</div>";
+      h += '<div class="voice-btns">' +
+        '<button onclick="window.Dict.playVoice(\'' + esc(word).replace(/'/g, "\\'") + '\',1)">🇬🇧 英式发音</button>' +
+        '<button onclick="window.Dict.playVoice(\'' + esc(word).replace(/'/g, "\\'") + '\',2)">🇺🇸 美式发音</button></div>';
+      if (data.defs && data.defs.length) {
+        data.defs.forEach(function (d) {
+          var m = d.match(/^([a-zA-Z]+\.|v\.|adj\.|adv\.|prep\.|conj\.|pron\.|num\.|art\.|abbr\.)/);
+          var pos = m ? '<span class="pos">' + esc(m[1]) + "</span>" : "";
+          var rest = m ? d.slice(m[0].length).trim() : d;
+          h += '<div class="def">' + pos + "<span>" + esc(rest) + "</span></div>";
+        });
+      }
+      if (data.ex && data.ex.length) {
+        h += '<div class="ex">';
+        data.ex.slice(0, 2).forEach(function (x) {
+          h += '<div class="en">' + esc(x.en) + "</div>";
+          if (x.cn) { h += '<div class="cn">' + esc(x.cn) + "</div>"; }
+        });
+        h += "</div>";
+      }
+      if (data.src === "online") {
+        h += '<div class="tag">在线释义（网络词典）· 本地词库暂未收录</div>';
+      }
+      res.innerHTML = h;
+    });
+  }
+
+  go.addEventListener("click", doSearch);
+  inp.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.keyCode === 13) { doSearch(); } });
+  document.querySelectorAll(".hot button").forEach(function (b) {
+    b.addEventListener("click", function () { inp.value = b.getAttribute("data-w"); doSearch(); });
+  });
+})();
+</script>
+</body>
+</html>
