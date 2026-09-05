@@ -710,17 +710,19 @@
   function playRandomRound() {
     if (!randomMode.active || randomMode.paused || !randomMode.word) { return; }
     var w = randomMode.word.w;
-    // 单词 → 例句 → 用法讲解 → 重复或下一个
+    // 单词 → 例句英文 → 例句中文 → 用法讲解 → 重复或下一个
     speakSeq(w.w, function () {
       speakSeq(w.ex && w.ex[0] ? w.ex[0] : "", function () {
-        speakSeq(w.us || "", function () {
-          randomMode.repeat++;
-          if (randomMode.repeat < randomMode.totalRepeat) {
-            renderRandom();
-            playRandomRound();
-          } else {
-            nextRandomWord();
-          }
+        speakSeq(w.ex && w.ex[1] ? w.ex[1] : "", function () {
+          speakSeq(w.us || "", function () {
+            randomMode.repeat++;
+            if (randomMode.repeat < randomMode.totalRepeat) {
+              renderRandom();
+              playRandomRound();
+            } else {
+              nextRandomWord();
+            }
+          });
         });
       });
     });
