@@ -150,3 +150,16 @@
   50% { box-shadow: 0 0 0 8px rgba(238,90,90,0); }
 }
 #rec-timer { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* === 用法讲解 === */
+.ws-usage {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #374151;
+  background: linear-gradient(135deg, rgba(155,187,244,0.1), rgba(155,187,244,0.05));
+  border-left: 3px solid #9bbbf4;
+  padding: 8px 12px;
+  border-radius: 0 8px 8px 0;
+  margin: 6px 0;
+}
+.ws-usage::first-letter { font-weight: 600; }

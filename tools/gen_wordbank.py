@@ -206,6 +206,72 @@ def gen_example(w, zh, pos):
     # 其他
     return [f"This is {w}.", f"这是{zh}。"]
 
+# ============ 用法讲解生成(适合小学生) ============
+def gen_usage(w, zh, pos, co):
+    """生成适合小学生理解的用法讲解，返回中文文本。"""
+    wl = w.lower()
+    # 提取非空搭配
+    cos = [c[0] for c in (co or [["",""]]) if c and c[0]]
+    co_str = "、".join(cos[:2]) if cos else ""
+
+    if pos == "n.":
+        # 名词
+        if any(c in zh for c in ["人","师","员","者","家","手","医生","老师","学生","司机","厨师","护士","农民","工人","警察","画家","科学家","诗人","作家","宇航员","志愿者","总统"]):
+            tip = f"「{w}」是名词，指一种职业或身份的人。"
+            if co_str: tip += f"常见说法：{co_str}。"
+            tip += f"比如可以说：He is a {w}. 他是一名{zh}。"
+        elif any(c in zh for c in ["地方","城市","国家","公园","学校","医院","商店","书店","超市","餐馆","银行","邮局","图书馆","博物馆","体育场","广场","宾馆","车站","机场","花园","农场","森林","海洋","湖","河","山","乡村","闹市区"]):
+            tip = f"「{w}」是名词，指一个地点或场所。"
+            tip += f"表示在这个地方常用 at 或 in，比如：at the {w}（在{zh}）。"
+        elif any(c in zh for c in ["动物","鸟","鱼","狗","猫","鸭","兔","蛇","龟","马","牛","猪","羊","蜜蜂","蝴蝶","熊猫","大象","老虎","猴子","企鹅","鲨鱼","鲸","袋鼠","考拉","松鼠","天鹅","青蛙","海狸","浣熊","昆虫","爬行动物","哺乳动物"]):
+            tip = f"「{w}」是名词，指一种动物。"
+            tip += f"表示一只用 a，多只加 s，比如：a {w}（一只{zh}）。"
+        elif any(c in zh for c in ["食物","面包","蛋糕","水果","冰淇淋","土豆","西红柿","肉","可乐","米饭","面条","蔬菜","鸡肉","鸡蛋","汤","糖果","三明治","饺子","火锅","牛奶","果汁","水","茶","烤火鸡","早茶"]):
+            tip = f"「{w}」是名词，指一种食物或饮料。"
+            tip += f"可以说 I like {w}. 我喜欢{zh}。"
+            if co_str: tip += f"常见搭配：{co_str}。"
+        elif any(c in zh for c in ["衣服","帽子","大衣","鞋","毛衣","夹克","手套","裤子","T恤","短裤","袜子","裙子","连衣裙","衬衫","围巾"]):
+            tip = f"「{w}」是名词，指一件衣物。"
+            tip += f"表示穿着用 wear，比如：wear a {w}（穿{zh}）。"
+        elif any(c in zh for c in ["月","一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"]):
+            tip = f"「{w}」是名词，指月份。注意月份首字母要大写！"
+            tip += f"在某个月用 in，比如：in {w}（在{zh}）。"
+        elif any(c in zh for c in ["学科","语文","英语","科学","体育","音乐","数学","美术"]):
+            tip = f"「{w}」是名词，指一门学科。"
+            tip += f"可以说 I like {w}. 我喜欢{zh}课。"
+        else:
+            tip = f"「{w}」是名词，表示「{zh}」。"
+            tip += f"可以说 I have a {w}. 我有一个{zh}。"
+            if co_str: tip += f"常见搭配：{co_str}。"
+    elif pos == "v.":
+        # 动词
+        if " " in wl:
+            tip = f"「{w}」是动词短语，意思是「{zh}」。"
+            tip += f"可以说 I often {w}. 我经常{zh}。"
+        else:
+            tip = f"「{w}」是动词，表示「{zh}」这个动作。"
+            tip += f"可以说 I can {w}. 我会{zh}。"
+            if co_str: tip += f"常见搭配：{co_str}。"
+    elif pos == "adj.":
+        # 形容词
+        tip = f"「{w}」是形容词，用来形容人或事物「{zh}」。"
+        tip += f"放在 be 动词后面，比如：It is {w}. 它很{zh}。"
+        if co_str: tip += f"常见说法：{co_str}。"
+    elif pos == "adv.":
+        tip = f"「{w}」是副词，用来修饰动作，表示「{zh}」。"
+        tip += f"通常放在动词后面，比如：He gets up {w}. 他{zh}起床。"
+    elif pos == "num.":
+        tip = f"「{w}」是数词，表示数字「{zh}」。"
+        tip += f"用来数数，比如：{w} apples. {zh}个苹果。"
+    elif pos == "pron.":
+        tip = f"「{w}」是代词，用来代替人或事物，表示「{zh}」。"
+        tip += f"放在名词前面，比如：{w} book. {zh}书。"
+    else:
+        tip = f"「{w}」表示「{zh}」。"
+        tip += f"在句子中根据语境使用。"
+
+    return tip
+
 # ============ emoji 选择 ============
 EMOJI_MAP = {
     "3a-u1":"👋","3a-u2":"🧍","3a-u3":"🍽️","3a-u4":"🐾","3a-u5":"👕","3a-u6":"🎂",
@@ -243,8 +309,10 @@ for uid, uname, grade, uem in UNITS:
         wl = w.lower()
         if wl in existing:
             e = existing[wl]
-            # 保留原有完整信息，中文用教材释义(若不同)
-            words.append({"w":e["w"],"p":e.get("p",""),"pos":e.get("pos",""),"zh":zh or e.get("zh",""),"sy":e.get("sy",[w]),"ex":e.get("ex",["",""]),"co":e.get("co",[["",""]]),"em":e.get("em","📖")})
+            pos = e.get("pos","") or guess_pos(zh, w)
+            co = e.get("co", [["",""]])
+            us = gen_usage(w, zh or e.get("zh",""), pos, co)
+            words.append({"w":e["w"],"p":e.get("p",""),"pos":pos,"zh":zh or e.get("zh",""),"sy":e.get("sy",[w]),"ex":e.get("ex",["",""]),"co":co,"em":e.get("em","📖"),"us":us})
             reuse_count += 1
         else:
             pos = guess_pos(zh, w)
@@ -252,7 +320,8 @@ for uid, uname, grade, uem in UNITS:
             ex = gen_example(w, zh, pos)
             co = [["",""]]  # 搭配留空
             em = get_emoji(w, uid)
-            words.append({"w":w,"p":"","pos":pos,"zh":zh,"sy":sy,"ex":ex,"co":co,"em":em})
+            us = gen_usage(w, zh, pos, co)
+            words.append({"w":w,"p":"","pos":pos,"zh":zh,"sy":sy,"ex":ex,"co":co,"em":em,"us":us})
             new_count += 1
     groups.append({"id":uid,"name":uname,"grade":grade,"em":uem,"words":words})
 
@@ -273,7 +342,7 @@ lines = []
 lines.append("/* ============================================================")
 lines.append(" * AI 教师 · 小学英语单词库（wordbank.js）")
 lines.append(" * 人教版新起点(一年级起点)三上~六下，按教材单元分组。")
-lines.append(" * 字段：w单词 p音标 pos词性 zh中文 sy音节拆分 ex例句[英,中] co搭配[[英,中]] em联想emoji")
+lines.append(" * 字段：w单词 p音标 pos词性 zh中文 sy音节拆分 ex例句[英,中] co搭配[[英,中]] us用法讲解 em联想emoji")
 lines.append(" * 供 英语/words/index.html 单词学习模块使用")
 lines.append(" * ============================================================ */")
 lines.append("window.WORDBANK = {")
@@ -282,7 +351,7 @@ lines.append("  groups: [")
 for g in groups:
     lines.append('    {"id":"' + g["id"] + '","name":"' + js_str(g["name"]) + '","grade":"' + g["grade"] + '","em":"' + g["em"] + '","words":[')
     for w in g["words"]:
-        lines.append('      {"w":"' + js_str(w["w"]) + '","p":"' + js_str(w["p"]) + '","pos":"' + w["pos"] + '","zh":"' + js_str(w["zh"]) + '","sy":' + js_arr(w["sy"]) + ',"ex":' + js_arr(w["ex"]) + ',"co":' + js_arr2(w["co"]) + ',"em":"' + w["em"] + '"},')
+        lines.append('      {"w":"' + js_str(w["w"]) + '","p":"' + js_str(w["p"]) + '","pos":"' + w["pos"] + '","zh":"' + js_str(w["zh"]) + '","sy":' + js_arr(w["sy"]) + ',"ex":' + js_arr(w["ex"]) + ',"co":' + js_arr2(w["co"]) + ',"us":"' + js_str(w["us"]) + '","em":"' + w["em"] + '"},')
     lines.append("    ]},")
 lines.append("  ]")
 lines.append("};")

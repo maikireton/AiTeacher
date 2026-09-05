@@ -58,6 +58,7 @@
   function sayWord(w) { say(w.w); }
   function sayZh(w) { say(w.zh); }
   function sayEx(w) { if (w.ex) { say(w.ex[0]); } }
+  function sayUsage(w) { if (w.us) { say(w.us); } }
 
   /* ---------------- 游戏化 ---------------- */
   function todayStr() {
@@ -398,6 +399,10 @@
       h += '<div class="ws-use"><span>🔗 搭配</span><div class="ws-co">' +
         w.co.map(function (c) { return c[0] + " <small>" + c[1] + "</small>"; }).join("　") + "</div></div>";
     }
+    if (w.us) {
+      h += '<div class="ws-use"><span>📖 用法讲解</span><div class="ws-usage">' + w.us + '</div>';
+      h += '<button class="ws-btn sm" data-act="c-usage">🔊 讲用法</button></div>';
+    }
     h += "</div>";
     h += '<div class="ws-nav">';
     h += '<button class="ws-btn" data-act="c-prev"' + (learn.idx === 0 ? " disabled" : "") + ">◀ 上一个</button>";
@@ -548,6 +553,7 @@
     if (act === "c-next") { resetRecorder(); learn.idx++; renderCard(); return; }
     if (act === "c-speak") { if (learn.list[learn.idx]) { sayWord(learn.list[learn.idx].w); } return; }
     if (act === "c-ex") { if (learn.list[learn.idx]) { sayEx(learn.list[learn.idx].w); } return; }
+    if (act === "c-usage") { if (learn.list[learn.idx]) { sayUsage(learn.list[learn.idx].w); } return; }
     if (act === "c-rec-start") { startRecording(); return; }
     if (act === "c-rec-stop") { stopRecording(); return; }
     if (act === "c-rec-play") { playRecording(); return; }
