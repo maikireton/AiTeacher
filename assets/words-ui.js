@@ -568,6 +568,13 @@
     if (act === "review-start" || act === "review-again") { startReview(); return; }
     if (act === "w-say") { var it2 = byId[gid]; if (it2) { sayWord(it2.w); } return; }
     if (act === "goto-stats") { switchTab("stats"); return; }
+    /* 随机磨耳朵 */
+    if (act === "random-start") { startRandomMode(); return; }
+    if (act === "random-pause") { pauseRandomMode(); return; }
+    if (act === "random-resume") { resumeRandomMode(); return; }
+    if (act === "random-stop") { stopRandomMode(); return; }
+    if (act === "random-skip") { skipRandomWord(); return; }
+    if (act === "random-repeat") { setRandomRepeat(parseInt(t.getAttribute("data-n"), 10)); return; }
     /* 拼写键盘 */
     if (act === "s-key") { addKey(t.getAttribute("data-k")); return; }
     if (act === "s-back") { backKey(); return; }
@@ -654,6 +661,150 @@
     var d = el('<div class="ws-toast">' + msg + "</div>");
     document.body.appendChild(d);
     setTimeout(function () { d.classList.add("hide"); setTimeout(function () { d.remove(); }, 300); }, 1400);
+  }
+
+  /* ---------------- 随机磨耳朵模式 ---------------- */
+  var randomMode = {
+    active: false,
+    word: null,
+    repeat: 0,
+    totalRepeat: 3,
+    paused: false,
+    wordCount: 0,
+    history: []
+  };
+
+  function allWords() {
+    var all = [];
+    WB.groups.forEach(function (g) {
+      g.words.forEach(function (w, wi) { all.push({ id: g.id + "-" + wi, gid: g.id, w: w }); });
+    });
+    return all;
+  }
+
+  function pickRandomWord() {
+    var all = allWords();
+    var candidates = all.filter(function (it) { return randomMode.history.indexOf(it.id) === -1; });
+    if (candidates.length === 0) { candidates = all; randomMode.history = []; }
+    var pick = candidates[Math.floor(Math.random() * candidates.length)];
+    randomMode.history.push(pick.id);
+    if (randomMode.history.length > 10) { randomMode.history.shift(); }
+    return pick;
+  }
+
+  function stopVoice() {
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+  }
+
+  function speakSeq(text, onEnd) {
+    if (!randomMode.active || randomMode.paused) { return; }
+    if (AiVoice && AiVoice.speakMixed) {
+      AiVoice.speakMixed(text, {
+        onEnd: function () { if (randomMode.active && !randomMode.paused) { onEnd(); } }
+      });
+    } else {
+      setTimeout(onEnd, 1200);
+    }
+  }
+
+  function playRandomRound() {
+    if (!randomMode.active || randomMode.paused || !randomMode.word) { return; }
+    var w = randomMode.word.w;
+    // 单词 → 例句 → 用法讲解 → 重复或下一个
+    speakSeq(w.w, function () {
+      speakSeq(w.ex && w.ex[0] ? w.ex[0] : "", function () {
+        speakSeq(w.us || "", function () {
+          randomMode.repeat++;
+          if (randomMode.repeat < randomMode.totalRepeat) {
+            renderRandom();
+            playRandomRound();
+          } else {
+            nextRandomWord();
+          }
+        });
+      });
+    });
+  }
+
+  function nextRandomWord() {
+    if (!randomMode.active) { return; }
+    randomMode.word = pickRandomWord();
+    randomMode.repeat = 0;
+    randomMode.wordCount++;
+    renderRandom();
+    playRandomRound();
+  }
+
+  function startRandomMode() {
+    randomMode.active = true;
+    randomMode.paused = false;
+    randomMode.wordCount = 0;
+    randomMode.history = [];
+    nextRandomWord();
+  }
+
+  function pauseRandomMode() {
+    randomMode.paused = true;
+    stopVoice();
+    renderRandom();
+  }
+
+  function resumeRandomMode() {
+    randomMode.paused = false;
+    randomMode.repeat = 0;
+    renderRandom();
+    playRandomRound();
+  }
+
+  function stopRandomMode() {
+    randomMode.active = false;
+    randomMode.paused = false;
+    stopVoice();
+    refreshCurrent();
+  }
+
+  function skipRandomWord() {
+    stopVoice();
+    nextRandomWord();
+  }
+
+  function setRandomRepeat(n) {
+    randomMode.totalRepeat = n;
+    renderRandom();
+  }
+
+  function renderRandom() {
+    var w = randomMode.word.w;
+    var h = '<div class="ws-random">';
+    h += '<div class="ws-random-head">🎲 随机磨耳朵 · 已听 ' + randomMode.wordCount + ' 词</div>';
+    h += '<div class="ws-card">';
+    h += '<div class="ws-card-em">' + w.em + "</div>";
+    h += '<div class="ws-card-word">' + w.w + "</div>";
+    h += '<div class="ws-card-ph">' + (w.p ? w.p + " · " : "") + w.pos + " · " + w.zh + "</div>";
+    h += '<div class="ws-card-sy">' + (w.sy ? w.sy.join(" · ") : "") + "</div>";
+    h += "</div>";
+    if (w.ex) {
+      h += '<div class="ws-use"><span>💡 例句</span><div class="ws-ex">' + w.ex[0] + '<br><small>' + w.ex[1] + "</small></div></div>";
+    }
+    if (w.us) {
+      h += '<div class="ws-use"><span>📖 用法讲解</span><div class="ws-usage">' + w.us + "</div></div>";
+    }
+    h += '<div class="ws-random-progress">🔁 第 ' + (randomMode.repeat + 1) + " / " + randomMode.totalRepeat + " 遍</div>";
+    h += '<div class="ws-random-repeat">每词重复：';
+    for (var i = 1; i <= 5; i++) {
+      h += '<button class="ws-btn sm' + (randomMode.totalRepeat === i ? " on" : "") + '" data-act="random-repeat" data-n="' + i + '">' + i + "遍</button>";
+    }
+    h += "</div>";
+    h += '<div class="ws-random-ctrl">';
+    if (randomMode.paused) {
+      h += '<button class="ws-btn main" data-act="random-resume">▶ 继续</button>';
+    } else {
+      h += '<button class="ws-btn" data-act="random-pause">⏸ 暂停</button>';
+    }
+    h += '<button class="ws-btn" data-act="random-skip">⏭ 下一个</button>';
+    h += '<button class="ws-btn" data-act="random-stop">⏹ 退出</button>';
+    h += "</div></div>";
+    body.innerHTML = h;
   }
 
   /* ---------------- 启动 ---------------- */
