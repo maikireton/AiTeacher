@@ -274,10 +274,91 @@
     body.innerHTML = h;
   }
   function openGroup(gid) {
+    resetRecorder();
     learn.gid = gid; learn.idx = 0; learn.list = wordsOf(gid);
     state.curGroup = gid; saveState();
     renderCard();
   }
+
+  /* ---------------- 跟读录音 ---------------- */
+  var recState = "idle"; // idle | requesting | recording | recorded
+  var mediaRecorder = null;
+  var audioStream = null;
+  var audioChunks = [];
+  var audioUrl = null;
+  var recTimer = null;
+  var recSeconds = 0;
+
+  function resetRecorder() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      try { mediaRecorder.stop(); } catch (e) {}
+    }
+    if (audioStream) {
+      audioStream.getTracks().forEach(function (t) { t.stop(); });
+      audioStream = null;
+    }
+    if (recTimer) { clearInterval(recTimer); recTimer = null; }
+    if (audioUrl) { URL.revokeObjectURL(audioUrl); audioUrl = null; }
+    audioChunks = [];
+    recSeconds = 0;
+    recState = "idle";
+  }
+
+  function startRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast("当前浏览器不支持录音");
+      return;
+    }
+    recState = "requesting";
+    renderCard();
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      audioStream = stream;
+      audioChunks = [];
+      var mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
+      mediaRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) { audioChunks.push(e.data); } };
+      mediaRecorder.onstop = function () {
+        var blob = new Blob(audioChunks, { type: mime || "audio/webm" });
+        audioUrl = URL.createObjectURL(blob);
+        recState = "recorded";
+        if (recTimer) { clearInterval(recTimer); recTimer = null; }
+        renderCard();
+        toast("录音完成，点「听我的录音」回放");
+      };
+      mediaRecorder.start();
+      recState = "recording";
+      recSeconds = 0;
+      recTimer = setInterval(function () {
+        recSeconds++;
+        var el = document.getElementById("rec-timer");
+        if (el) { el.textContent = fmtTime(recSeconds); }
+      }, 1000);
+      renderCard();
+    }).catch(function (err) {
+      recState = "idle";
+      renderCard();
+      toast("无法访问麦克风：" + (err.message || err.name));
+    });
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+    }
+  }
+
+  function playRecording() {
+    if (!audioUrl) { return; }
+    var a = new Audio(audioUrl);
+    a.play().catch(function () { toast("播放失败"); });
+  }
+
+  function fmtTime(s) {
+    var m = Math.floor(s / 60);
+    var sec = s % 60;
+    return m + ":" + (sec < 10 ? "0" : "") + sec;
+  }
+
   function renderCard() {
     var it = learn.list[learn.idx];
     if (!it) { return; }
@@ -294,7 +375,21 @@
     h += '<div class="ws-card-lv">' + starRow(rec.lv) + " <small>" + lvName(rec.lv) + "</small></div>";
     h += "</div>";
     h += '<div class="ws-uses">';
-    h += '<div class="ws-use"><span>👂 听 / 🗣 说</span><button class="ws-btn sm" data-act="c-speak">🔊 读单词</button></div>';
+    // 听 / 说 / 跟读录音
+    h += '<div class="ws-use"><span>👂 听 / 🗣 说 / 🎤 跟读</span>';
+    h += '<div class="ws-speak-row">';
+    h += '<button class="ws-btn sm" data-act="c-speak">🔊 读单词</button>';
+    if (recState === "idle") {
+      h += '<button class="ws-btn sm rec-btn" data-act="c-rec-start">🎤 跟读录音</button>';
+    } else if (recState === "requesting") {
+      h += '<button class="ws-btn sm rec-btn" disabled>⏳ 正在请求麦克风...</button>';
+    } else if (recState === "recording") {
+      h += '<button class="ws-btn sm rec-btn recording" data-act="c-rec-stop">🔴 录音中 <span id="rec-timer">0:00</span> · 点我停止</button>';
+    } else {
+      h += '<button class="ws-btn sm" data-act="c-rec-play">▶️ 听我的录音</button>';
+      h += '<button class="ws-btn sm rec-btn" data-act="c-rec-redo">🔄 重录</button>';
+    }
+    h += "</div></div>";
     if (w.ex) {
       h += '<div class="ws-use"><span>💡 例句</span><div class="ws-ex">' + w.ex[0] + '<br><small>' + w.ex[1] + "</small></div>";
       h += '<button class="ws-btn sm" data-act="c-ex">🔊 读例句</button></div>';
@@ -449,10 +544,14 @@
     }
     if (act === "pick") { openGroup(gid); return; }
     if (act === "drill-start") { startDrill(gid); return; }
-    if (act === "c-prev") { if (learn.idx > 0) { learn.idx--; renderCard(); } return; }
-    if (act === "c-next") { learn.idx++; renderCard(); return; }
+    if (act === "c-prev") { if (learn.idx > 0) { resetRecorder(); learn.idx--; renderCard(); } return; }
+    if (act === "c-next") { resetRecorder(); learn.idx++; renderCard(); return; }
     if (act === "c-speak") { if (learn.list[learn.idx]) { sayWord(learn.list[learn.idx].w); } return; }
     if (act === "c-ex") { if (learn.list[learn.idx]) { sayEx(learn.list[learn.idx].w); } return; }
+    if (act === "c-rec-start") { startRecording(); return; }
+    if (act === "c-rec-stop") { stopRecording(); return; }
+    if (act === "c-rec-play") { playRecording(); return; }
+    if (act === "c-rec-redo") { resetRecorder(); renderCard(); return; }
     if (act === "c-done") { switchTab("drill"); startDrill(gid || state.curGroup); return; }
     if (act === "test-pick") { if (gid) { testCfg.gid = gid; renderTestCfg(); } else { renderTestSetup(); } return; }
     if (act === "test-num") { testCfg.count = parseInt(t.getAttribute("data-n"), 10); renderTestCfg(); return; }
@@ -511,6 +610,7 @@
   /* ---------------- Tab 切换 ---------------- */
   var currentTab = "learn";
   function switchTab(tab) {
+    if (tab !== "learn" && recState !== "idle") { resetRecorder(); }
     currentTab = tab;
     document.querySelectorAll(".ws-tab").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-tab") === tab); });
     if (tab === "learn") { renderGroups(); }
