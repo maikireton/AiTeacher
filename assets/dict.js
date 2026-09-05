@@ -100,6 +100,36 @@
     } catch (e) {}
   }
 
+  /* ---------- 句子朗读（英文例句/中文翻译，优先用用户设置的在线音色） ---------- */
+  function ensureOnlineVoice(cb) {
+    if (window.OnlineVoice) { cb && cb(); return; }
+    try {
+      var cur = document.currentScript;
+      var base = cur && cur.src ? cur.src.replace(/[^/]*$/, "") : "assets/";
+      var s = document.createElement("script");
+      s.src = base + "voice-online.js";
+      var done = false;
+      s.onload = function () { if (!done) { done = true; cb && cb(); } };
+      s.onerror = function () { if (!done) { done = true; cb && cb(); } };
+      document.head.appendChild(s);
+    } catch (e) { cb && cb(); }
+  }
+
+  function readSentence(text, lang, ev) {
+    if (ev) { try { ev.stopPropagation(); } catch (e) {} }
+    text = String(text || "").trim();
+    if (!text) { return; }
+    ensureOnlineVoice(function () {
+      if (!window.OnlineVoice) { return; }
+      var saved = null;
+      try { saved = JSON.parse(window.localStorage.getItem("aiTeacher:settings") || "null"); } catch (e) {}
+      var isEn = lang === "en";
+      var o = isEn ? (saved && saved.voiceEn) : (saved && saved.voice);
+      var voice = (o && o.online && o.uri) ? o.uri : (isEn ? "en-US-AriaNeural" : "zh-CN-XiaoxiaoNeural");
+      try { window.OnlineVoice.speak(text, { voice: voice, lang: isEn ? "en-US" : "zh-CN", rate: 0.95 }); } catch (e) {}
+    });
+  }
+
   /* ---------- 查词卡片 UI ---------- */
   function buildCard() {
     if (cardEl) { return; }
@@ -149,21 +179,27 @@
       /* 释义 */
       if (data.defs && data.defs.length) {
         h += '<div style="margin:12px 0 0;">';
-        data.defs.forEach(function (d, i) {
-          var m = d.match(/^([a-zA-Z]+\.|v\.|adj\.|adv\.|prep\.|conj\.|pron\.|num\.|art\.|abbr\.)/);
-          var pos = m ? '<span style="background:#eef2ff;color:#3b6ef5;border-radius:6px;padding:1px 7px;font-size:12px;margin-right:8px;white-space:nowrap;">' + esc(m[1]) + "</span>" : "";
-          var rest = m ? d.slice(m[0].length).trim() : d;
-          h += '<div style="display:flex;align-items:flex-start;gap:8px;margin:6px 0;font-size:16px;color:#222;">' +
-            pos + '<span>' + esc(rest) + "</span></div>";
+        data.defs.forEach(function (d) {
+          var pos = d.pos ? '<span style="background:#eef2ff;color:#3b6ef5;border-radius:6px;padding:1px 7px;font-size:12px;margin-right:8px;white-space:nowrap;flex:0 0 auto;">' + esc(d.pos) + "</span>" : "";
+          h += '<div style="display:flex;align-items:flex-start;gap:8px;margin:6px 0;">' +
+            pos + '<div style="font-size:16px;color:#222;"><div>' + esc(d.cn || "") + "</div>" +
+            (d.en ? '<div style="font-size:12px;color:#999;margin-top:2px;">' + esc(d.en) + "</div>" : "") +
+            "</div></div>";
         });
         h += "</div>";
       }
-      /* 例句 */
+      /* 例句（英文 + 中文翻译，均可朗读） */
       if (data.ex && data.ex.length) {
         h += '<div style="border-top:1px dashed #ddd;margin-top:12px;padding-top:10px;">';
         data.ex.slice(0, 2).forEach(function (x) {
-          h += '<div style="margin:8px 0;font-size:15px;color:#222;">' + esc(x.en) + "</div>" +
-            (x.cn ? '<div style="font-size:13px;color:#888;margin-top:2px;">' + esc(x.cn) + "</div>" : "");
+          h += '<div style="display:flex;align-items:flex-start;gap:8px;margin:8px 0;font-size:15px;color:#222;">' +
+            '<span style="flex:1;">' + esc(x.en) + "</span>" +
+            '<button onclick="window.__dictRead(\'' + esc(x.en).replace(/'/g, "\\'") + '\',\'en\',event)" style="flex:0 0 auto;border:none;background:#eef2ff;color:#3b6ef5;border-radius:8px;padding:4px 9px;font-size:12px;cursor:pointer;">🔊</button></div>';
+          if (x.cn) {
+            h += '<div style="display:flex;align-items:flex-start;gap:8px;margin:2px 0 8px;font-size:13px;color:#888;">' +
+              '<span style="flex:1;">' + esc(x.cn) + "</span>" +
+              '<button onclick="window.__dictRead(\'' + esc(x.cn).replace(/'/g, "\\'") + '\',\'zh\',event)" style="flex:0 0 auto;border:none;background:#f0f7f0;color:#2e8b57;border-radius:8px;padding:4px 9px;font-size:12px;cursor:pointer;">🔊</button></div>';
+          }
         });
         h += "</div>";
       }
@@ -175,6 +211,7 @@
   }
 
   window.__dictPlay = playVoice;
+  window.__dictRead = readSentence;
 
   function closeCard() {
     if (maskEl) { maskEl.style.display = "none"; }
@@ -216,6 +253,7 @@
     openCard: openCard,
     closeCard: closeCard,
     playVoice: playVoice,
+    readSentence: readSentence,
     isLocalReady: function () { return !!dictData; }
   };
 
